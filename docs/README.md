@@ -10,6 +10,8 @@
 | `discovery/product-vision.md` | 產品願景、核心循環、範圍與成功條件 |
 | `discovery/open-questions.md` | 尚待確認的產品問題與建議預設值 |
 | `decisions/` | Architecture Decision Records（ADR） |
+| `design/` | 技術尖峰、架構與實作設計 |
+| `design-system/` | 視覺系統與各頁／場景覆寫 |
 | `specs/` | 可審閱、可驗收的功能規格與狀態索引 |
 | `templates/feature-spec-template.md` | 新功能規格範本 |
 | `logs/` | 階段進程、測試與重要問題紀錄 |
@@ -22,6 +24,7 @@
 
 ## 當前狀態
 
-- 階段：產品探索／核心規格草案
+- 階段：已核准首個垂直切片／技術尖峰
 - 原始輸入：專案根目錄的 `初始概念.md`
-- 下一個決策點：確認首個垂直切片範圍、同情系統門檻與技術方案
+- 已確認：單關卡垂直切片、橫向畫面、三鍵操作、Vite + TypeScript + Phaser
+- 下一個決策點：同情系統局部死亡門檻與美術方向
