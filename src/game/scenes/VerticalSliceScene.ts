@@ -395,6 +395,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     publishGameStatus({
       deaths: next.totalDeaths,
       message: `抵達終點。世界總共心軟了 ${this.countActiveAssists()} 次。`,
+      phase: 'completed',
     });
     this.addText(this.player.x - 40, 205, '通過\n（本題不計分）', 34, '#b9382c')
       .setAlign('center')

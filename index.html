@@ -9,25 +9,59 @@
   </head>
   <body>
     <div id="app">
-      <main class="game-shell" aria-labelledby="game-title">
+      <main class="game-shell" data-game-started="false" data-menu-open="true" aria-labelledby="game-title">
         <header class="game-header">
           <div>
             <p class="eyebrow">PLAYABLE SLICE · 001</p>
             <h1 id="game-title">遊戲開始心軟了</h1>
           </div>
-          <div class="death-ticket" aria-label="目前死亡次數">
-            <span>死亡</span>
-            <strong id="death-count">0</strong>
-            <span>次</span>
+          <div class="header-actions">
+            <button id="pause-button" class="utility-button" type="button" aria-label="暫停遊戲" hidden>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                <path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z" fill="currentColor" />
+              </svg>
+              <span>暫停</span>
+            </button>
+            <div class="death-ticket" aria-label="目前死亡次數">
+              <span>死亡</span>
+              <strong id="death-count">0</strong>
+              <span>次</span>
+            </div>
           </div>
         </header>
 
         <section class="stage-frame" aria-label="遊戲舞台">
           <div id="game-root" tabindex="0" aria-label="2D 橫向平台遊戲；使用左右方向與跳躍操作"></div>
-          <div class="rotation-notice" role="status">
-            <span class="rotation-mark" aria-hidden="true">↻</span>
-            <strong>把手機轉過來</strong>
-            <span>橫向的世界比較願意幫你。</span>
+          <div id="game-menu" class="game-menu">
+            <section class="menu-panel" data-menu-panel="title" aria-labelledby="title-panel-heading">
+              <p class="menu-kicker">第一張作業</p>
+              <h2 id="title-panel-heading">走到右邊。<br />遊戲會盡量不插手。</h2>
+              <p id="continue-summary" class="menu-copy">尚未留下任何可疑紀錄。</p>
+              <div class="menu-actions">
+                <button id="start-button" class="menu-button primary-action" type="button">開始</button>
+              </div>
+            </section>
+
+            <section class="menu-panel" data-menu-panel="pause" aria-labelledby="pause-panel-heading" hidden>
+              <p class="menu-kicker">先停一下</p>
+              <h2 id="pause-panel-heading">遊戲正在假裝反省</h2>
+              <div class="menu-actions">
+                <button id="resume-button" class="menu-button primary-action" type="button">繼續</button>
+                <button id="restart-button" class="menu-button" type="button">重來本關</button>
+                <button id="mute-button" class="menu-button" type="button">靜音</button>
+                <button id="clear-button" class="menu-button danger-action" type="button">清除紀錄</button>
+              </div>
+            </section>
+
+            <section class="menu-panel" data-menu-panel="complete" aria-labelledby="complete-panel-heading" hidden>
+              <p class="menu-kicker">本題完成</p>
+              <h2 id="complete-panel-heading">世界先投降了</h2>
+              <p id="complete-summary" class="menu-copy"></p>
+              <div class="menu-actions">
+                <button id="replay-button" class="menu-button primary-action" type="button">再寫一次</button>
+                <button id="title-button" class="menu-button" type="button">回標題</button>
+              </div>
+            </section>
           </div>
         </section>
 

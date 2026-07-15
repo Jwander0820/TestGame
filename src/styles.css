@@ -58,6 +58,12 @@ button {
   gap: 24px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .eyebrow {
   margin: 0 0 2px;
   color: var(--mercy-ink);
@@ -85,6 +91,7 @@ h1 {
   box-shadow: 4px 4px 0 var(--ink);
   transform: rotate(1deg);
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .death-ticket strong {
@@ -100,6 +107,113 @@ h1 {
   border-radius: 14px 10px 16px 9px;
   background: var(--sky);
   box-shadow: 8px 9px 0 rgba(29, 42, 51, 0.18);
+}
+
+.game-menu {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 28px);
+  background: rgba(255, 249, 232, 0.94);
+}
+
+.game-menu[hidden],
+.menu-panel[hidden],
+.utility-button[hidden] {
+  display: none;
+}
+
+.menu-panel {
+  width: min(620px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: clamp(12px, 3vw, 28px);
+  border: 3px solid var(--ink);
+  border-radius: 16px 11px 18px 12px;
+  background: var(--paper);
+  box-shadow: 7px 7px 0 rgba(29, 42, 51, 0.18);
+  text-align: center;
+}
+
+.menu-kicker {
+  margin: 0 0 4px;
+  color: var(--mercy-ink);
+  font: 800 0.72rem/1.2 ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.12em;
+}
+
+.menu-panel h2 {
+  margin: 0;
+  font-family: Fredoka, "Noto Sans TC", system-ui, sans-serif;
+  font-size: clamp(1.3rem, 4vw, 2.2rem);
+  line-height: 1.08;
+}
+
+.menu-copy {
+  margin: 8px 0 0;
+  font-size: clamp(0.78rem, 2vw, 0.95rem);
+  font-weight: 700;
+}
+
+.menu-actions {
+  margin-top: clamp(10px, 2.5vw, 18px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.menu-button,
+.utility-button {
+  min-height: 48px;
+  border: 3px solid var(--ink);
+  border-radius: 13px 10px 15px 11px;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 5px 0 var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 160ms ease-out,
+    box-shadow 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.menu-button:hover,
+.utility-button:hover {
+  background: #fff1b2;
+}
+
+.menu-button:active,
+.utility-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.menu-button:focus-visible,
+.utility-button:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.primary-action {
+  grid-column: 1 / -1;
+  background: var(--play-yellow);
+}
+
+.danger-action {
+  color: var(--mercy-ink);
+}
+
+.utility-button {
+  min-height: 44px;
+  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 #game-root,
@@ -118,6 +232,14 @@ h1 {
 
 .rotation-notice {
   display: none;
+}
+
+.game-shell[data-game-started="false"] .touch-controls {
+  display: none;
+}
+
+.game-shell[data-menu-open="true"] .touch-controls {
+  opacity: 0.35;
 }
 
 .game-status {
@@ -217,14 +339,64 @@ h1 {
   }
 
   h1 {
-    font-size: clamp(1.35rem, 7vw, 2rem);
+    font-size: clamp(1.25rem, 6vw, 1.65rem);
   }
 
   .death-ticket {
-    min-width: 96px;
+    min-width: 88px;
     padding: 7px 9px;
     transform: scale(0.9) rotate(1deg);
     transform-origin: right center;
+  }
+
+  .header-actions {
+    gap: 7px;
+  }
+
+  .utility-button {
+    min-width: 48px;
+    padding-inline: 9px;
+  }
+
+  .utility-button span {
+    display: none;
+  }
+
+  .game-menu {
+    padding: 6px;
+  }
+
+  .menu-panel {
+    padding: 6px 10px 9px;
+    overflow: visible;
+  }
+
+  .menu-kicker {
+    margin-bottom: 2px;
+    font-size: 0.62rem;
+  }
+
+  .menu-panel h2 {
+    font-size: 1.05rem;
+  }
+
+  .menu-copy {
+    margin-top: 3px;
+    font-size: 0.7rem;
+  }
+
+  .menu-actions {
+    margin-top: 6px;
+    gap: 6px;
+  }
+
+  .menu-button {
+    min-height: 44px;
+    box-shadow: 0 3px 0 var(--ink);
+  }
+
+  [data-menu-panel="pause"] .primary-action {
+    grid-column: auto;
   }
 
   .touch-controls {
@@ -235,6 +407,16 @@ h1 {
   .control-button {
     min-width: 64px;
     min-height: 64px;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 360px) {
+  .game-shell[data-game-started="true"] h1 {
+    display: none;
+  }
+
+  .death-ticket {
+    min-width: 84px;
   }
 }
 
@@ -252,6 +434,10 @@ h1 {
     left: max(18px, env(safe-area-inset-left));
     right: max(18px, env(safe-area-inset-right));
     pointer-events: none;
+  }
+
+  .header-actions {
+    pointer-events: auto;
   }
 
   .eyebrow,
@@ -273,6 +459,10 @@ h1 {
 
   .game-status {
     display: none;
+  }
+
+  [data-menu-panel="pause"] .primary-action {
+    grid-column: auto;
   }
 
   .touch-controls {

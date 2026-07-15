@@ -1,6 +1,7 @@
 export interface GameStatusDetail {
   readonly deaths: number;
   readonly message: string;
+  readonly phase?: 'playing' | 'completed';
 }
 
 const STATUS_EVENT = 'game:status';
