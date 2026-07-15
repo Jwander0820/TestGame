@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff9e8" />
+    <meta name="description" content="一款會因為玩家一直死亡，開始偷偷作弊幫忙的橫向平台遊戲。" />
+    <title>遊戲開始心軟了｜技術尖峰</title>
+  </head>
+  <body>
+    <div id="app">
+      <main class="game-shell" aria-labelledby="game-title">
+        <header class="game-header">
+          <div>
+            <p class="eyebrow">TECHNICAL SPIKE · 001</p>
+            <h1 id="game-title">遊戲開始心軟了</h1>
+          </div>
+          <div class="death-ticket" aria-label="目前死亡次數">
+            <span>死亡</span>
+            <strong id="death-count">0</strong>
+            <span>次</span>
+          </div>
+        </header>
+
+        <section class="stage-frame" aria-label="遊戲舞台">
+          <div id="game-root" tabindex="0" aria-label="2D 橫向平台遊戲；使用左右方向與跳躍操作"></div>
+          <div class="rotation-notice" role="status">
+            <span class="rotation-mark" aria-hidden="true">↻</span>
+            <strong>把手機轉過來</strong>
+            <span>橫向的世界比較願意幫你。</span>
+          </div>
+        </section>
+
+        <p id="game-status" class="game-status" aria-live="polite">
+          方向鍵或 A／D 移動，空白鍵跳躍。
+        </p>
+
+        <nav class="touch-controls" aria-label="觸控遊戲操作">
+          <div class="movement-controls">
+            <button class="control-button" type="button" data-action="left" aria-label="向左移動">
+              <span aria-hidden="true">←</span>
+            </button>
+            <button class="control-button" type="button" data-action="right" aria-label="向右移動">
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+          <button class="control-button jump-button" type="button" data-action="jump" aria-label="跳躍">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28">
+              <path d="M12 4 5.5 11h4v9h5v-9h4L12 4Z" fill="currentColor" />
+            </svg>
+            <span>跳</span>
+          </button>
+        </nav>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
