@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_PROGRESS, PROGRESS_STORAGE_KEY, ProgressStore, parseProgress } from './progress';
+import {
+  PROGRESS_STORAGE_KEY,
+  PROGRESS_VERSION,
+  ProgressStore,
+  createDefaultProgress,
+  parseProgress,
+} from './progress';
 
 class MemoryStorage implements Pick<Storage, 'getItem' | 'setItem'> {
   private readonly values = new Map<string, string>();
@@ -15,45 +21,53 @@ class MemoryStorage implements Pick<Storage, 'getItem' | 'setItem'> {
 
 describe('progress state', () => {
   it('falls back safely for missing, malformed or incompatible data', () => {
-    expect(parseProgress(null)).toEqual(DEFAULT_PROGRESS);
-    expect(parseProgress('{broken')).toEqual(DEFAULT_PROGRESS);
-    expect(parseProgress('{"version":2,"totalDeaths":9}')).toEqual(DEFAULT_PROGRESS);
-    expect(parseProgress('{"version":1,"totalDeaths":-1}')).toEqual(DEFAULT_PROGRESS);
+    expect(parseProgress(null)).toEqual(createDefaultProgress());
+    expect(parseProgress('{broken')).toEqual(createDefaultProgress());
+    expect(parseProgress('{"version":9,"totalDeaths":9}')).toEqual(createDefaultProgress());
+    expect(parseProgress('{"version":1,"totalDeaths":-1}')).toEqual(createDefaultProgress());
   });
 
-  it('records and persists one death at a time', () => {
+  it('migrates version one while preserving the death total', () => {
+    expect(parseProgress('{"version":1,"totalDeaths":9}')).toEqual({
+      ...createDefaultProgress(),
+      totalDeaths: 9,
+    });
+  });
+
+  it('replaces and persists version two state', () => {
     const storage = new MemoryStorage();
     const store = new ProgressStore(storage);
+    const next = { ...createDefaultProgress(), totalDeaths: 2 };
 
-    expect(store.recordDeath().totalDeaths).toBe(1);
-    expect(store.recordDeath().totalDeaths).toBe(2);
-    expect(storage.getItem(PROGRESS_STORAGE_KEY)).toBe('{"version":1,"totalDeaths":2}');
-
-    const reloaded = new ProgressStore(storage);
-    expect(reloaded.snapshot.totalDeaths).toBe(2);
+    expect(store.replace(next)).toBe(next);
+    expect(JSON.parse(storage.getItem(PROGRESS_STORAGE_KEY) ?? '{}')).toEqual(next);
+    expect(new ProgressStore(storage).snapshot).toEqual(next);
   });
 
-  it('keeps running when storage writes fail', () => {
+  it('rejects a partially valid version two payload', () => {
+    const raw = JSON.stringify({
+      version: PROGRESS_VERSION,
+      totalDeaths: 3,
+      levels: { broken: { totalDeaths: 1 } },
+      discoveredEasterEggIds: [],
+      globalTriggeredReactionIds: [],
+    });
+    expect(parseProgress(raw)).toEqual(createDefaultProgress());
+  });
+
+  it('keeps running when storage access fails', () => {
     const storage: Pick<Storage, 'getItem' | 'setItem'> = {
-      getItem: () => null,
+      getItem: () => {
+        throw new Error('blocked');
+      },
       setItem: () => {
         throw new Error('blocked');
       },
     };
     const store = new ProgressStore(storage);
+    const next = { ...createDefaultProgress(), totalDeaths: 1 };
 
-    expect(store.recordDeath().totalDeaths).toBe(1);
-  });
-
-  it('starts safely when storage reads are blocked', () => {
-    const storage: Pick<Storage, 'getItem' | 'setItem'> = {
-      getItem: () => {
-        throw new Error('blocked');
-      },
-      setItem: () => undefined,
-    };
-
-    const store = new ProgressStore(storage);
-    expect(store.snapshot).toEqual(DEFAULT_PROGRESS);
+    expect(store.snapshot).toEqual(createDefaultProgress());
+    expect(store.replace(next)).toBe(next);
   });
 });

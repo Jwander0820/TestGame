@@ -201,33 +201,40 @@ h1 {
 }
 
 @media (orientation: portrait) and (max-width: 900px) {
-  .game-header,
-  .game-status,
-  .touch-controls,
-  #game-root {
-    visibility: hidden;
+  .game-shell {
+    min-height: 100dvh;
+    padding-top: max(20px, env(safe-area-inset-top));
+    align-content: start;
+    grid-template-rows: auto auto auto auto;
   }
 
-  .rotation-notice {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: 8px;
-    padding: 32px;
-    text-align: center;
-    background: var(--paper);
+  .game-header {
+    align-items: center;
   }
 
-  .rotation-notice strong {
-    font: 800 clamp(1.35rem, 6vw, 2rem)/1.1 Fredoka, "Noto Sans TC", sans-serif;
+  .eyebrow {
+    display: none;
   }
 
-  .rotation-mark {
-    color: var(--mercy-ink);
-    font-size: 3rem;
-    font-weight: 900;
+  h1 {
+    font-size: clamp(1.35rem, 7vw, 2rem);
+  }
+
+  .death-ticket {
+    min-width: 96px;
+    padding: 7px 9px;
+    transform: scale(0.9) rotate(1deg);
+    transform-origin: right center;
+  }
+
+  .touch-controls {
+    display: flex;
+    padding: 4px 2px max(8px, env(safe-area-inset-bottom));
+  }
+
+  .control-button {
+    min-width: 64px;
+    min-height: 64px;
   }
 }
 

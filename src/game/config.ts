@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { InputController } from './input/InputController';
-import { SpikeScene } from './scenes/SpikeScene';
+import { VerticalSliceScene } from './scenes/VerticalSliceScene';
 import type { ProgressStore } from './state/progress';
 
 export interface GameDependencies {
@@ -32,6 +32,6 @@ export function createGame(dependencies: GameDependencies): Phaser.Game {
       width: 960,
       height: 540,
     },
-    scene: [new SpikeScene(dependencies)],
+    scene: [new VerticalSliceScene(dependencies)],
   });
 }
