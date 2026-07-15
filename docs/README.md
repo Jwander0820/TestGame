@@ -10,7 +10,7 @@
 | `discovery/product-vision.md` | 產品願景、核心循環、範圍與成功條件 |
 | `discovery/open-questions.md` | 尚待確認的產品問題與建議預設值 |
 | `decisions/` | Architecture Decision Records（ADR） |
-| `specs/` | 經討論、可驗收的功能規格 |
+| `specs/` | 可審閱、可驗收的功能規格與狀態索引 |
 | `templates/feature-spec-template.md` | 新功能規格範本 |
 | `logs/` | 階段進程、測試與重要問題紀錄 |
 
@@ -22,6 +22,6 @@
 
 ## 當前狀態
 
-- 階段：產品探索／技術提案
+- 階段：產品探索／核心規格草案
 - 原始輸入：專案根目錄的 `初始概念.md`
-- 下一個決策點：確認首個垂直切片範圍與技術方案
+- 下一個決策點：確認首個垂直切片範圍、同情系統門檻與技術方案
