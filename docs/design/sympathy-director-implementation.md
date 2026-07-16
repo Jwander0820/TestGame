@@ -82,6 +82,7 @@ ProgressStore 保存 v2；場景照常快速重生
 ## 場景安全
 
 - 死亡鎖在建立 `DeathEvent` 前取得，避免同一生命多次計數。
+- 場景生命週期只允許 `playing → dying → playing` 或 `playing → completed`；死亡中不能完關，完成後也不能再產生死亡。
 - effect 套用失敗只記錄錯誤；不保存該 reaction 或 active effect，仍執行 900 ms 重生。
 - effect 回傳失敗或意外擲出例外都由工作階段交易邊界收斂；死亡本身照常保存，後續生命可重試同一 reaction。
 - 場景建立時先從保存狀態還原 active effect，再允許玩家操作。

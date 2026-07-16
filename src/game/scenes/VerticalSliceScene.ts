@@ -7,6 +7,7 @@ import { LevelOneWorld } from './levelOne/LevelOneWorld';
 import { LevelOneSession } from '../session/LevelOneSession';
 import type { ProgressStore } from '../state/progress';
 import { IdleTrigger } from '../state/IdleTrigger';
+import { SceneLifecycle } from '../state/SceneLifecycle';
 import type { ReactionDefinition } from '../sympathy/types';
 import type { PlaytestDriver } from '../testing/PlaytestDriver';
 import { addGameText } from '../visuals/addGameText';
@@ -35,8 +36,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   private reverseCoins: Phaser.GameObjects.Container[] = [];
   private reverseCoinLabel: Phaser.GameObjects.Text | null = null;
   private appliedEffectIds = new Set<string>();
-  private dying = false;
-  private completed = false;
+  private readonly lifecycle = new SceneLifecycle();
   private readonly idleTrigger = new IdleTrigger(8_000);
 
   private readonly resetIdleClock = (): void => {
@@ -91,18 +91,17 @@ export class VerticalSliceScene extends Phaser.Scene {
           message: '它說「完全安全」，但沒有說是對誰安全。',
         });
       },
-      isPlayerDying: () => this.dying,
+      isPlayerDying: () => this.lifecycle.isDying,
     });
     this.reverseCoins = [];
     this.reverseCoinLabel = null;
     this.appliedEffectIds.clear();
-    this.dying = false;
-    this.completed = false;
+    this.lifecycle.reset();
     this.idleTrigger.resetAll();
   }
 
   override update(): void {
-    if (this.dying || this.completed) {
+    if (!this.lifecycle.isPlaying) {
       return;
     }
 
@@ -286,11 +285,10 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private beginDeath(context: DeathContext): void {
-    if (this.dying || this.completed) {
+    if (!this.lifecycle.beginDeath()) {
       return;
     }
 
-    this.dying = true;
     this.resetIdleClock();
     this.player.setTint(0xb9382c);
     this.player.setVelocity(0, -180);
@@ -329,13 +327,16 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private respawn(): void {
+    if (!this.lifecycle.isDying) {
+      return;
+    }
     this.player.clearTint();
     this.player.setPosition(this.spawn.x, this.spawn.y);
     this.player.setVelocity(0, 0);
     if (this.player.body !== null) {
       this.player.body.enable = true;
     }
-    this.dying = false;
+    this.lifecycle.respawn();
     this.resetIdleClock();
     publishGameStatus({
       deaths: this.session.totalDeaths,
@@ -394,10 +395,9 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private finishLevel(): void {
-    if (this.completed || this.dying) {
+    if (!this.lifecycle.complete()) {
       return;
     }
-    this.completed = true;
     this.player.setVelocity(0, 0);
     if (this.player.body !== null) {
       this.player.body.enable = false;
