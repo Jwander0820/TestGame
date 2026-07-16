@@ -163,7 +163,6 @@ function resumeGame(): void {
     return;
   }
   inputController.actions.releaseAll();
-  progressStore.replace(restartLevel(progressStore.snapshot, LEVEL_ONE_ID));
   game.scene.resume('VerticalSliceScene');
   showMenu(null);
 }
@@ -174,6 +173,7 @@ function restartGame(): void {
     return;
   }
   inputController.actions.releaseAll();
+  progressStore.replace(restartLevel(progressStore.snapshot, LEVEL_ONE_ID));
   game.scene.resume('VerticalSliceScene');
   game.scene.getScene('VerticalSliceScene').scene.restart();
   showMenu(null);
