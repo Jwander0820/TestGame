@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { LEVEL_ONE_ID, LEVEL_ONE_REACTIONS } from '../content/levelOne';
 import {
   LEVEL_ONE_PLATFORM_LAYOUT,
   LEVEL_ONE_PLAYER_PHYSICS,
@@ -10,10 +9,10 @@ import {
 } from '../content/levelOneLayout';
 import { publishGameStatus } from '../events';
 import type { InputController } from '../input/InputController';
+import { LevelOneSession } from '../session/LevelOneSession';
 import type { ProgressStore } from '../state/progress';
 import { IdleTrigger } from '../state/IdleTrigger';
-import { advanceProgress, completeLevel, discoverEasterEgg, recordDeath } from '../sympathy/director';
-import type { DeathEvent, ReactionDefinition } from '../sympathy/types';
+import type { ReactionDefinition } from '../sympathy/types';
 import type { PlaytestDriver } from '../testing/PlaytestDriver';
 import { createGameTextures, PLATFORM_TEXTURE_WIDTH } from '../visuals/createTextures';
 
@@ -30,6 +29,7 @@ interface DeathContext {
 }
 
 export class VerticalSliceScene extends Phaser.Scene {
+  private readonly session: LevelOneSession;
   private readonly moveSpeed = LEVEL_ONE_PLAYER_PHYSICS.moveSpeed;
   private readonly jumpSpeed = LEVEL_ONE_PLAYER_PHYSICS.jumpSpeed;
   private spawn = new Phaser.Math.Vector2(LEVEL_ONE_SPAWNS.start.x, LEVEL_ONE_SPAWNS.start.y);
@@ -53,6 +53,7 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   constructor(private readonly dependencies: VerticalSliceSceneDependencies) {
     super('VerticalSliceScene');
+    this.session = new LevelOneSession(dependencies.progressStore);
   }
 
   create(): void {
@@ -80,7 +81,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       window.removeEventListener('blur', this.resetIdleClock);
     });
 
-    const deaths = this.dependencies.progressStore.snapshot.totalDeaths;
+    const deaths = this.session.totalDeaths;
     publishGameStatus({
       deaths,
       message: deaths === 0 ? '方向鍵或 A／D 移動，空白鍵跳躍。' : '紀錄還在。世界也記得自己放過多少水。',
@@ -199,15 +200,8 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
-    const level = this.dependencies.progressStore.snapshot.levels[LEVEL_ONE_ID];
-    if (level !== undefined && level.progressOrder >= 2) {
-      this.spawn = new Phaser.Math.Vector2(
-        LEVEL_ONE_SPAWNS.afterWarningStrip.x,
-        LEVEL_ONE_SPAWNS.afterWarningStrip.y,
-      );
-    } else if (level !== undefined && level.progressOrder >= 1) {
-      this.spawn = new Phaser.Math.Vector2(LEVEL_ONE_SPAWNS.afterFirstGap.x, LEVEL_ONE_SPAWNS.afterFirstGap.y);
-    }
+    const initialSpawn = this.session.initialSpawn;
+    this.spawn = new Phaser.Math.Vector2(initialSpawn.x, initialSpawn.y);
 
     this.player = this.physics.add.sprite(this.spawn.x, this.spawn.y, 'player');
     this.player.setCollideWorldBounds(false);
@@ -243,7 +237,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private createReverseEasterEgg(): void {
-    const discovered = this.dependencies.progressStore.snapshot.discoveredEasterEggIds.includes('reverse-zero-coins');
+    const discovered = this.session.hasDiscoveredEasterEgg('reverse-zero-coins');
     const coinPositions = [6, 20, 34, 48, 62, 76, 90, 104];
 
     this.reverseCoins = coinPositions.map((x) => {
@@ -277,13 +271,11 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   private triggerReverseEasterEgg(): void {
     const eggId = 'reverse-zero-coins';
-    const current = this.dependencies.progressStore.snapshot;
-    if (current.discoveredEasterEggIds.includes(eggId)) {
+    const next = this.session.discoverEasterEgg(eggId);
+    if (next === null) {
       return;
     }
 
-    const next = discoverEasterEgg(current, eggId);
-    this.dependencies.progressStore.replace(next);
     this.reverseCoinLabel?.setText('已領取 · 仍然沒用');
     const message = '你特地往左找到了 8 枚沒有用途的金幣。很會。';
     publishGameStatus({ deaths: next.totalDeaths, message });
@@ -318,8 +310,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private updateProgressMarkers(): void {
-    const level = this.dependencies.progressStore.snapshot.levels[LEVEL_ONE_ID];
-    const currentOrder = level?.progressOrder ?? 0;
+    const currentOrder = this.session.progressOrder;
 
     if (currentOrder < 1 && this.player.x >= 790) {
       this.advanceMarker(
@@ -342,13 +333,11 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private advanceMarker(markerId: string, order: number, spawn: Phaser.Math.Vector2, message: string): void {
-    const current = this.dependencies.progressStore.snapshot;
-    const next = advanceProgress(current, LEVEL_ONE_ID, markerId, order);
-    if (next === current) {
+    const next = this.session.advanceMarker(markerId, order);
+    if (next === null) {
       return;
     }
     this.spawn = spawn;
-    this.dependencies.progressStore.replace(next);
     publishGameStatus({ deaths: next.totalDeaths, message });
   }
 
@@ -359,21 +348,12 @@ export class VerticalSliceScene extends Phaser.Scene {
 
     this.dying = true;
     this.resetIdleClock();
-    const state = this.dependencies.progressStore.snapshot;
-    const level = state.levels[LEVEL_ONE_ID];
-    const event: DeathEvent = {
-      id: `${LEVEL_ONE_ID}:${level?.attempt ?? 1}:${Date.now()}`,
-      levelId: LEVEL_ONE_ID,
+    const result = this.session.recordDeath({
       causeId: context.causeId,
       blockerId: context.blockerId,
       x: Math.round(this.player.x),
       y: Math.round(this.player.y),
-      progressMarkerId: level?.progressMarkerId ?? 'start',
-      attempt: level?.attempt ?? 1,
-      occurredAt: Date.now(),
-    };
-    const result = recordDeath(state, event, LEVEL_ONE_REACTIONS);
-    this.dependencies.progressStore.replace(result.state);
+    });
 
     this.player.setTint(0xb9382c);
     this.player.setVelocity(0, -180);
@@ -415,17 +395,14 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.dying = false;
     this.resetIdleClock();
     publishGameStatus({
-      deaths: this.dependencies.progressStore.snapshot.totalDeaths,
+      deaths: this.session.totalDeaths,
       message: '再一次。已經發生的援助不會收回。',
     });
   }
 
   private restorePersistedAssists(): void {
-    const blockers = this.dependencies.progressStore.snapshot.levels[LEVEL_ONE_ID]?.blockers ?? {};
-    for (const blocker of Object.values(blockers)) {
-      for (const effectId of blocker.activeAssistIds) {
-        this.applyEffectSafely(effectId);
-      }
+    for (const effectId of this.session.activeAssistIds) {
+      this.applyEffectSafely(effectId);
     }
   }
 
@@ -492,12 +469,10 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
 
     const eggId = 'idle-apology';
-    const current = this.dependencies.progressStore.snapshot;
-    if (current.discoveredEasterEggIds.includes(eggId)) {
+    const next = this.session.discoverEasterEgg(eggId);
+    if (next === null) {
       return;
     }
-    const next = discoverEasterEgg(current, eggId);
-    this.dependencies.progressStore.replace(next);
     const message = '你是在等遊戲先道歉嗎？';
     publishGameStatus({ deaths: next.totalDeaths, message });
     const annotation = this.addText(this.player.x + 20, this.player.y - 76, message, 22, '#b9382c')
@@ -517,12 +492,10 @@ export class VerticalSliceScene extends Phaser.Scene {
     if (this.player.body !== null) {
       this.player.body.enable = false;
     }
-    let next = advanceProgress(this.dependencies.progressStore.snapshot, LEVEL_ONE_ID, 'goal', 3);
-    next = completeLevel(next, LEVEL_ONE_ID);
-    this.dependencies.progressStore.replace(next);
+    const next = this.session.complete();
     publishGameStatus({
       deaths: next.totalDeaths,
-      message: `抵達終點。世界總共心軟了 ${this.countActiveAssists()} 次。`,
+      message: `抵達終點。世界總共心軟了 ${this.session.activeAssistCount} 次。`,
       phase: 'completed',
     });
     this.addText(this.player.x - 40, 205, '通過\n（本題不計分）', 34, '#b9382c')
@@ -531,11 +504,6 @@ export class VerticalSliceScene extends Phaser.Scene {
       .setStroke('#fff9e8', 8)
       .setRotation(-0.055)
       .setDepth(20);
-  }
-
-  private countActiveAssists(): number {
-    const blockers = this.dependencies.progressStore.snapshot.levels[LEVEL_ONE_ID]?.blockers ?? {};
-    return Object.values(blockers).reduce((total, blocker) => total + blocker.activeAssistIds.length, 0);
   }
 
   private addText(x: number, y: number, text: string, fontSize: number, color: string): Phaser.GameObjects.Text {
