@@ -29,4 +29,14 @@ describe('IdleTrigger', () => {
     expect(trigger.update(12_000, true)).toBe(false);
     expect(trigger.update(20_000, true)).toBe(true);
   });
+
+  it('can be fully reset for a new scene or cleared save', () => {
+    const trigger = new IdleTrigger(1_000);
+
+    expect(trigger.update(0, true)).toBe(false);
+    expect(trigger.update(1_000, true)).toBe(true);
+    trigger.resetAll();
+    expect(trigger.update(1_100, true)).toBe(false);
+    expect(trigger.update(2_100, true)).toBe(true);
+  });
 });

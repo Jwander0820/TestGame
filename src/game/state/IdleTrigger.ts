@@ -34,4 +34,9 @@ export class IdleTrigger {
   reset(): void {
     this.eligibleSince = null;
   }
+
+  resetAll(): void {
+    this.eligibleSince = null;
+    this.triggered = false;
+  }
 }

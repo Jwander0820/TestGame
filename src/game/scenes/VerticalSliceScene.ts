@@ -51,6 +51,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.resetRuntimeState();
     createGameTextures(this);
     this.physics.world.setBounds(0, 0, LEVEL_ONE_WORLD.width, LEVEL_ONE_WORLD.height + 180);
     this.drawWorld();
@@ -78,6 +79,17 @@ export class VerticalSliceScene extends Phaser.Scene {
       deaths,
       message: deaths === 0 ? '方向鍵或 A／D 移動，空白鍵跳躍。' : '紀錄還在。世界也記得自己放過多少水。',
     });
+  }
+
+  private resetRuntimeState(): void {
+    this.spawn.set(LEVEL_ONE_SPAWNS.start.x, LEVEL_ONE_SPAWNS.start.y);
+    this.warningHazard = null;
+    this.warningOverlap = null;
+    this.spring = null;
+    this.appliedEffectIds.clear();
+    this.dying = false;
+    this.completed = false;
+    this.idleTrigger.resetAll();
   }
 
   override update(): void {

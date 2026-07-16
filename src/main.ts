@@ -5,6 +5,7 @@ import { subscribeToGameStatus } from './game/events';
 import { InputController } from './game/input/InputController';
 import type { GameAction } from './game/input/ActionState';
 import { ProgressStore, createDefaultProgress } from './game/state/progress';
+import { restartLevel } from './game/sympathy/director';
 
 type MenuName = 'title' | 'pause' | 'complete';
 
@@ -82,16 +83,18 @@ function updateProgressSummary(): void {
   const snapshot = progressStore.snapshot;
   const level = snapshot.levels[LEVEL_ONE_ID];
   deathCount.textContent = String(snapshot.totalDeaths);
-  startButton.textContent = level === undefined ? '開始' : '繼續';
 
   if (level === undefined) {
+    startButton.textContent = '開始';
     continueSummary.textContent = '尚未留下任何可疑紀錄。';
     return;
   }
   if (level.completed) {
+    startButton.textContent = '再寫一次';
     continueSummary.textContent = `本題已完成，累積死亡 ${snapshot.totalDeaths} 次。可以再寫一次。`;
     return;
   }
+  startButton.textContent = '繼續';
   continueSummary.textContent = `從「${level.progressMarkerId}」繼續，累積死亡 ${snapshot.totalDeaths} 次。`;
 }
 
@@ -128,12 +131,20 @@ function showMenu(menu: MenuName | null): void {
 
 function startGame(): void {
   inputController.actions.releaseAll();
+  const completed = progressStore.snapshot.levels[LEVEL_ONE_ID]?.completed === true;
+  if (completed) {
+    progressStore.replace(restartLevel(progressStore.snapshot, LEVEL_ONE_ID));
+  }
+
   if (game === null) {
     game = createGame({ inputController, progressStore });
     game.sound.mute = muted;
     gameShell.dataset.gameStarted = 'true';
   } else {
     game.scene.resume('VerticalSliceScene');
+    if (completed) {
+      game.scene.getScene('VerticalSliceScene').scene.restart();
+    }
   }
   showMenu(null);
 }
@@ -152,6 +163,7 @@ function resumeGame(): void {
     return;
   }
   inputController.actions.releaseAll();
+  progressStore.replace(restartLevel(progressStore.snapshot, LEVEL_ONE_ID));
   game.scene.resume('VerticalSliceScene');
   showMenu(null);
 }

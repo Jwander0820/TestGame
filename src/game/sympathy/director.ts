@@ -184,6 +184,38 @@ export function completeLevel(state: ProgressState, levelId: string): ProgressSt
   };
 }
 
+export function restartLevel(state: ProgressState, levelId: string): ProgressState {
+  const level = state.levels[levelId];
+  if (level === undefined) {
+    return state;
+  }
+
+  const blockers = Object.fromEntries(
+    Object.entries(level.blockers).map(([blockerId, blocker]) => [
+      blockerId,
+      {
+        ...blocker,
+        consecutiveDeaths: 0,
+        streakMarkerId: 'start',
+      },
+    ]),
+  );
+
+  return {
+    ...state,
+    levels: {
+      ...state.levels,
+      [levelId]: {
+        ...level,
+        progressMarkerId: 'start',
+        progressOrder: 0,
+        blockers,
+        completed: false,
+      },
+    },
+  };
+}
+
 export function discoverEasterEgg(state: ProgressState, easterEggId: string): ProgressState {
   if (state.discoveredEasterEggIds.includes(easterEggId)) {
     return state;

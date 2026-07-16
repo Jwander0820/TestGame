@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LEVEL_ONE_ID, LEVEL_ONE_REACTIONS } from '../content/levelOne';
 import { createDefaultProgress } from '../state/progress';
-import { advanceProgress, discoverEasterEgg, recordDeath } from './director';
+import { advanceProgress, completeLevel, discoverEasterEgg, recordDeath, restartLevel } from './director';
 import type { DeathEvent, ReactionDefinition } from './types';
 
 function death(index: number, overrides: Partial<DeathEvent> = {}): DeathEvent {
@@ -102,5 +102,28 @@ describe('sympathy director', () => {
 
     expect(first.discoveredEasterEggIds).toEqual(['idle-apology']);
     expect(second).toBe(first);
+  });
+
+  it('restarts a completed level from the beginning while preserving cumulative reactions', () => {
+    let state = createDefaultProgress();
+    state = recordDeath(state, death(1), LEVEL_ONE_REACTIONS).state;
+    state = recordDeath(state, death(2), LEVEL_ONE_REACTIONS).state;
+    state = recordDeath(state, death(3), LEVEL_ONE_REACTIONS).state;
+    state = advanceProgress(state, LEVEL_ONE_ID, 'after-warning-strip', 2);
+    state = completeLevel(state, LEVEL_ONE_ID);
+
+    const restarted = restartLevel(state, LEVEL_ONE_ID);
+    const level = restarted.levels[LEVEL_ONE_ID];
+    const blocker = level?.blockers['first-gap'];
+
+    expect(restarted.totalDeaths).toBe(3);
+    expect(level?.progressMarkerId).toBe('start');
+    expect(level?.progressOrder).toBe(0);
+    expect(level?.completed).toBe(false);
+    expect(level?.deathsByCause).toEqual({ fell: 3 });
+    expect(blocker?.consecutiveDeaths).toBe(0);
+    expect(blocker?.streakMarkerId).toBe('start');
+    expect(blocker?.triggeredReactionIds).toEqual(['first-gap-comment', 'first-gap-move-landing']);
+    expect(blocker?.activeAssistIds).toEqual(['move-first-landing']);
   });
 });
