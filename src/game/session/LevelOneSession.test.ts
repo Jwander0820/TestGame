@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LEVEL_ONE_ID } from '../content/levelOne';
 import { LEVEL_ONE_SPAWNS } from '../content/levelOneLayout';
 import { ProgressStore } from '../state/progress';
@@ -18,6 +18,12 @@ function createSession(): LevelOneSession {
     return now;
   });
 }
+
+const applySuccessfully = (): boolean => true;
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('LevelOneSession', () => {
   it('resolves the restart position from the furthest saved progress marker', () => {
@@ -39,12 +45,62 @@ describe('LevelOneSession', () => {
       y: 600.6,
     } as const;
 
-    expect(session.recordDeath(death).reaction).toBeNull();
-    expect(session.recordDeath(death).reaction?.id).toBe('first-gap-comment');
-    expect(session.recordDeath(death).reaction?.id).toBe('first-gap-move-landing');
+    expect(session.recordDeath(death, applySuccessfully).reaction).toBeNull();
+    expect(session.recordDeath(death, applySuccessfully).reaction?.id).toBe('first-gap-comment');
+    expect(session.recordDeath(death, applySuccessfully).reaction?.id).toBe('first-gap-move-landing');
     expect(session.totalDeaths).toBe(3);
     expect(session.activeAssistIds).toEqual(['move-first-landing']);
     expect(session.activeAssistCount).toBe(1);
+  });
+
+  it('saves the death but not a half-applied reaction when a world effect fails', () => {
+    const session = createSession();
+    const death = {
+      causeId: 'fell-out-of-world',
+      blockerId: 'first-gap',
+      x: 500,
+      y: 600,
+    } as const;
+
+    session.recordDeath(death, applySuccessfully);
+    session.recordDeath(death, applySuccessfully);
+    const failed = session.recordDeath(death, () => false);
+
+    expect(failed.reaction).toBeNull();
+    expect(failed.state.totalDeaths).toBe(3);
+    expect(session.activeAssistIds).toEqual([]);
+
+    const appliedEffectIds: string[] = [];
+    const retried = session.recordDeath(death, (effectId) => {
+      appliedEffectIds.push(effectId);
+      return true;
+    });
+
+    expect(retried.reaction?.id).toBe('first-gap-move-landing');
+    expect(appliedEffectIds).toEqual(['move-first-landing']);
+    expect(session.activeAssistIds).toEqual(['move-first-landing']);
+  });
+
+  it('contains an unexpected effect exception and keeps the session retryable', () => {
+    const session = createSession();
+    const death = {
+      causeId: 'fell-out-of-world',
+      blockerId: 'first-gap',
+      x: 500,
+      y: 600,
+    } as const;
+    session.recordDeath(death, applySuccessfully);
+    session.recordDeath(death, applySuccessfully);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const failed = session.recordDeath(death, () => {
+      throw new Error('broken world effect');
+    });
+
+    expect(failed.reaction).toBeNull();
+    expect(session.totalDeaths).toBe(3);
+    expect(session.activeAssistIds).toEqual([]);
+    expect(error).toHaveBeenCalledOnce();
   });
 
   it('persists an easter egg once and reports repeated discovery without mutation', () => {

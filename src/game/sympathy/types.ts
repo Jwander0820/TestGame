@@ -27,6 +27,7 @@ export interface ReactionDefinition<EffectId extends string = string> {
 
 export interface DirectorResult {
   readonly state: ProgressState;
+  readonly stateWithoutReaction: ProgressState;
   readonly reaction: ReactionDefinition | null;
   readonly candidateReactionIds: readonly string[];
   readonly duplicate: boolean;

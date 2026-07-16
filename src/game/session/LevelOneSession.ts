@@ -17,6 +17,7 @@ export interface LevelOneDeathInput {
 }
 
 type Clock = () => number;
+type EffectApplier = (effectId: string) => boolean;
 
 export class LevelOneSession {
   constructor(
@@ -73,7 +74,7 @@ export class LevelOneSession {
     return this.progressStore.replace(next);
   }
 
-  recordDeath(input: LevelOneDeathInput): DirectorResult {
+  recordDeath(input: LevelOneDeathInput, applyEffect: EffectApplier): DirectorResult {
     const state = this.progressStore.snapshot;
     const level = state.levels[LEVEL_ONE_ID];
     const eventIdTime = this.clock();
@@ -92,8 +93,28 @@ export class LevelOneSession {
       },
       LEVEL_ONE_REACTIONS,
     );
-    this.progressStore.replace(result.state);
-    return result;
+
+    const effectId = result.reaction?.effectId;
+    let effectApplied = effectId === undefined;
+    if (effectId !== undefined) {
+      try {
+        effectApplied = applyEffect(effectId);
+      } catch (error) {
+        console.error('[sympathy-effect-transaction]', effectId, error);
+      }
+    }
+
+    if (effectApplied) {
+      this.progressStore.replace(result.state);
+      return result;
+    }
+
+    this.progressStore.replace(result.stateWithoutReaction);
+    return {
+      ...result,
+      state: result.stateWithoutReaction,
+      reaction: null,
+    };
   }
 
   complete(): ProgressState {

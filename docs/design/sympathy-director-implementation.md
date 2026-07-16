@@ -16,11 +16,14 @@
 SympathyDirector（純資料）
    ├─ 更新全域／關卡／阻礙狀態
    ├─ 固定排序選出最多一個 Reaction
-   └─ 回傳新的 ProgressState
+   └─ 回傳死亡基線與含 Reaction 的候選狀態
            ↓
-ProgressStore 保存 v2
+LevelOneSession 交易邊界
+   ├─ 無機械 effect：直接保存候選狀態
+   ├─ effect 成功：保存含 Reaction／active effect 的狀態
+   └─ effect 失敗：只保存死亡基線，不消耗 Reaction
            ↓
-場景依 effectId 套用平台、彈簧、橋或危險帶演出
+ProgressStore 保存 v2；場景照常快速重生
 ```
 
 導演不知道 Phaser、Sprite、Tween 或 DOM；場景不知道死亡門檻與反應排序。
@@ -79,7 +82,8 @@ ProgressStore 保存 v2
 ## 場景安全
 
 - 死亡鎖在建立 `DeathEvent` 前取得，避免同一生命多次計數。
-- effect 套用失敗只記錄錯誤；仍執行 900 ms 重生。
+- effect 套用失敗只記錄錯誤；不保存該 reaction 或 active effect，仍執行 900 ms 重生。
+- effect 回傳失敗或意外擲出例外都由工作階段交易邊界收斂；死亡本身照常保存，後續生命可重試同一 reaction。
 - 場景建立時先從保存狀態還原 active effect，再允許玩家操作。
 - tier 4 必須提供不需原精準技巧的連續通路。
 - 手機主要平台維持在底部觸控安全帶以上。
@@ -87,6 +91,7 @@ ProgressStore 保存 v2
 ## 驗證
 
 - 純資料測試：門檻、排序、去重、進度重設、未知 blocker、v1 遷移。
+- 交易測試：效果成功才保存 active effect；失敗回傳及例外都只保存死亡基線，且下一次死亡可重試。
 - 場景瀏覽器測試：連死 2／3／5／7 次時只出現一個對應演出，重新整理後 effect 仍在。
 - 完成路徑：無援助可由熟練操作通過；tier 4 不需精準跳躍即可通過。
 

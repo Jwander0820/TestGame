@@ -60,7 +60,13 @@ export function recordDeath(
 ): DirectorResult {
   const currentLevel = state.levels[event.levelId] ?? createLevelProgress();
   if (currentLevel.processedDeathEventIds.includes(event.id)) {
-    return { state, reaction: null, candidateReactionIds: [], duplicate: true };
+    return {
+      state,
+      stateWithoutReaction: state,
+      reaction: null,
+      candidateReactionIds: [],
+      duplicate: true,
+    };
   }
 
   const nextDeathsByCause = {
@@ -90,6 +96,27 @@ export function recordDeath(
       ? { reaction: null, candidateReactionIds: [] as readonly string[] }
       : selectReaction(definitions, event, updatedBlocker);
 
+  const processedDeathEventIds = [...currentLevel.processedDeathEventIds, event.id].slice(
+    -MAX_PROCESSED_DEATH_EVENTS,
+  );
+  const levelWithoutReaction: LevelProgress = {
+    ...currentLevel,
+    totalDeaths: currentLevel.totalDeaths + 1,
+    attempt: Math.max(currentLevel.attempt, event.attempt + 1),
+    deathsByCause: nextDeathsByCause,
+    blockers: nextBlockers,
+    processedDeathEventIds,
+  };
+  const stateWithoutReaction: ProgressState = {
+    ...state,
+    version: PROGRESS_VERSION,
+    totalDeaths: state.totalDeaths + 1,
+    levels: {
+      ...state.levels,
+      [event.levelId]: levelWithoutReaction,
+    },
+  };
+
   if (event.blockerId !== null && updatedBlocker !== null && selection.reaction !== null) {
     updatedBlocker = {
       ...updatedBlocker,
@@ -105,16 +132,9 @@ export function recordDeath(
     };
   }
 
-  const processedDeathEventIds = [...currentLevel.processedDeathEventIds, event.id].slice(
-    -MAX_PROCESSED_DEATH_EVENTS,
-  );
   const nextLevel: LevelProgress = {
-    ...currentLevel,
-    totalDeaths: currentLevel.totalDeaths + 1,
-    attempt: Math.max(currentLevel.attempt, event.attempt + 1),
-    deathsByCause: nextDeathsByCause,
+    ...levelWithoutReaction,
     blockers: nextBlockers,
-    processedDeathEventIds,
   };
   const nextState: ProgressState = {
     ...state,
@@ -128,6 +148,7 @@ export function recordDeath(
 
   return {
     state: nextState,
+    stateWithoutReaction,
     reaction: selection.reaction,
     candidateReactionIds: selection.candidateReactionIds,
     duplicate: false,

@@ -292,22 +292,21 @@ export class VerticalSliceScene extends Phaser.Scene {
 
     this.dying = true;
     this.resetIdleClock();
-    const result = this.session.recordDeath({
-      causeId: context.causeId,
-      blockerId: context.blockerId,
-      x: Math.round(this.player.x),
-      y: Math.round(this.player.y),
-    });
-
     this.player.setTint(0xb9382c);
     this.player.setVelocity(0, -180);
     if (this.player.body !== null) {
       this.player.body.enable = false;
     }
 
-    if (result.reaction?.effectId !== undefined) {
-      this.applyEffectSafely(result.reaction.effectId);
-    }
+    const result = this.session.recordDeath(
+      {
+        causeId: context.causeId,
+        blockerId: context.blockerId,
+        x: Math.round(this.player.x),
+        y: Math.round(this.player.y),
+      },
+      (effectId) => this.applyEffectSafely(effectId),
+    );
 
     const message = result.reaction?.message ?? context.message;
     publishGameStatus({ deaths: result.state.totalDeaths, message });
@@ -350,9 +349,9 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
   }
 
-  private applyEffectSafely(effectId: string): void {
+  private applyEffectSafely(effectId: string): boolean {
     if (this.appliedEffectIds.has(effectId)) {
-      return;
+      return true;
     }
 
     try {
@@ -361,8 +360,10 @@ export class VerticalSliceScene extends Phaser.Scene {
       }
       this.world.applyAssistEffect(effectId);
       this.appliedEffectIds.add(effectId);
+      return true;
     } catch (error) {
       console.error('[sympathy-effect]', effectId, error);
+      return false;
     }
   }
 

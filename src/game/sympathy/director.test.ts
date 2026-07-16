@@ -82,6 +82,22 @@ describe('sympathy director', () => {
     expect(result.state.levels[LEVEL_ONE_ID]?.blockers['not-registered']?.totalDeaths).toBe(1);
   });
 
+  it('provides a death-only fallback state before committing a mechanical reaction', () => {
+    let state = createDefaultProgress();
+    state = recordDeath(state, death(1), LEVEL_ONE_REACTIONS).state;
+    state = recordDeath(state, death(2), LEVEL_ONE_REACTIONS).state;
+
+    const result = recordDeath(state, death(3), LEVEL_ONE_REACTIONS);
+    const committed = result.state.levels[LEVEL_ONE_ID]?.blockers['first-gap'];
+    const fallback = result.stateWithoutReaction.levels[LEVEL_ONE_ID]?.blockers['first-gap'];
+
+    expect(result.reaction?.effectId).toBe('move-first-landing');
+    expect(committed?.activeAssistIds).toEqual(['move-first-landing']);
+    expect(fallback?.activeAssistIds).toEqual([]);
+    expect(fallback?.triggeredReactionIds).toEqual(['first-gap-comment']);
+    expect(result.stateWithoutReaction.totalDeaths).toBe(3);
+  });
+
   it('resets local streaks only when reaching a newer marker', () => {
     let state = recordDeath(createDefaultProgress(), death(1), LEVEL_ONE_REACTIONS).state;
     state = recordDeath(state, death(2), LEVEL_ONE_REACTIONS).state;
