@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SPEC-0001 最高援助整關測試</title>
+    <style>
+      body {
+        margin: 0;
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        color: #1d2a33;
+        background: #fff9e8;
+        font-family: system-ui, sans-serif;
+      }
+
+      main {
+        width: min(960px, 100vw);
+      }
+
+      #game-root {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+      }
+
+      #playtest-result {
+        display: block;
+        padding: 12px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div id="game-root" aria-label="最高援助整關自動測試舞台"></div>
+      <output id="playtest-result" data-status="running" data-deaths="14">正在執行最高援助路線。</output>
+    </main>
+    <script type="module" src="./max-assistance.ts"></script>
+  </body>
+</html>

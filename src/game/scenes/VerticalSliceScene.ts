@@ -178,18 +178,23 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
 
     for (const definition of LEVEL_ONE_SECRET_PLATFORM_LAYOUT) {
-      const platform = this.addPlatform(definition.x, definition.y, definition.width, 'tape-platform');
-      if (platform.body !== null) {
-        platform.body.checkCollision.down = false;
-        platform.body.checkCollision.left = false;
-        platform.body.checkCollision.right = false;
-      }
+      this.addOneWayPlatform(definition.x, definition.y, definition.width);
     }
   }
 
   private addPlatform(x: number, y: number, width: number, texture = 'platform'): Phaser.Physics.Arcade.Sprite {
     const platform = this.platforms.create(x, y, texture) as Phaser.Physics.Arcade.Sprite;
     platform.setScale(width / PLATFORM_TEXTURE_WIDTH, 1).refreshBody();
+    return platform;
+  }
+
+  private addOneWayPlatform(x: number, y: number, width: number): Phaser.Physics.Arcade.Sprite {
+    const platform = this.addPlatform(x, y, width, 'tape-platform');
+    if (platform.body !== null) {
+      platform.body.checkCollision.down = false;
+      platform.body.checkCollision.left = false;
+      platform.body.checkCollision.right = false;
+    }
     return platform;
   }
 
@@ -432,7 +437,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     try {
       switch (effectId) {
         case 'move-first-landing':
-          this.firstLanding.setX(615).refreshBody();
+          this.firstLanding.setX(640).refreshBody();
           break;
         case 'deploy-gap-spring':
           this.deployGapSpring();
@@ -444,9 +449,9 @@ export class VerticalSliceScene extends Phaser.Scene {
           this.createWarningHazard(96);
           break;
         case 'deploy-strip-bypass':
-          this.addPlatform(1_010, 345, 100.8, 'tape-platform');
-          this.addPlatform(1_115, 315, 100.8, 'tape-platform');
-          this.addPlatform(1_220, 345, 100.8, 'tape-platform');
+          this.addOneWayPlatform(1_010, 345, 100.8);
+          this.addOneWayPlatform(1_115, 315, 100.8);
+          this.addOneWayPlatform(1_220, 345, 100.8);
           break;
         case 'retire-warning-strip':
           this.warningOverlap?.destroy();
