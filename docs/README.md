@@ -14,6 +14,7 @@
 | `design-system/` | 視覺系統與各頁／場景覆寫 |
 | `specs/` | 可審閱、可驗收的功能規格與狀態索引 |
 | `templates/feature-spec-template.md` | 新功能規格範本 |
+| `testing/` | 本機試玩、驗證方式與測試操作說明 |
 | `logs/` | 階段進程、測試與重要問題紀錄 |
 
 ## SDD 狀態流程
