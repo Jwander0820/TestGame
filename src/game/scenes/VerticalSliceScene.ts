@@ -14,11 +14,13 @@ import type { ProgressStore } from '../state/progress';
 import { IdleTrigger } from '../state/IdleTrigger';
 import { advanceProgress, completeLevel, discoverEasterEgg, recordDeath } from '../sympathy/director';
 import type { DeathEvent, ReactionDefinition } from '../sympathy/types';
+import type { PlaytestDriver } from '../testing/PlaytestDriver';
 import { createGameTextures, PLATFORM_TEXTURE_WIDTH } from '../visuals/createTextures';
 
 interface VerticalSliceSceneDependencies {
   readonly inputController: InputController;
   readonly progressStore: ProgressStore;
+  readonly playtestDriver?: PlaytestDriver;
 }
 
 interface DeathContext {
@@ -86,6 +88,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private resetRuntimeState(): void {
+    this.dependencies.playtestDriver?.reset(this.dependencies.inputController.actions);
     this.spawn.set(LEVEL_ONE_SPAWNS.start.x, LEVEL_ONE_SPAWNS.start.y);
     this.warningHazard = null;
     this.warningOverlap = null;
@@ -104,6 +107,14 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
 
     const actions = this.dependencies.inputController.actions;
+    this.dependencies.playtestDriver?.update(
+      {
+        x: this.player.x,
+        y: this.player.y,
+        grounded: this.player.body?.blocked.down === true,
+      },
+      actions,
+    );
     const horizontal = Number(actions.isDown('right')) - Number(actions.isDown('left'));
     this.player.setVelocityX(horizontal * this.moveSpeed);
 

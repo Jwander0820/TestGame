@@ -3,10 +3,12 @@ import { LEVEL_ONE_PLAYER_PHYSICS } from './content/levelOneLayout';
 import type { InputController } from './input/InputController';
 import { VerticalSliceScene } from './scenes/VerticalSliceScene';
 import type { ProgressStore } from './state/progress';
+import type { PlaytestDriver } from './testing/PlaytestDriver';
 
 export interface GameDependencies {
   readonly inputController: InputController;
   readonly progressStore: ProgressStore;
+  readonly playtestDriver?: PlaytestDriver;
 }
 
 export function createGame(dependencies: GameDependencies): Phaser.Game {
