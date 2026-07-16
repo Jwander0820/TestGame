@@ -32,6 +32,11 @@ export const LEVEL_ONE_PLATFORM_LAYOUT: readonly PlatformDefinition[] = [
   { id: 'goal-platform', x: 2_080, y: 430, width: 201.6 },
 ] as const;
 
+export const LEVEL_ONE_SECRET_PLATFORM_LAYOUT: readonly PlatformDefinition[] = [
+  { id: 'reverse-step', x: 35, y: 350, width: 110 },
+  { id: 'reverse-cache', x: 45, y: 270, width: 190 },
+] as const;
+
 export const LEVEL_ONE_WARNING_HAZARD = {
   x: 1_105,
   y: 492,

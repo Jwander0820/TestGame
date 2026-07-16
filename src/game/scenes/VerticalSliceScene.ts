@@ -3,6 +3,7 @@ import { LEVEL_ONE_ID, LEVEL_ONE_REACTIONS } from '../content/levelOne';
 import {
   LEVEL_ONE_PLATFORM_LAYOUT,
   LEVEL_ONE_PLAYER_PHYSICS,
+  LEVEL_ONE_SECRET_PLATFORM_LAYOUT,
   LEVEL_ONE_SPAWNS,
   LEVEL_ONE_WARNING_HAZARD,
   LEVEL_ONE_WORLD,
@@ -37,6 +38,8 @@ export class VerticalSliceScene extends Phaser.Scene {
   private warningHazard: Phaser.GameObjects.Rectangle | null = null;
   private warningOverlap: Phaser.Physics.Arcade.Collider | null = null;
   private spring: Phaser.Physics.Arcade.Sprite | null = null;
+  private reverseCoins: Phaser.GameObjects.Container[] = [];
+  private reverseCoinLabel: Phaser.GameObjects.Text | null = null;
   private appliedEffectIds = new Set<string>();
   private dying = false;
   private completed = false;
@@ -57,6 +60,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.drawWorld();
     this.createPlatforms();
     this.createPlayer();
+    this.createReverseEasterEgg();
     this.createWarningHazard(LEVEL_ONE_WARNING_HAZARD.width);
     this.createGoal();
     this.restorePersistedAssists();
@@ -86,6 +90,8 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.warningHazard = null;
     this.warningOverlap = null;
     this.spring = null;
+    this.reverseCoins = [];
+    this.reverseCoinLabel = null;
     this.appliedEffectIds.clear();
     this.dying = false;
     this.completed = false;
@@ -159,6 +165,15 @@ export class VerticalSliceScene extends Phaser.Scene {
         this.firstLanding = platform;
       }
     }
+
+    for (const definition of LEVEL_ONE_SECRET_PLATFORM_LAYOUT) {
+      const platform = this.addPlatform(definition.x, definition.y, definition.width, 'tape-platform');
+      if (platform.body !== null) {
+        platform.body.checkCollision.down = false;
+        platform.body.checkCollision.left = false;
+        platform.body.checkCollision.right = false;
+      }
+    }
   }
 
   private addPlatform(x: number, y: number, width: number, texture = 'platform'): Phaser.Physics.Arcade.Sprite {
@@ -209,6 +224,70 @@ export class VerticalSliceScene extends Phaser.Scene {
         message: '它說「完全安全」，但沒有說是對誰安全。',
       });
     });
+  }
+
+  private createReverseEasterEgg(): void {
+    const discovered = this.dependencies.progressStore.snapshot.discoveredEasterEggIds.includes('reverse-zero-coins');
+    const coinPositions = [6, 20, 34, 48, 62, 76, 90, 104];
+
+    this.reverseCoins = coinPositions.map((x) => {
+      const disc = this.add.circle(0, 0, 9, 0xffd447, 1).setStrokeStyle(3, 0x1d2a33, 1);
+      const value = this.add
+        .text(0, 0, '0', {
+          color: '#b9382c',
+          fontFamily: 'Fredoka, Nunito, sans-serif',
+          fontSize: '11px',
+          fontStyle: 'bold',
+        })
+        .setOrigin(0.5);
+      return this.add.container(x, 225, [disc, value]).setAlpha(discovered ? 0.42 : 1);
+    });
+
+    this.reverseCoinLabel = this.addText(
+      8,
+      289,
+      discovered ? '已領取 · 仍然沒用' : '用途：0 × 8',
+      14,
+      '#b9382c',
+    )
+      .setBackgroundColor('#fff9e8')
+      .setPadding(5, 3)
+      .setRotation(-0.035);
+
+    const trigger = this.add.zone(55, 205, 150, 130);
+    this.physics.add.existing(trigger, true);
+    this.physics.add.overlap(this.player, trigger, () => this.triggerReverseEasterEgg());
+  }
+
+  private triggerReverseEasterEgg(): void {
+    const eggId = 'reverse-zero-coins';
+    const current = this.dependencies.progressStore.snapshot;
+    if (current.discoveredEasterEggIds.includes(eggId)) {
+      return;
+    }
+
+    const next = discoverEasterEgg(current, eggId);
+    this.dependencies.progressStore.replace(next);
+    this.reverseCoinLabel?.setText('已領取 · 仍然沒用');
+    const message = '你特地往左找到了 8 枚沒有用途的金幣。很會。';
+    publishGameStatus({ deaths: next.totalDeaths, message });
+    this.tweens.add({
+      targets: this.reverseCoins,
+      y: '-=14',
+      duration: 180,
+      ease: 'Sine.Out',
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => this.reverseCoins.forEach((coin) => coin.setAlpha(0.42)),
+    });
+
+    const annotation = this.addText(165, 120, '恭喜找到 8 枚\n完全沒有用途的金幣。', 21, '#b9382c')
+      .setOrigin(0.5)
+      .setAlign('center')
+      .setStroke('#fff9e8', 6)
+      .setRotation(-0.045)
+      .setDepth(10);
+    this.time.delayedCall(3_000, () => annotation.destroy());
   }
 
   private createGoal(): void {

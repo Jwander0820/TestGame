@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   LEVEL_ONE_PLATFORM_LAYOUT,
   LEVEL_ONE_PLAYER_PHYSICS,
+  LEVEL_ONE_SECRET_PLATFORM_LAYOUT,
   LEVEL_ONE_WARNING_HAZARD,
   type PlatformDefinition,
 } from './levelOneLayout';
@@ -18,6 +19,14 @@ function descendingFlightTime(source: PlatformDefinition, target: PlatformDefini
 
 function horizontalGap(source: PlatformDefinition, target: PlatformDefinition): number {
   return target.x - target.width / 2 - (source.x + source.width / 2);
+}
+
+function intervalGap(source: PlatformDefinition, target: PlatformDefinition): number {
+  const sourceLeft = source.x - source.width / 2;
+  const sourceRight = source.x + source.width / 2;
+  const targetLeft = target.x - target.width / 2;
+  const targetRight = target.x + target.width / 2;
+  return Math.max(0, sourceLeft - targetRight, targetLeft - sourceRight);
 }
 
 describe('level one zero-assist route', () => {
@@ -51,5 +60,29 @@ describe('level one zero-assist route', () => {
 
     expect(hazardLeft).toBeLessThanOrEqual(sourceRight + 4);
     expect(hazardRight).toBeGreaterThanOrEqual(targetLeft);
+  });
+
+  it('keeps the reverse exploration shelves reachable without affecting the main route', () => {
+    const start = LEVEL_ONE_PLATFORM_LAYOUT.find((platform) => platform.id === 'start');
+    if (start === undefined) {
+      throw new Error('Start platform is missing.');
+    }
+
+    const secretRoute = [start, ...LEVEL_ONE_SECRET_PLATFORM_LAYOUT];
+    const { gravityY, jumpSpeed, moveSpeed } = LEVEL_ONE_PLAYER_PHYSICS;
+    const maximumJumpHeight = jumpSpeed ** 2 / (2 * gravityY);
+
+    for (let index = 0; index < secretRoute.length - 1; index += 1) {
+      const source = secretRoute[index];
+      const target = secretRoute[index + 1];
+      if (source === undefined || target === undefined) {
+        throw new Error('Secret platform route is incomplete.');
+      }
+
+      const requiredHeight = Math.max(0, source.y - target.y);
+      const availableRange = descendingFlightTime(source, target) * moveSpeed;
+      expect(maximumJumpHeight - requiredHeight, `${source.id} → ${target.id} vertical`).toBeGreaterThanOrEqual(12);
+      expect(availableRange - intervalGap(source, target), `${source.id} → ${target.id} horizontal`).toBeGreaterThanOrEqual(20);
+    }
   });
 });
