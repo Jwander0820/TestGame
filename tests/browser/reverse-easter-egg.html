@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SPEC-0001 反向零價值金幣實際碰撞測試</title>
+    <style>
+      body {
+        margin: 0;
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        color: #1d2a33;
+        background: #fff9e8;
+        font-family: system-ui, sans-serif;
+      }
+
+      main {
+        width: min(1100px, 100vw);
+      }
+
+      #game-root {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+      }
+
+      output {
+        display: block;
+        padding: 12px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div id="game-root" aria-label="反向零價值金幣實際碰撞測試舞台"></div>
+      <output id="playtest-result" data-status="booting" data-driver="playtest:reverse-easter-egg">
+        正在載入正式靜態產物。
+      </output>
+    </main>
+    <script type="module" src="./reverse-easter-egg.ts"></script>
+  </body>
+</html>
