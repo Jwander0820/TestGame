@@ -17,11 +17,23 @@ cd C:\codex\Game
 
 啟動器依序使用：
 
-1. 系統已安裝的 Node.js 與 npm。
+1. 符合版本需求的系統 Node.js 與 npm。
 2. 本機 Codex 內建的 Node.js 與 pnpm 執行環境。
 3. 兩者皆不存在時，顯示 Node.js LTS 安裝提示並結束。
 
-因此在目前的 Codex 桌面環境中，不一定需要先安裝全域 `pnpm`。若要離開 Codex 環境自行長期開發，仍建議安裝 Node.js LTS；專案需要 Node.js `^20.19.0` 或 `>=22.12.0`。
+啟動器也會檢查專案套件：若 `node_modules` 尚未準備，正常啟動時會先安裝本專案所需套件，再啟動遊戲。使用系統 npm 時不建立額外的 `package-lock.json`；使用 Codex runtime 時依 `pnpm-lock.yaml` 安裝。
+
+因此在目前的 Codex 桌面環境中，不一定需要先安裝 Node.js，也不需要安裝全域 `pnpm`。若要離開 Codex 環境自行長期開發，仍建議安裝 Node.js LTS；專案需要 Node.js `^20.19.0` 或 `>=22.12.0`。
+
+## 只檢查、不啟動
+
+若想先確認環境是否可用，不啟動伺服器也不自動安裝套件：
+
+```powershell
+.\play-local.cmd --check
+```
+
+輸出 `Launcher is ready` 代表 Node.js 與專案套件均可用。若顯示套件缺失，改為正常執行 `play-local.cmd`，啟動器就會進行安裝。
 
 ## 手動啟動
 
@@ -78,3 +90,11 @@ pnpm dev
 ### 安裝 Node.js 後仍找不到 `node`
 
 關閉目前 PowerShell，再開啟新視窗，執行 `node -v` 與 `npm -v` 確認環境變數已重新載入。
+
+### 顯示 Node.js 版本過舊
+
+專案接受 Node.js 20.19 以上的 20.x，或 Node.js 22.12 以上版本。建議直接安裝官網目前的 LTS 版本；安裝後關閉並重開終端機。
+
+### 第一次啟動停在安裝套件
+
+第一次執行可能需要下載 Phaser、Vite 與 TypeScript 等專案套件，時間依網路而定。套件只會放在本專案的 `node_modules`，不會上傳專案或安裝全域 pnpm。若安裝失敗，確認網路後再次執行即可。
