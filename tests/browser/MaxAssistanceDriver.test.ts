@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { LEVEL_ONE_ID } from '../../src/game/content/levelOne';
 import { ActionState } from '../../src/game/input/ActionState';
 import { MaxAssistanceDriver } from './MaxAssistanceDriver';
-import { createMaxAssistanceProgress } from './maxAssistanceState';
+import {
+  createMaxAssistanceCheckpointProgress,
+  createMaxAssistanceProgress,
+} from './maxAssistanceState';
 
 describe('maximum assistance browser route', () => {
   it('builds the approved tier 4 save with every persistent world effect', () => {
@@ -32,5 +35,20 @@ describe('maximum assistance browser route', () => {
 
     expect(actions.isDown('right')).toBe(true);
     expect(actions.consumeJumpPressed()).toBe(false);
+  });
+
+  it('preserves the highest assists at the first checkpoint for reload verification', () => {
+    const state = createMaxAssistanceCheckpointProgress();
+    const level = state.levels[LEVEL_ONE_ID];
+    const activeAssistCount = Object.values(level?.blockers ?? {}).reduce(
+      (total, blocker) => total + blocker.activeAssistIds.length,
+      0,
+    );
+
+    expect(state.totalDeaths).toBe(14);
+    expect(level?.progressMarkerId).toBe('after-first-gap');
+    expect(level?.progressOrder).toBe(1);
+    expect(level?.completed).toBe(false);
+    expect(activeAssistCount).toBe(6);
   });
 });

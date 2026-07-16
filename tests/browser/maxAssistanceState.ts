@@ -17,7 +17,7 @@ function deathEvent(index: number, blockerId: string, progressMarkerId: string):
   };
 }
 
-export function createMaxAssistanceProgress(): ProgressState {
+export function createMaxAssistanceCheckpointProgress(): ProgressState {
   let state = createDefaultProgress();
   for (let index = 1; index <= 7; index += 1) {
     state = recordDeath(state, deathEvent(index, 'first-gap', 'start'), LEVEL_ONE_REACTIONS).state;
@@ -32,5 +32,9 @@ export function createMaxAssistanceProgress(): ProgressState {
     ).state;
   }
 
-  return restartLevel(state, LEVEL_ONE_ID);
+  return state;
+}
+
+export function createMaxAssistanceProgress(): ProgressState {
+  return restartLevel(createMaxAssistanceCheckpointProgress(), LEVEL_ONE_ID);
 }
