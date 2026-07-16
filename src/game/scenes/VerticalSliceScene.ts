@@ -1,12 +1,19 @@
 import Phaser from 'phaser';
 import { LEVEL_ONE_ID, LEVEL_ONE_REACTIONS } from '../content/levelOne';
+import {
+  LEVEL_ONE_PLATFORM_LAYOUT,
+  LEVEL_ONE_PLAYER_PHYSICS,
+  LEVEL_ONE_SPAWNS,
+  LEVEL_ONE_WARNING_HAZARD,
+  LEVEL_ONE_WORLD,
+} from '../content/levelOneLayout';
 import { publishGameStatus } from '../events';
 import type { InputController } from '../input/InputController';
 import type { ProgressStore } from '../state/progress';
 import { IdleTrigger } from '../state/IdleTrigger';
 import { advanceProgress, completeLevel, discoverEasterEgg, recordDeath } from '../sympathy/director';
 import type { DeathEvent, ReactionDefinition } from '../sympathy/types';
-import { createGameTextures } from '../visuals/createTextures';
+import { createGameTextures, PLATFORM_TEXTURE_WIDTH } from '../visuals/createTextures';
 
 interface VerticalSliceSceneDependencies {
   readonly inputController: InputController;
@@ -19,13 +26,10 @@ interface DeathContext {
   readonly message: string;
 }
 
-const WORLD_WIDTH = 2_200;
-const WORLD_HEIGHT = 540;
-
 export class VerticalSliceScene extends Phaser.Scene {
-  private readonly moveSpeed = 240;
-  private readonly jumpSpeed = 470;
-  private spawn = new Phaser.Math.Vector2(110, 350);
+  private readonly moveSpeed = LEVEL_ONE_PLAYER_PHYSICS.moveSpeed;
+  private readonly jumpSpeed = LEVEL_ONE_PLAYER_PHYSICS.jumpSpeed;
+  private spawn = new Phaser.Math.Vector2(LEVEL_ONE_SPAWNS.start.x, LEVEL_ONE_SPAWNS.start.y);
 
   private player!: Phaser.Physics.Arcade.Sprite;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
@@ -48,15 +52,15 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   create(): void {
     createGameTextures(this);
-    this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT + 180);
+    this.physics.world.setBounds(0, 0, LEVEL_ONE_WORLD.width, LEVEL_ONE_WORLD.height + 180);
     this.drawWorld();
     this.createPlatforms();
     this.createPlayer();
-    this.createWarningHazard(190);
+    this.createWarningHazard(LEVEL_ONE_WARNING_HAZARD.width);
     this.createGoal();
     this.restorePersistedAssists();
 
-    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.cameras.main.setBounds(0, 0, LEVEL_ONE_WORLD.width, LEVEL_ONE_WORLD.height);
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09, -130, 30);
     this.cameras.main.setDeadzone(280, 180);
 
@@ -97,7 +101,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       this.player.setVelocityY(-this.jumpSpeed);
     }
 
-    if (this.player.y > WORLD_HEIGHT + 30) {
+    if (this.player.y > LEVEL_ONE_WORLD.height + 30) {
       const blockerId = this.player.x >= 390 && this.player.x < 790 ? 'first-gap' : null;
       this.beginDeath({
         causeId: 'fell-out-of-world',
@@ -115,11 +119,11 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#ddf4ff');
     const grid = this.add.graphics();
     grid.lineStyle(1, 0x9fd5e8, 0.35);
-    for (let x = 0; x <= WORLD_WIDTH; x += 48) {
-      grid.lineBetween(x, 0, x, WORLD_HEIGHT);
+    for (let x = 0; x <= LEVEL_ONE_WORLD.width; x += 48) {
+      grid.lineBetween(x, 0, x, LEVEL_ONE_WORLD.height);
     }
-    for (let y = 0; y <= WORLD_HEIGHT; y += 48) {
-      grid.lineBetween(0, y, WORLD_WIDTH, y);
+    for (let y = 0; y <= LEVEL_ONE_WORLD.height; y += 48) {
+      grid.lineBetween(0, y, LEVEL_ONE_WORLD.width, y);
     }
 
     this.addText(42, 38, '練習題一：只要一直往右，應該不會有事。', 22, '#1d2a33').setAlpha(0.86);
@@ -137,27 +141,29 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   private createPlatforms(): void {
     this.platforms = this.physics.add.staticGroup();
-    this.addPlatform(220, 430, 4);
-    this.firstLanding = this.addPlatform(663, 408, 2);
-    this.addPlatform(865, 430, 2.25);
-    this.addPlatform(1_360, 430, 3);
-    this.addPlatform(1_625, 382, 1.6);
-    this.addPlatform(1_825, 430, 2.45);
-    this.addPlatform(2_080, 430, 2.1);
+    for (const definition of LEVEL_ONE_PLATFORM_LAYOUT) {
+      const platform = this.addPlatform(definition.x, definition.y, definition.width);
+      if (definition.id === 'first-landing') {
+        this.firstLanding = platform;
+      }
+    }
   }
 
-  private addPlatform(x: number, y: number, scaleX: number, texture = 'platform'): Phaser.Physics.Arcade.Sprite {
+  private addPlatform(x: number, y: number, width: number, texture = 'platform'): Phaser.Physics.Arcade.Sprite {
     const platform = this.platforms.create(x, y, texture) as Phaser.Physics.Arcade.Sprite;
-    platform.setScale(scaleX, 1).refreshBody();
+    platform.setScale(width / PLATFORM_TEXTURE_WIDTH, 1).refreshBody();
     return platform;
   }
 
   private createPlayer(): void {
     const level = this.dependencies.progressStore.snapshot.levels[LEVEL_ONE_ID];
     if (level !== undefined && level.progressOrder >= 2) {
-      this.spawn = new Phaser.Math.Vector2(1_340, 360);
+      this.spawn = new Phaser.Math.Vector2(
+        LEVEL_ONE_SPAWNS.afterWarningStrip.x,
+        LEVEL_ONE_SPAWNS.afterWarningStrip.y,
+      );
     } else if (level !== undefined && level.progressOrder >= 1) {
-      this.spawn = new Phaser.Math.Vector2(820, 360);
+      this.spawn = new Phaser.Math.Vector2(LEVEL_ONE_SPAWNS.afterFirstGap.x, LEVEL_ONE_SPAWNS.afterFirstGap.y);
     }
 
     this.player = this.physics.add.sprite(this.spawn.x, this.spawn.y, 'player');
@@ -173,7 +179,14 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.warningHazard?.destroy();
     this.warningHazard = null;
 
-    const danger = this.add.rectangle(1_105, 492, width, 54, 0xe95d5d, 1);
+    const danger = this.add.rectangle(
+      LEVEL_ONE_WARNING_HAZARD.x,
+      LEVEL_ONE_WARNING_HAZARD.y,
+      width,
+      LEVEL_ONE_WARNING_HAZARD.height,
+      0xe95d5d,
+      1,
+    );
     danger.setStrokeStyle(4, 0x1d2a33, 1);
     this.physics.add.existing(danger, true);
     this.warningHazard = danger;
@@ -202,12 +215,20 @@ export class VerticalSliceScene extends Phaser.Scene {
     const currentOrder = level?.progressOrder ?? 0;
 
     if (currentOrder < 1 && this.player.x >= 790) {
-      this.advanceMarker('after-first-gap', 1, new Phaser.Math.Vector2(820, 360), '第一題通過。世界假裝沒緊張。');
+      this.advanceMarker(
+        'after-first-gap',
+        1,
+        new Phaser.Math.Vector2(LEVEL_ONE_SPAWNS.afterFirstGap.x, LEVEL_ONE_SPAWNS.afterFirstGap.y),
+        '第一題通過。世界假裝沒緊張。',
+      );
     } else if (currentOrder < 2 && this.player.x >= 1_300) {
       this.advanceMarker(
         'after-warning-strip',
         2,
-        new Phaser.Math.Vector2(1_340, 360),
+        new Phaser.Math.Vector2(
+          LEVEL_ONE_SPAWNS.afterWarningStrip.x,
+          LEVEL_ONE_SPAWNS.afterWarningStrip.y,
+        ),
         '「完全安全」區已經在你後面了。',
       );
     }
@@ -315,15 +336,15 @@ export class VerticalSliceScene extends Phaser.Scene {
           this.deployGapSpring();
           break;
         case 'deploy-gap-bridge':
-          this.addPlatform(490, 430, 1.65, 'tape-platform');
+          this.addPlatform(490, 430, 158.4, 'tape-platform');
           break;
         case 'shrink-warning-strip':
           this.createWarningHazard(96);
           break;
         case 'deploy-strip-bypass':
-          this.addPlatform(1_010, 345, 1.05, 'tape-platform');
-          this.addPlatform(1_115, 315, 1.05, 'tape-platform');
-          this.addPlatform(1_220, 345, 1.05, 'tape-platform');
+          this.addPlatform(1_010, 345, 100.8, 'tape-platform');
+          this.addPlatform(1_115, 315, 100.8, 'tape-platform');
+          this.addPlatform(1_220, 345, 100.8, 'tape-platform');
           break;
         case 'retire-warning-strip':
           this.warningOverlap?.destroy();
