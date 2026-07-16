@@ -43,3 +43,16 @@ export const LEVEL_ONE_WARNING_HAZARD = {
   width: 190,
   height: 54,
 } as const;
+
+export const LEVEL_ONE_ASSISTANCE_LAYOUT = {
+  firstLandingX: 640,
+  gapSpring: { x: 444, y: 434, launchSpeed: 650 },
+  gapBridge: { x: 490, y: 430, width: 158.4 },
+  warningStripWidth: 96,
+  warningBypass: [
+    { id: 'warning-bypass-left', x: 1_010, y: 345, width: 100.8 },
+    { id: 'warning-bypass-middle', x: 1_115, y: 315, width: 100.8 },
+    { id: 'warning-bypass-right', x: 1_220, y: 345, width: 100.8 },
+  ] as const satisfies readonly PlatformDefinition[],
+  retiredLabel: { x: 1_105, y: 492 },
+} as const;

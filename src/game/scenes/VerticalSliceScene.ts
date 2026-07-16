@@ -1,20 +1,16 @@
 import Phaser from 'phaser';
-import {
-  LEVEL_ONE_PLATFORM_LAYOUT,
-  LEVEL_ONE_PLAYER_PHYSICS,
-  LEVEL_ONE_SECRET_PLATFORM_LAYOUT,
-  LEVEL_ONE_SPAWNS,
-  LEVEL_ONE_WARNING_HAZARD,
-  LEVEL_ONE_WORLD,
-} from '../content/levelOneLayout';
+import { isLevelOneEffectId } from '../content/levelOne';
+import { LEVEL_ONE_PLAYER_PHYSICS, LEVEL_ONE_SPAWNS, LEVEL_ONE_WORLD } from '../content/levelOneLayout';
 import { publishGameStatus } from '../events';
 import type { InputController } from '../input/InputController';
+import { LevelOneWorld } from './levelOne/LevelOneWorld';
 import { LevelOneSession } from '../session/LevelOneSession';
 import type { ProgressStore } from '../state/progress';
 import { IdleTrigger } from '../state/IdleTrigger';
 import type { ReactionDefinition } from '../sympathy/types';
 import type { PlaytestDriver } from '../testing/PlaytestDriver';
-import { createGameTextures, PLATFORM_TEXTURE_WIDTH } from '../visuals/createTextures';
+import { addGameText } from '../visuals/addGameText';
+import { createGameTextures } from '../visuals/createTextures';
 
 interface VerticalSliceSceneDependencies {
   readonly inputController: InputController;
@@ -35,11 +31,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   private spawn = new Phaser.Math.Vector2(LEVEL_ONE_SPAWNS.start.x, LEVEL_ONE_SPAWNS.start.y);
 
   private player!: Phaser.Physics.Arcade.Sprite;
-  private platforms!: Phaser.Physics.Arcade.StaticGroup;
-  private firstLanding!: Phaser.Physics.Arcade.Sprite;
-  private warningHazard: Phaser.GameObjects.Rectangle | null = null;
-  private warningOverlap: Phaser.Physics.Arcade.Collider | null = null;
-  private spring: Phaser.Physics.Arcade.Sprite | null = null;
+  private world!: LevelOneWorld;
   private reverseCoins: Phaser.GameObjects.Container[] = [];
   private reverseCoinLabel: Phaser.GameObjects.Text | null = null;
   private appliedEffectIds = new Set<string>();
@@ -61,10 +53,10 @@ export class VerticalSliceScene extends Phaser.Scene {
     createGameTextures(this);
     this.physics.world.setBounds(0, 0, LEVEL_ONE_WORLD.width, LEVEL_ONE_WORLD.height + 180);
     this.drawWorld();
-    this.createPlatforms();
+    this.world.createPlatforms();
     this.createPlayer();
     this.createReverseEasterEgg();
-    this.createWarningHazard(LEVEL_ONE_WARNING_HAZARD.width);
+    this.world.createWarningHazard();
     this.createGoal();
     this.restorePersistedAssists();
 
@@ -91,9 +83,16 @@ export class VerticalSliceScene extends Phaser.Scene {
   private resetRuntimeState(): void {
     this.dependencies.playtestDriver?.reset(this.dependencies.inputController.actions);
     this.spawn.set(LEVEL_ONE_SPAWNS.start.x, LEVEL_ONE_SPAWNS.start.y);
-    this.warningHazard = null;
-    this.warningOverlap = null;
-    this.spring = null;
+    this.world = new LevelOneWorld(this, {
+      onWarningHazard: () => {
+        this.beginDeath({
+          causeId: 'trusted-warning-strip',
+          blockerId: 'warning-strip',
+          message: '它說「完全安全」，但沒有說是對誰安全。',
+        });
+      },
+      isPlayerDying: () => this.dying,
+    });
     this.reverseCoins = [];
     this.reverseCoinLabel = null;
     this.appliedEffectIds.clear();
@@ -156,47 +155,17 @@ export class VerticalSliceScene extends Phaser.Scene {
       grid.lineBetween(0, y, LEVEL_ONE_WORLD.width, y);
     }
 
-    this.addText(42, 38, '練習題一：只要一直往右，應該不會有事。', 22, '#1d2a33').setAlpha(0.86);
-    this.addText(500, 450, '第一題\n跨過去', 17, '#1d2a33').setAlign('center').setRotation(-0.03);
-    this.addText(1_030, 468, '完全安全', 17, '#fff9e8')
+    addGameText(this, 42, 38, '練習題一：只要一直往右，應該不會有事。', 22, '#1d2a33').setAlpha(0.86);
+    addGameText(this, 500, 450, '第一題\n跨過去', 17, '#1d2a33').setAlign('center').setRotation(-0.03);
+    addGameText(this, 1_030, 468, '完全安全', 17, '#fff9e8')
       .setBackgroundColor('#e95d5d')
       .setPadding(10, 6)
       .setRotation(0.025);
-    this.addText(1_710, 350, '終點在右邊\n這次是真的', 18, '#1d2a33')
+    addGameText(this, 1_710, 350, '終點在右邊\n這次是真的', 18, '#1d2a33')
       .setAlign('center')
       .setBackgroundColor('#fff9e8')
       .setPadding(12, 8)
       .setRotation(-0.025);
-  }
-
-  private createPlatforms(): void {
-    this.platforms = this.physics.add.staticGroup();
-    for (const definition of LEVEL_ONE_PLATFORM_LAYOUT) {
-      const platform = this.addPlatform(definition.x, definition.y, definition.width);
-      if (definition.id === 'first-landing') {
-        this.firstLanding = platform;
-      }
-    }
-
-    for (const definition of LEVEL_ONE_SECRET_PLATFORM_LAYOUT) {
-      this.addOneWayPlatform(definition.x, definition.y, definition.width);
-    }
-  }
-
-  private addPlatform(x: number, y: number, width: number, texture = 'platform'): Phaser.Physics.Arcade.Sprite {
-    const platform = this.platforms.create(x, y, texture) as Phaser.Physics.Arcade.Sprite;
-    platform.setScale(width / PLATFORM_TEXTURE_WIDTH, 1).refreshBody();
-    return platform;
-  }
-
-  private addOneWayPlatform(x: number, y: number, width: number): Phaser.Physics.Arcade.Sprite {
-    const platform = this.addPlatform(x, y, width, 'tape-platform');
-    if (platform.body !== null) {
-      platform.body.checkCollision.down = false;
-      platform.body.checkCollision.left = false;
-      platform.body.checkCollision.right = false;
-    }
-    return platform;
   }
 
   private createPlayer(): void {
@@ -207,33 +176,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(false);
     this.player.setMaxVelocity(this.moveSpeed, 780);
     this.player.body?.setSize(28, 39, true);
-    this.physics.add.collider(this.player, this.platforms);
-  }
-
-  private createWarningHazard(width: number): void {
-    this.warningOverlap?.destroy();
-    this.warningOverlap = null;
-    this.warningHazard?.destroy();
-    this.warningHazard = null;
-
-    const danger = this.add.rectangle(
-      LEVEL_ONE_WARNING_HAZARD.x,
-      LEVEL_ONE_WARNING_HAZARD.y,
-      width,
-      LEVEL_ONE_WARNING_HAZARD.height,
-      0xe95d5d,
-      1,
-    );
-    danger.setStrokeStyle(4, 0x1d2a33, 1);
-    this.physics.add.existing(danger, true);
-    this.warningHazard = danger;
-    this.warningOverlap = this.physics.add.overlap(this.player, danger, () => {
-      this.beginDeath({
-        causeId: 'trusted-warning-strip',
-        blockerId: 'warning-strip',
-        message: '它說「完全安全」，但沒有說是對誰安全。',
-      });
-    });
+    this.world.attachPlayer(this.player);
   }
 
   private createReverseEasterEgg(): void {
@@ -253,7 +196,8 @@ export class VerticalSliceScene extends Phaser.Scene {
       return this.add.container(x, 225, [disc, value]).setAlpha(discovered ? 0.42 : 1);
     });
 
-    this.reverseCoinLabel = this.addText(
+    this.reverseCoinLabel = addGameText(
+      this,
       8,
       289,
       discovered ? '已領取 · 仍然沒用' : '用途：0 × 8',
@@ -289,7 +233,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       onComplete: () => this.reverseCoins.forEach((coin) => coin.setAlpha(0.42)),
     });
 
-    const annotation = this.addText(165, 120, '恭喜找到 8 枚\n完全沒有用途的金幣。', 21, '#b9382c')
+    const annotation = addGameText(this, 165, 120, '恭喜找到 8 枚\n完全沒有用途的金幣。', 21, '#b9382c')
       .setOrigin(0.5)
       .setAlign('center')
       .setStroke('#fff9e8', 6)
@@ -377,7 +321,7 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   private createMercyAnnotation(message: string, reaction: ReactionDefinition | null): Phaser.GameObjects.Text {
     const prefix = reaction === null ? '×' : `修正 ${reaction.tier}`;
-    return this.addText(this.player.x, Math.max(80, this.player.y - 72), `${prefix}　${message}`, 22, '#b9382c')
+    return addGameText(this, this.player.x, Math.max(80, this.player.y - 72), `${prefix}　${message}`, 22, '#b9382c')
       .setOrigin(0.5)
       .setStroke('#fff9e8', 6)
       .setRotation(-0.045)
@@ -412,49 +356,14 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
 
     try {
-      switch (effectId) {
-        case 'move-first-landing':
-          this.firstLanding.setX(640).refreshBody();
-          break;
-        case 'deploy-gap-spring':
-          this.deployGapSpring();
-          break;
-        case 'deploy-gap-bridge':
-          this.addPlatform(490, 430, 158.4, 'tape-platform');
-          break;
-        case 'shrink-warning-strip':
-          this.createWarningHazard(96);
-          break;
-        case 'deploy-strip-bypass':
-          this.addOneWayPlatform(1_010, 345, 100.8);
-          this.addOneWayPlatform(1_115, 315, 100.8);
-          this.addOneWayPlatform(1_220, 345, 100.8);
-          break;
-        case 'retire-warning-strip':
-          this.warningOverlap?.destroy();
-          this.warningOverlap = null;
-          this.warningHazard?.setFillStyle(0x9fd5e8, 0.4).setStrokeStyle(3, 0xb9382c, 0.75);
-          this.addText(1_105, 492, '已下班', 18, '#b9382c').setOrigin(0.5).setRotation(-0.04);
-          break;
-        default:
-          throw new Error(`Unknown sympathy effect: ${effectId}`);
+      if (!isLevelOneEffectId(effectId)) {
+        throw new Error(`Unknown sympathy effect: ${effectId}`);
       }
+      this.world.applyAssistEffect(effectId);
       this.appliedEffectIds.add(effectId);
     } catch (error) {
       console.error('[sympathy-effect]', effectId, error);
     }
-  }
-
-  private deployGapSpring(): void {
-    if (this.spring !== null) {
-      return;
-    }
-    this.spring = this.physics.add.staticSprite(444, 434, 'spring');
-    this.physics.add.collider(this.player, this.spring, () => {
-      if (!this.dying && this.player.body?.velocity.y !== undefined && this.player.body.velocity.y >= 0) {
-        this.player.setVelocityY(-650);
-      }
-    });
   }
 
   private updateIdleEgg(): void {
@@ -475,7 +384,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
     const message = '你是在等遊戲先道歉嗎？';
     publishGameStatus({ deaths: next.totalDeaths, message });
-    const annotation = this.addText(this.player.x + 20, this.player.y - 76, message, 22, '#b9382c')
+    const annotation = addGameText(this, this.player.x + 20, this.player.y - 76, message, 22, '#b9382c')
       .setOrigin(0.5)
       .setStroke('#fff9e8', 6)
       .setRotation(-0.05)
@@ -498,7 +407,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       message: `抵達終點。世界總共心軟了 ${this.session.activeAssistCount} 次。`,
       phase: 'completed',
     });
-    this.addText(this.player.x - 40, 205, '通過\n（本題不計分）', 34, '#b9382c')
+    addGameText(this, this.player.x - 40, 205, '通過\n（本題不計分）', 34, '#b9382c')
       .setAlign('center')
       .setOrigin(0.5)
       .setStroke('#fff9e8', 8)
@@ -506,13 +415,4 @@ export class VerticalSliceScene extends Phaser.Scene {
       .setDepth(20);
   }
 
-  private addText(x: number, y: number, text: string, fontSize: number, color: string): Phaser.GameObjects.Text {
-    return this.add.text(x, y, text, {
-      color,
-      fontFamily: 'Fredoka, Nunito, Noto Sans TC, sans-serif',
-      fontSize: `${fontSize}px`,
-      fontStyle: 'bold',
-      lineSpacing: 5,
-    });
-  }
 }

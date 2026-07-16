@@ -14,7 +14,7 @@ export interface DeathEvent {
   readonly occurredAt: number;
 }
 
-export interface ReactionDefinition {
+export interface ReactionDefinition<EffectId extends string = string> {
   readonly id: string;
   readonly levelId: string;
   readonly blockerId: string;
@@ -22,7 +22,7 @@ export interface ReactionDefinition {
   readonly tier: ReactionTier;
   readonly priority: number;
   readonly message: string;
-  readonly effectId?: string;
+  readonly effectId?: EffectId;
 }
 
 export interface DirectorResult {

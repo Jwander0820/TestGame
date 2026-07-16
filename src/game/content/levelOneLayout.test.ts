@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   LEVEL_ONE_PLATFORM_LAYOUT,
   LEVEL_ONE_PLAYER_PHYSICS,
+  LEVEL_ONE_ASSISTANCE_LAYOUT,
   LEVEL_ONE_SECRET_PLATFORM_LAYOUT,
   LEVEL_ONE_WARNING_HAZARD,
   type PlatformDefinition,
@@ -83,6 +84,32 @@ describe('level one zero-assist route', () => {
       const availableRange = descendingFlightTime(source, target) * moveSpeed;
       expect(maximumJumpHeight - requiredHeight, `${source.id} → ${target.id} vertical`).toBeGreaterThanOrEqual(12);
       expect(availableRange - intervalGap(source, target), `${source.id} → ${target.id} horizontal`).toBeGreaterThanOrEqual(20);
+    }
+  });
+});
+
+describe('level one assistance geometry', () => {
+  it('makes every physical assistance step strictly easier than its original blocker', () => {
+    const firstLanding = LEVEL_ONE_PLATFORM_LAYOUT.find((platform) => platform.id === 'first-landing');
+    if (firstLanding === undefined) {
+      throw new Error('First landing platform is missing.');
+    }
+
+    expect(LEVEL_ONE_ASSISTANCE_LAYOUT.firstLandingX).toBeLessThan(firstLanding.x);
+    expect(LEVEL_ONE_ASSISTANCE_LAYOUT.warningStripWidth).toBeLessThan(LEVEL_ONE_WARNING_HAZARD.width);
+    expect(LEVEL_ONE_ASSISTANCE_LAYOUT.gapBridge.width).toBeGreaterThan(0);
+    expect(LEVEL_ONE_ASSISTANCE_LAYOUT.gapSpring.launchSpeed).toBeGreaterThan(
+      LEVEL_ONE_PLAYER_PHYSICS.jumpSpeed,
+    );
+  });
+
+  it('keeps the warning bypass ordered from left to right above the hazard', () => {
+    const bypass = LEVEL_ONE_ASSISTANCE_LAYOUT.warningBypass;
+
+    const positions = bypass.map((platform) => platform.x);
+    expect(positions).toEqual([...positions].sort((left, right) => left - right));
+    for (const platform of bypass) {
+      expect(platform.y).toBeLessThan(LEVEL_ONE_WARNING_HAZARD.y);
     }
   });
 });
