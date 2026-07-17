@@ -6,9 +6,11 @@ const JUMP_SOURCE = 'playtest:max-assistance:jump';
 
 const JUMP_ZONES = [
   { minX: 835, maxX: 870 },
+  { minX: 600, maxX: 635 },
   { minX: 985, maxX: 1_015 },
   { minX: 1_405, maxX: 1_455 },
-  { minX: 1_890, maxX: 1_935 },
+  { minX: 2_385, maxX: 2_430 },
+  { minX: 2_585, maxX: 2_635 },
 ] as const;
 
 export class MaxAssistanceDriver implements PlaytestDriver {

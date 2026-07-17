@@ -9,6 +9,9 @@ export const LEVEL_ONE_EFFECT_IDS = {
   shrinkWarningStrip: 'shrink-warning-strip',
   deployStripBypass: 'deploy-strip-bypass',
   retireWarningStrip: 'retire-warning-strip',
+  reinforceInternBridge: 'reinforce-intern-bridge',
+  deployBridgeSafetyNet: 'deploy-bridge-safety-net',
+  certifyBridgePermanent: 'certify-bridge-permanent',
 } as const;
 
 export type LevelOneEffectId = (typeof LEVEL_ONE_EFFECT_IDS)[keyof typeof LEVEL_ONE_EFFECT_IDS];
@@ -66,7 +69,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 2,
     tier: 1,
     priority: 100,
-    message: '「完全安全」這四個字開始心虛了。',
+    message: '「王城認證」這四個字開始彼此切割了。',
   },
   {
     id: 'warning-strip-shrink',
@@ -98,4 +101,96 @@ export const LEVEL_ONE_REACTIONS = [
     message: '危險帶今日提早下班。',
     effectId: LEVEL_ONE_EFFECT_IDS.retireWarningStrip,
   },
+  {
+    id: 'intern-bridge-comment',
+    levelId: LEVEL_ONE_ID,
+    blockerId: 'intern-bridge',
+    threshold: 2,
+    tier: 1,
+    priority: 100,
+    message: '承辦人強調：橋塌掉不代表驗收沒有通過。',
+  },
+  {
+    id: 'intern-bridge-reinforced',
+    levelId: LEVEL_ONE_ID,
+    blockerId: 'intern-bridge',
+    threshold: 3,
+    tier: 2,
+    priority: 100,
+    message: '補發三張安全證明。木板現在比較不敢塌。',
+    effectId: LEVEL_ONE_EFFECT_IDS.reinforceInternBridge,
+  },
+  {
+    id: 'intern-bridge-safety-net',
+    levelId: LEVEL_ONE_ID,
+    blockerId: 'intern-bridge',
+    threshold: 5,
+    tier: 3,
+    priority: 100,
+    message: '守衛：我沒有修橋，我只是在下面接你。',
+    effectId: LEVEL_ONE_EFFECT_IDS.deployBridgeSafetyNet,
+  },
+  {
+    id: 'intern-bridge-certified',
+    levelId: LEVEL_ONE_ID,
+    blockerId: 'intern-bridge',
+    threshold: 7,
+    tier: 4,
+    priority: 100,
+    message: '王城公告：即日起，這座橋依法不得倒塌。',
+    effectId: LEVEL_ONE_EFFECT_IDS.certifyBridgePermanent,
+  },
 ] as const satisfies readonly ReactionDefinition<LevelOneEffectId>[];
+
+export interface LevelOneRouteBanter {
+  readonly id: string;
+  readonly triggerX: number;
+  readonly message: string;
+}
+
+export const LEVEL_ONE_ROUTE_BANTER = [
+  {
+    id: 'bridge-briefing',
+    triggerX: 1_500,
+    message: '前方是王國模範橋。牌子比橋新很多。',
+  },
+  {
+    id: 'goal-pressure',
+    triggerX: 2_500,
+    message: '王城就在前面。客服已經把手放在跳關按鈕上。',
+  },
+] as const satisfies readonly LevelOneRouteBanter[];
+
+export interface LevelOneCompletionCopy {
+  readonly status: string;
+  readonly banner: string;
+}
+
+export function getLevelOneCompletionCopy(
+  totalDeaths: number,
+  activeAssistCount: number,
+  goalMercyUsed = false,
+): LevelOneCompletionCopy {
+  if (totalDeaths === 0) {
+    return {
+      status: '零次死亡。工務處準備的援助演出全部報廢。',
+      banner: '通過\n（世界有點失落）',
+    };
+  }
+  if (activeAssistCount === 0) {
+    if (goalMercyUsed) {
+      return {
+        status: '抵達終點。客服強調：搬終點不列入協助申報。',
+        banner: '勇者認證通過\n（終點已配合）',
+      };
+    }
+    return {
+      status: '抵達終點。世界堅稱剛才沒有偷偷幫忙。',
+      banner: '勇者認證通過\n（無可疑協助）',
+    };
+  }
+  return {
+    status: `抵達終點。王城正式否認曾經心軟 ${activeAssistCount} 次。`,
+    banner: '勇者認證通過\n（紀錄已經銷毀）',
+  };
+}

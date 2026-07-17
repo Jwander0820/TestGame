@@ -6,7 +6,7 @@ import { ProgressStore } from '../../src/game/state/progress';
 import { MaxAssistanceDriver } from './MaxAssistanceDriver';
 import { createMaxAssistanceProgress } from './maxAssistanceState';
 
-const EXPECTED_DEATHS = 14;
+const EXPECTED_DEATHS = 21;
 const result = document.querySelector<HTMLOutputElement>('#playtest-result');
 if (result === null) {
   throw new Error('Playtest result output is missing.');
@@ -43,6 +43,9 @@ const game = createGame({ inputController, progressStore, playtestDriver });
 window.setTimeout(() => {
   if (result.dataset.status === 'running') {
     result.dataset.status = 'timeout';
+    result.dataset.lastX = String(Math.round(playtestDriver.lastFrame?.x ?? -1));
+    result.dataset.lastY = String(Math.round(playtestDriver.lastFrame?.y ?? -1));
+    result.dataset.lastGrounded = String(playtestDriver.lastFrame?.grounded ?? false);
     result.textContent = '最高援助自動路線未在 25 秒內完成。';
   }
 }, 25_000);

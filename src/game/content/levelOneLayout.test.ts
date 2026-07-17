@@ -3,6 +3,9 @@ import {
   LEVEL_ONE_PLATFORM_LAYOUT,
   LEVEL_ONE_PLAYER_PHYSICS,
   LEVEL_ONE_ASSISTANCE_LAYOUT,
+  LEVEL_ONE_AMBUSH_LAYOUT,
+  LEVEL_ONE_COLLAPSING_BRIDGE,
+  LEVEL_ONE_GOAL,
   LEVEL_ONE_SECRET_PLATFORM_LAYOUT,
   LEVEL_ONE_WARNING_HAZARD,
   type PlatformDefinition,
@@ -103,6 +106,21 @@ describe('level one assistance geometry', () => {
     );
   });
 
+  it('gives a moving player enough time to cross the collapsing bridge without assistance', () => {
+    const bridge = LEVEL_ONE_PLATFORM_LAYOUT.find(
+      (platform) => platform.id === LEVEL_ONE_COLLAPSING_BRIDGE.id,
+    );
+    if (bridge === undefined) {
+      throw new Error('The collapsing bridge is missing from the main route.');
+    }
+
+    const crossingTimeMs = (bridge.width / LEVEL_ONE_PLAYER_PHYSICS.moveSpeed) * 1_000;
+    expect(LEVEL_ONE_COLLAPSING_BRIDGE.collapseDelayMs - crossingTimeMs).toBeGreaterThanOrEqual(300);
+    expect(LEVEL_ONE_COLLAPSING_BRIDGE.reinforcedDelayMs).toBeGreaterThan(
+      LEVEL_ONE_COLLAPSING_BRIDGE.collapseDelayMs,
+    );
+  });
+
   it('keeps the warning bypass ordered from left to right above the hazard', () => {
     const bypass = LEVEL_ONE_ASSISTANCE_LAYOUT.warningBypass;
 
@@ -111,5 +129,44 @@ describe('level one assistance geometry', () => {
     for (const platform of bypass) {
       expect(platform.y).toBeLessThan(LEVEL_ONE_WARNING_HAZARD.y);
     }
+  });
+});
+
+describe('level one learned ambush routes', () => {
+  it('places the landing stamp where a blind runner reaches it as it appears', () => {
+    const stamp = LEVEL_ONE_AMBUSH_LAYOUT.landingStamp;
+    const runnerX = stamp.triggerX +
+      LEVEL_ONE_PLAYER_PHYSICS.moveSpeed * (stamp.revealDelayMs / 1_000);
+
+    expect(runnerX).toBeGreaterThanOrEqual(stamp.x - stamp.width / 2);
+    expect(runnerX).toBeLessThanOrEqual(stamp.x + stamp.width / 2);
+  });
+
+  it('drops the goal stamp onto the natural run-up while allowing a jump to clear it', () => {
+    const stamp = LEVEL_ONE_AMBUSH_LAYOUT.goalStamp;
+    const triggerEntryX = stamp.triggerX - stamp.triggerWidth / 2 - LEVEL_ONE_PLAYER_PHYSICS.bodyWidth / 2;
+    const runnerX = triggerEntryX +
+      LEVEL_ONE_PLAYER_PHYSICS.moveSpeed * (stamp.dropDelayMs / 1_000);
+
+    expect(runnerX).toBeGreaterThanOrEqual(stamp.dangerMinX);
+    expect(runnerX).toBeLessThanOrEqual(stamp.dangerMaxX);
+    expect(stamp.safeJumpY).toBeGreaterThan(0);
+  });
+
+  it('moves the goal closer after an audit death without placing it inside the spent stamp', () => {
+    const mercyGoalX = LEVEL_ONE_GOAL.x + LEVEL_ONE_GOAL.mercyShiftX;
+    const stamp = LEVEL_ONE_AMBUSH_LAYOUT.goalStamp;
+    const goalApproach = LEVEL_ONE_PLATFORM_LAYOUT.find((platform) => platform.id === 'goal-approach');
+    const goalPlatform = LEVEL_ONE_PLATFORM_LAYOUT.find((platform) => platform.id === 'goal-platform');
+    if (goalApproach === undefined || goalPlatform === undefined) {
+      throw new Error('Goal route platforms are missing.');
+    }
+
+    const routeLeft = goalApproach.x - goalApproach.width / 2;
+    const routeRight = goalPlatform.x + goalPlatform.width / 2;
+    expect(LEVEL_ONE_GOAL.mercyShiftX).toBeLessThan(0);
+    expect(mercyGoalX).toBeGreaterThan(stamp.dangerMaxX);
+    expect(mercyGoalX).toBeGreaterThanOrEqual(routeLeft);
+    expect(mercyGoalX).toBeLessThanOrEqual(routeRight);
   });
 });

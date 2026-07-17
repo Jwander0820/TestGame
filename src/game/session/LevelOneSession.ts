@@ -34,6 +34,9 @@ export class LevelOneSession {
   }
 
   get initialSpawn(): LevelOneSpawn {
+    if (this.progressOrder >= 3) {
+      return LEVEL_ONE_SPAWNS.afterInternBridge;
+    }
     if (this.progressOrder >= 2) {
       return LEVEL_ONE_SPAWNS.afterWarningStrip;
     }
@@ -50,6 +53,14 @@ export class LevelOneSession {
 
   get activeAssistCount(): number {
     return this.activeAssistIds.length;
+  }
+
+  causeDeaths(causeId: string): number {
+    return this.progressStore.snapshot.levels[LEVEL_ONE_ID]?.deathsByCause[causeId] ?? 0;
+  }
+
+  blockerDeaths(blockerId: string): number {
+    return this.progressStore.snapshot.levels[LEVEL_ONE_ID]?.blockers[blockerId]?.totalDeaths ?? 0;
   }
 
   hasDiscoveredEasterEgg(easterEggId: string): boolean {
@@ -118,7 +129,7 @@ export class LevelOneSession {
   }
 
   complete(): ProgressState {
-    let next = advanceProgress(this.progressStore.snapshot, LEVEL_ONE_ID, 'goal', 3);
+    let next = advanceProgress(this.progressStore.snapshot, LEVEL_ONE_ID, 'goal', 4);
     next = completeLevel(next, LEVEL_ONE_ID);
     return this.progressStore.replace(next);
   }

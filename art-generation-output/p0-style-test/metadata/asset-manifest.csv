@@ -1,0 +1,15 @@
+file_name,asset_id,category,candidate,version,dimensions,model,status,notes
+chr_hero_concept_c01_v001.png,P0-01-C1,character,c01,v001,1024x1024,Gemini-3.1-Pro,pending_approval,經典款新手勇者概念圖 (紅披風/鋼鐵圓頭盔/小圓盾)
+chr_hero_concept_c02_v001.png,P0-01-C2,character,c02,v001,1024x1024,Gemini-3.1-Pro,pending_approval,深藍披風/古銅色圓頭盔新手勇者概念圖
+chr_hero_concept_c03_v001.png,P0-01-C3,character,c03,v001,1024x1024,Gemini-3.1-Pro,pending_approval,綠披風/有羽飾鐵盔/鎖子皮甲新手勇者概念圖
+env_forest_styleframe_c01_v001.png,P0-02-C1,environment,c01,v001,1024x576,Gemini-3.1-Pro,pending_approval,第一關新手森林午後明亮風格圖 (960x540規格比例)
+env_forest_styleframe_c02_v001.png,P0-02-C2,environment,c02,v001,1024x576,Gemini-3.1-Pro,pending_approval,第一關新手森林黃昏暖橘風格圖 (960x540規格比例)
+env_forest_styleframe_c03_v001.png,P0-02-C3,environment,c03,v001,1024x576,Gemini-3.1-Pro,pending_approval,第一關新手森林晨霧青藍風格圖 (960x540規格比例)
+anim_hero_basicposes_c01_v001.png,P0-03,animation,c01,v001,1024x1024,Gemini-3.1-Pro,pending_approval,主角(c01款)待機/跑步/跳躍/下降/落地之關鍵動作測試表
+assist_slime-spring_storyboard_c01_v001.png,P0-04,assists,c01,v001,1024x1024,Gemini-3.1-Pro,pending_approval,史萊姆彈簧救起落坑勇者之5格喜劇分鏡圖
+env_forest_styleframe_c01_mobile-480.png,P0-05-C1-M480,mobile-preview,c01,v001,480x270,N/A,pending_approval,c01場景縮小至480x270以驗證手機上落腳點與陷阱之可讀性
+env_forest_styleframe_c01_mobile-360.png,P0-05-C1-M360,mobile-preview,c01,v001,360x202,N/A,pending_approval,c01場景縮小至360x202以驗證手機上落腳點與陷阱之可讀性
+env_forest_styleframe_c02_mobile-480.png,P0-05-C2-M480,mobile-preview,c02,v001,480x270,N/A,pending_approval,c02場景縮小至480x270以驗證手機上落腳點與陷阱之可讀性
+env_forest_styleframe_c02_mobile-360.png,P0-05-C2-M360,mobile-preview,c02,v001,360x202,N/A,pending_approval,c02場景縮小至360x202以驗證手機上落腳點與陷阱之可讀性
+env_forest_styleframe_c03_mobile-480.png,P0-05-C3-M480,mobile-preview,c03,v001,480x270,N/A,pending_approval,c03場景縮小至480x270以驗證手機上落腳點與陷阱之可讀性
+env_forest_styleframe_c03_mobile-360.png,P0-05-C3-M360,mobile-preview,c03,v001,360x202,N/A,pending_approval,c03場景縮小至360x202以驗證手機上落腳點與陷阱之可讀性

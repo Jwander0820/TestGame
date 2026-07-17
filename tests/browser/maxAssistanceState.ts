@@ -4,12 +4,22 @@ import { advanceProgress, recordDeath, restartLevel } from '../../src/game/sympa
 import type { DeathEvent } from '../../src/game/sympathy/types';
 
 function deathEvent(index: number, blockerId: string, progressMarkerId: string): DeathEvent {
+  const causeByBlocker: Readonly<Record<string, string>> = {
+    'first-gap': 'fell-out-of-world',
+    'warning-strip': 'trusted-warning-strip',
+    'intern-bridge': 'intern-bridge-collapse',
+  };
+  const xByBlocker: Readonly<Record<string, number>> = {
+    'first-gap': 500,
+    'warning-strip': 1_105,
+    'intern-bridge': 2_070,
+  };
   return {
     id: `max-assistance-death-${index}`,
     levelId: LEVEL_ONE_ID,
-    causeId: blockerId === 'first-gap' ? 'fell-out-of-world' : 'trusted-warning-strip',
+    causeId: causeByBlocker[blockerId] ?? 'unknown',
     blockerId,
-    x: blockerId === 'first-gap' ? 500 : 1_105,
+    x: xByBlocker[blockerId] ?? 0,
     y: 500,
     progressMarkerId,
     attempt: index,
@@ -36,5 +46,18 @@ export function createMaxAssistanceCheckpointProgress(): ProgressState {
 }
 
 export function createMaxAssistanceProgress(): ProgressState {
-  return restartLevel(createMaxAssistanceCheckpointProgress(), LEVEL_ONE_ID);
+  let state = advanceProgress(
+    createMaxAssistanceCheckpointProgress(),
+    LEVEL_ONE_ID,
+    'after-warning-strip',
+    2,
+  );
+  for (let index = 15; index <= 21; index += 1) {
+    state = recordDeath(
+      state,
+      deathEvent(index, 'intern-bridge', 'after-warning-strip'),
+      LEVEL_ONE_REACTIONS,
+    ).state;
+  }
+  return restartLevel(state, LEVEL_ONE_ID);
 }

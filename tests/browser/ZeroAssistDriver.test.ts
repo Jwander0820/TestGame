@@ -27,4 +27,15 @@ describe('ZeroAssistDriver', () => {
     expect(actions.isDown('right')).toBe(false);
     expect(actions.isDown('jump')).toBe(false);
   });
+
+  it('can intentionally accept the first goal audit and jump on the retry', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver({ allowFirstGoalAmbush: true });
+
+    driver.update({ x: 2_600, y: 390, grounded: true }, actions);
+    expect(actions.consumeJumpPressed()).toBe(false);
+    driver.update({ x: 2_650, y: 390, grounded: true }, actions);
+    driver.update({ x: 2_600, y: 390, grounded: true }, actions);
+    expect(actions.consumeJumpPressed()).toBe(true);
+  });
 });

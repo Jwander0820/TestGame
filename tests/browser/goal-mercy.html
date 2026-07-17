@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>終點公開放水整關驗證</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #fff9e8;
+      }
+
+      #game-root {
+        width: min(100vw, 960px);
+        margin: 0 auto;
+      }
+
+      #playtest-result {
+        display: block;
+        padding: 12px;
+        font: 700 16px/1.4 system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <output id="playtest-result" data-status="running">等待終點審核事故。</output>
+    <div id="game-root"></div>
+    <script type="module" src="./goal-mercy.ts"></script>
+  </body>
+</html>

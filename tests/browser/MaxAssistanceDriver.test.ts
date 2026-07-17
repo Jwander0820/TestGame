@@ -12,7 +12,7 @@ describe('maximum assistance browser route', () => {
     const state = createMaxAssistanceProgress();
     const level = state.levels[LEVEL_ONE_ID];
 
-    expect(state.totalDeaths).toBe(14);
+    expect(state.totalDeaths).toBe(21);
     expect(level?.progressMarkerId).toBe('start');
     expect(level?.progressOrder).toBe(0);
     expect(level?.blockers['first-gap']?.activeAssistIds).toEqual([
@@ -24,6 +24,11 @@ describe('maximum assistance browser route', () => {
       'shrink-warning-strip',
       'deploy-strip-bypass',
       'retire-warning-strip',
+    ]);
+    expect(level?.blockers['intern-bridge']?.activeAssistIds).toEqual([
+      'reinforce-intern-bridge',
+      'deploy-bridge-safety-net',
+      'certify-bridge-permanent',
     ]);
   });
 

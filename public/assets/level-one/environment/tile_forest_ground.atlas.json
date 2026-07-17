@@ -1,0 +1,19 @@
+{
+  "frames": {
+    "grass-platform": {
+      "frame": { "x": 17, "y": 22, "w": 112, "h": 108 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 112, "h": 108 },
+      "sourceSize": { "w": 112, "h": 108 }
+    }
+  },
+  "meta": {
+    "app": "manual-integration-audit",
+    "version": "1.0",
+    "image": "tile_forest_ground.png",
+    "format": "RGBA8888",
+    "size": { "w": 1024, "h": 1024 },
+    "scale": "1"
+  }
+}

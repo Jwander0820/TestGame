@@ -7,9 +7,11 @@ const JUMP_SOURCE = 'playtest:reverse-easter-egg:jump';
 
 const MAIN_ROUTE_JUMP_ZONES = [
   { minX: 376, maxX: 405 },
+  { minX: 580, maxX: 625 },
   { minX: 970, maxX: 1_005 },
   { minX: 1_405, maxX: 1_455 },
-  { minX: 1_890, maxX: 1_935 },
+  { minX: 2_385, maxX: 2_430 },
+  { minX: 2_585, maxX: 2_635 },
 ] as const;
 
 type DriverPhase = 'first-jump' | 'second-jump' | 'main-route';

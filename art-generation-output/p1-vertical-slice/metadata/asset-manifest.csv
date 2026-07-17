@@ -1,0 +1,5 @@
+file_name,asset_id,category,dimensions,frames,dimensions_per_frame,model,status,notes
+chr_hero_idle_sheet.png,CHR-01,character,128x48,4,32x48,Gemini-3.1-Pro,pending_approval,主角待機呼吸動畫，C01紅披風鋼鐵盔特徵，4幀水平排列，透明去背
+chr_hero_run_sheet.png,CHR-02,character,192x48,6,32x48,Gemini-3.1-Pro,pending_approval,主角跑步動畫，C01特徵，腿部忙亂但上身正經，6幀水平排列，透明去背
+tile_forest_ground.png,ENV-04,environment,1024x1024,N/A,24x24,Gemini-3.1-Pro,pending_approval,新手森林清晨地表Tileset，C03神秘清晨冷綠調，24x24模組，透明去背
+assist_slime_spring_sheet.png,OBJ-04,assists,192x32,4,48x32,Gemini-3.1-Pro,pending_approval,史萊姆彈簧援助物件，包含壓縮與起跳回彈，4幀水平排列，透明去背

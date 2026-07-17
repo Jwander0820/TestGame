@@ -34,6 +34,8 @@ describe('LevelOneSession', () => {
     expect(session.initialSpawn).toBe(LEVEL_ONE_SPAWNS.afterFirstGap);
     session.advanceMarker('after-warning-strip', 2);
     expect(session.initialSpawn).toBe(LEVEL_ONE_SPAWNS.afterWarningStrip);
+    session.advanceMarker('after-intern-bridge', 3);
+    expect(session.initialSpawn).toBe(LEVEL_ONE_SPAWNS.afterInternBridge);
   });
 
   it('persists death reactions and exposes active assistance to the scene', () => {
@@ -51,6 +53,8 @@ describe('LevelOneSession', () => {
     expect(session.totalDeaths).toBe(3);
     expect(session.activeAssistIds).toEqual(['move-first-landing']);
     expect(session.activeAssistCount).toBe(1);
+    expect(session.causeDeaths('fell-out-of-world')).toBe(3);
+    expect(session.blockerDeaths('first-gap')).toBe(3);
   });
 
   it('saves the death but not a half-applied reaction when a world effect fails', () => {
@@ -118,7 +122,7 @@ describe('LevelOneSession', () => {
     const completed = session.complete();
 
     expect(completed.levels[LEVEL_ONE_ID]?.progressMarkerId).toBe('goal');
-    expect(completed.levels[LEVEL_ONE_ID]?.progressOrder).toBe(3);
+    expect(completed.levels[LEVEL_ONE_ID]?.progressOrder).toBe(4);
     expect(completed.levels[LEVEL_ONE_ID]?.completed).toBe(true);
   });
 });
