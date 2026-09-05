@@ -9,13 +9,10 @@ import {
   LEVEL_ONE_WARNING_HAZARD,
   type PlatformDefinition,
 } from '../../content/levelOneLayout';
+import { LEVEL_ONE_COLORS, LEVEL_ONE_TEXT_COLORS } from '../../content/levelOneVisuals';
 import { addGameText } from '../../visuals/addGameText';
 import { PLATFORM_TEXTURE_WIDTH } from '../../visuals/createTextures';
-import {
-  LEVEL_ONE_ART_ANIMATIONS,
-  LEVEL_ONE_ART_KEYS,
-  hasLevelOneArt,
-} from '../../visuals/levelOneArt';
+import { LEVEL_ONE_ART_KEYS, hasLevelOneArt } from '../../visuals/levelOneArt';
 
 interface LevelOneWorldCallbacks {
   readonly onWarningHazard: () => void;
@@ -37,6 +34,7 @@ export class LevelOneWorld {
   private firstLanding: Phaser.Physics.Arcade.Sprite | null = null;
   private player: Phaser.Physics.Arcade.Sprite | null = null;
   private warningHazard: Phaser.GameObjects.Rectangle | null = null;
+  private warningMarks: Phaser.GameObjects.Graphics | null = null;
   private warningOverlap: Phaser.Physics.Arcade.Collider | null = null;
   private spring: Phaser.Physics.Arcade.Sprite | null = null;
   private springVisual: Phaser.GameObjects.Sprite | null = null;
@@ -94,18 +92,23 @@ export class LevelOneWorld {
     this.warningOverlap = null;
     this.warningHazard?.destroy();
     this.warningHazard = null;
+    this.warningMarks?.destroy();
+    this.warningMarks = null;
 
     const danger = this.scene.add.rectangle(
       LEVEL_ONE_WARNING_HAZARD.x,
       LEVEL_ONE_WARNING_HAZARD.y,
       width,
       LEVEL_ONE_WARNING_HAZARD.height,
-      this.warningHazardRevealed ? 0xe95d5d : 0x1faf9d,
+      this.warningHazardRevealed ? LEVEL_ONE_COLORS.hazard : LEVEL_ONE_COLORS.safeBody,
       1,
     );
-    danger.setStrokeStyle(4, 0x1d2a33, 1);
+    danger.setStrokeStyle(4, LEVEL_ONE_COLORS.outline, 1);
     this.scene.physics.add.existing(danger, true);
     this.warningHazard = danger;
+    if (this.warningHazardRevealed) {
+      this.drawWarningMarks(width);
+    }
     this.warningOverlap = this.scene.physics.add.overlap(this.requirePlayer(), danger, this.callbacks.onWarningHazard);
   }
 
@@ -114,12 +117,20 @@ export class LevelOneWorld {
       return;
     }
     this.warningHazardRevealed = true;
-    this.warningHazard?.setFillStyle(0xe95d5d, 1);
-    addGameText(this.scene, LEVEL_ONE_WARNING_HAZARD.x, 470, '認證撤回', 17, '#fff9e8')
+    this.warningHazard?.setFillStyle(LEVEL_ONE_COLORS.hazard, 1);
+    this.drawWarningMarks(this.warningHazard?.displayWidth ?? LEVEL_ONE_WARNING_HAZARD.width);
+    addGameText(
+      this.scene,
+      LEVEL_ONE_WARNING_HAZARD.x,
+      470,
+      '守衛翻牌：危險',
+      16,
+      LEVEL_ONE_TEXT_COLORS.parchment,
+    )
       .setOrigin(0.5)
-      .setBackgroundColor('#b9382c')
+      .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.danger)
       .setPadding(8, 4)
-      .setRotation(-0.04);
+      .setDepth(3);
   }
 
   applyAssistEffect(effectId: LevelOneEffectId): void {
@@ -138,7 +149,7 @@ export class LevelOneWorld {
         const bridge = LEVEL_ONE_ASSISTANCE_LAYOUT.gapBridge;
         this.retireGapSpring();
         this.movePlatform(this.requireFirstLanding(), this.requireFirstLanding().x, bridge.y);
-        this.addPlatform(bridge.x, bridge.y, bridge.width, 'tape-platform');
+        this.addPlatform(bridge.x, bridge.y, bridge.width, 'mercy-platform');
         return;
       }
       case LEVEL_ONE_EFFECT_IDS.shrinkWarningStrip:
@@ -152,24 +163,37 @@ export class LevelOneWorld {
       case LEVEL_ONE_EFFECT_IDS.retireWarningStrip: {
         this.warningOverlap?.destroy();
         this.warningOverlap = null;
-        this.warningHazard?.setFillStyle(0x9fd5e8, 0.4).setStrokeStyle(3, 0xb9382c, 0.75);
+        this.warningMarks?.destroy();
+        this.warningMarks = null;
+        this.warningHazard
+          ?.setFillStyle(LEVEL_ONE_COLORS.midSilhouette, 0.58)
+          .setStrokeStyle(3, LEVEL_ONE_COLORS.assist, 1);
         const label = LEVEL_ONE_ASSISTANCE_LAYOUT.retiredLabel;
-        addGameText(this.scene, label.x, label.y, '已下班', 18, '#b9382c')
+        addGameText(this.scene, label.x, label.y, '王命停用', 17, LEVEL_ONE_TEXT_COLORS.ink)
           .setOrigin(0.5)
-          .setRotation(-0.04);
+          .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.assist)
+          .setPadding(7, 4);
         return;
       }
       case LEVEL_ONE_EFFECT_IDS.reinforceInternBridge:
         this.bridgeCollapseDelayMs = LEVEL_ONE_COLLAPSING_BRIDGE.reinforcedDelayMs;
-        this.requireCollapsingBridge().setTint(0xfff1b2);
+        this.requireCollapsingBridge().setTint(LEVEL_ONE_COLORS.assistHighlight);
         return;
       case LEVEL_ONE_EFFECT_IDS.deployBridgeSafetyNet: {
         if (this.bridgeSafetyNet === null) {
           const net = LEVEL_ONE_COLLAPSING_BRIDGE.safetyNet;
           this.bridgeSafetyNet = this.addOneWayPlatform(net.x, net.y, net.width);
-          addGameText(this.scene, net.x, net.y + 14, '臨時接住區', 15, '#b9382c')
+          addGameText(
+            this.scene,
+            net.x,
+            net.y + 14,
+            '守衛臨時接住區',
+            14,
+            LEVEL_ONE_TEXT_COLORS.ink,
+          )
             .setOrigin(0.5, 0)
-            .setRotation(-0.025);
+            .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.assist)
+            .setPadding(6, 3);
         }
         return;
       }
@@ -178,11 +202,18 @@ export class LevelOneWorld {
         this.resetTransientHazards();
         this.requireCollapsingBridge().setTexture('platform').clearTint().refreshBody();
         const label = LEVEL_ONE_COLLAPSING_BRIDGE.certifiedLabel;
-        addGameText(this.scene, label.x, label.y, '永久合格（禁止倒塌）', 16, '#b9382c')
+        addGameText(
+          this.scene,
+          label.x,
+          label.y,
+          '王命：此橋不得再塌',
+          16,
+          LEVEL_ONE_TEXT_COLORS.danger,
+        )
           .setOrigin(0.5)
-          .setBackgroundColor('#fff9e8')
+          .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.parchment)
           .setPadding(7, 4)
-          .setRotation(-0.025);
+          .setDepth(3);
         return;
       }
     }
@@ -202,9 +233,11 @@ export class LevelOneWorld {
     this.scene.tweens.killTweensOf(bridge);
     const definition = this.requireCollapsingBridgeDefinition();
     bridge.setPosition(definition.x, definition.y).setAlpha(1).setAngle(0).setActive(true).setVisible(true);
-    bridge.setTexture(this.bridgeCertified ? 'platform' : this.bridgeWeaknessRevealed ? 'tape-platform' : 'platform');
+    bridge.setTexture(
+      this.bridgeCertified ? 'platform' : this.bridgeWeaknessRevealed ? 'mercy-platform' : 'platform',
+    );
     if (!this.bridgeCertified && this.bridgeCollapseDelayMs > LEVEL_ONE_COLLAPSING_BRIDGE.collapseDelayMs) {
-      bridge.setTint(0xfff1b2);
+      bridge.setTint(LEVEL_ONE_COLORS.assistHighlight);
     } else {
       bridge.clearTint();
     }
@@ -227,13 +260,28 @@ export class LevelOneWorld {
     return platform;
   }
 
+  private drawWarningMarks(width: number): void {
+    this.warningMarks?.destroy();
+    const marks = this.scene.add.graphics().setDepth(2);
+    const left = LEVEL_ONE_WARNING_HAZARD.x - width / 2;
+    const top = LEVEL_ONE_WARNING_HAZARD.y - LEVEL_ONE_WARNING_HAZARD.height / 2;
+    marks.fillStyle(LEVEL_ONE_COLORS.hazardDark, 1);
+    for (let x = left + 12; x < left + width - 8; x += 26) {
+      marks.fillTriangle(x, top + 3, x + 8, top + 15, x + 16, top + 3);
+    }
+    marks.lineStyle(3, LEVEL_ONE_COLORS.outline, 1);
+    marks.lineBetween(left + 8, top + 2, left + 20, top + 14);
+    marks.lineBetween(left + width - 20, top + 2, left + width - 8, top + 14);
+    this.warningMarks = marks;
+  }
+
   private movePlatform(platform: Phaser.Physics.Arcade.Sprite, x: number, y: number): void {
     platform.setPosition(x, y).refreshBody();
     this.platformVisuals.get(platform)?.setPosition(x, y + 15);
   }
 
   private addOneWayPlatform(x: number, y: number, width: number): Phaser.Physics.Arcade.Sprite {
-    const platform = this.addPlatform(x, y, width, 'tape-platform');
+    const platform = this.addPlatform(x, y, width, 'mercy-platform');
     if (platform.body !== null) {
       platform.body.checkCollision.down = false;
       platform.body.checkCollision.left = false;
@@ -246,7 +294,7 @@ export class LevelOneWorld {
     const bridge = this.scene.physics.add.staticSprite(
       definition.x,
       definition.y,
-      this.bridgeWeaknessRevealed ? 'tape-platform' : 'platform',
+      this.bridgeWeaknessRevealed ? 'mercy-platform' : 'platform',
     );
     bridge.setScale(definition.width / PLATFORM_TEXTURE_WIDTH, 1).refreshBody();
     this.collapsingBridge = bridge;
@@ -265,8 +313,8 @@ export class LevelOneWorld {
 
     const bridge = this.requireCollapsingBridge();
     this.bridgeWeaknessRevealed = true;
-    bridge.setTexture('tape-platform').refreshBody();
-    bridge.setTint(0xffd447);
+    bridge.setTexture('mercy-platform').refreshBody();
+    bridge.setTint(LEVEL_ONE_COLORS.assistHighlight);
     this.scene.tweens.add({
       targets: bridge,
       angle: { from: -0.8, to: 0.8 },
@@ -288,10 +336,10 @@ export class LevelOneWorld {
       definition.revealedY,
       definition.width,
       definition.height,
-      0xe95d5d,
+      LEVEL_ONE_COLORS.hazard,
       revealed ? 1 : 0,
     );
-    stamp.setStrokeStyle(4, 0x1d2a33, revealed ? 1 : 0);
+    stamp.setStrokeStyle(4, LEVEL_ONE_COLORS.outline, revealed ? 1 : 0);
     this.scene.physics.add.existing(stamp, true);
     const stampBody = stamp.body as Phaser.Physics.Arcade.StaticBody | null;
     if (stampBody !== null) {
@@ -299,7 +347,14 @@ export class LevelOneWorld {
     }
     this.scene.physics.add.overlap(this.requirePlayer(), stamp, this.callbacks.onLandingAmbush);
 
-    const label = addGameText(this.scene, definition.x, definition.revealedY, '補考', 14, '#fff9e8')
+    const label = addGameText(
+      this.scene,
+      definition.x,
+      definition.revealedY,
+      '王徽',
+      14,
+      LEVEL_ONE_TEXT_COLORS.parchment,
+    )
       .setOrigin(0.5)
       .setAlpha(revealed ? 1 : 0)
       .setDepth(2);
@@ -311,7 +366,7 @@ export class LevelOneWorld {
       }
       this.landingAmbushArmed = true;
       this.scene.time.delayedCall(definition.revealDelayMs, () => {
-        stamp.setAlpha(1).setStrokeStyle(4, 0x1d2a33, 1);
+        stamp.setAlpha(1).setStrokeStyle(4, LEVEL_ONE_COLORS.outline, 1);
         label.setAlpha(1);
         if (stampBody !== null) {
           stampBody.enable = true;
@@ -328,11 +383,18 @@ export class LevelOneWorld {
       initialY,
       definition.width,
       definition.height,
-      0xffd447,
+      LEVEL_ONE_COLORS.royalGold,
       1,
     );
-    seal.setStrokeStyle(5, 0xb9382c, 1).setDepth(3);
-    const label = addGameText(this.scene, definition.x, initialY, '審\n核', 19, '#b9382c')
+    seal.setStrokeStyle(5, LEVEL_ONE_COLORS.hazardDark, 1).setDepth(3);
+    const label = addGameText(
+      this.scene,
+      definition.x,
+      initialY,
+      '王\n令',
+      19,
+      LEVEL_ONE_TEXT_COLORS.danger,
+    )
       .setOrigin(0.5)
       .setAlign('center')
       .setDepth(4);
@@ -387,18 +449,24 @@ export class LevelOneWorld {
       return;
     }
     const definition = LEVEL_ONE_ASSISTANCE_LAYOUT.gapSpring;
-    this.spring = this.scene.physics.add.staticSprite(definition.x, definition.y, 'spring');
-    if (hasLevelOneArt(this.scene, LEVEL_ONE_ART_KEYS.slimeSpring)) {
-      this.spring.setAlpha(0);
-      this.springVisual = this.scene.add
-        .sprite(definition.x, definition.y - 24, LEVEL_ONE_ART_KEYS.slimeSpring, 2)
-        .setScale(1.25)
-        .setDepth(2);
-    }
+    this.spring = this.scene.physics.add.staticSprite(definition.x, definition.y, 'spring').setAlpha(0);
+    this.springVisual = this.scene.add
+      .sprite(definition.x, definition.y + 15, 'spring')
+      .setOrigin(0.5, 1)
+      .setDepth(2);
     this.scene.physics.add.collider(this.requirePlayer(), this.spring, () => {
       const player = this.requirePlayer();
       if (!this.callbacks.isPlayerDying() && player.body?.velocity.y !== undefined && player.body.velocity.y >= 0) {
-        this.springVisual?.play(LEVEL_ONE_ART_ANIMATIONS.slimeBounce);
+        if (this.springVisual !== null) {
+          this.scene.tweens.killTweensOf(this.springVisual);
+          this.springVisual.setScale(1, 0.72);
+          this.scene.tweens.add({
+            targets: this.springVisual,
+            scaleY: 1,
+            duration: 180,
+            ease: 'Back.Out',
+          });
+        }
         player.setVelocityY(-definition.launchSpeed);
       }
     });
@@ -411,7 +479,7 @@ export class LevelOneWorld {
     if (this.spring.body !== null) {
       this.spring.body.enable = false;
     }
-    this.spring.setAlpha(this.springVisual === null ? 0.35 : 0);
+    this.spring.setAlpha(0);
     this.springVisual?.setAlpha(0.35);
   }
 

@@ -181,8 +181,8 @@ function verifyReloadedTitle(): void {
     result.dataset.resumeMarker === 'after-first-gap' &&
     result.dataset.restartMarker === 'start' &&
     result.dataset.completePanelVisible === 'true' &&
-    startLabel === '再寫一次' &&
-    continueSummary.includes('本題已完成') &&
+    startLabel === '再次啟程' &&
+    continueSummary.includes('王城試煉已完成') &&
     reloadedDeaths === completedDeaths &&
     consoleWarningCount === 0 &&
     consoleErrorCount === 0;

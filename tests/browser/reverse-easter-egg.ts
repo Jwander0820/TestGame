@@ -6,7 +6,7 @@ import { PROGRESS_STORAGE_KEY, ProgressStore } from '../../src/game/state/progre
 import { ReverseEasterEggDriver } from './ReverseEasterEggDriver';
 
 const REVERSE_EGG_ID = 'reverse-zero-coins';
-const REVERSE_MESSAGE = '你特地往左找到了 8 枚沒有用途的金幣。很會。';
+const REVERSE_MESSAGE = '你特地往左找到了 8 枚王庫退役幣。守衛拒絕收兌。';
 const STORAGE_NAMESPACE = 'playtest:reverse-easter-egg:';
 const STAGE_KEY = `${STORAGE_NAMESPACE}stage`;
 const namespacedStorage: Pick<Storage, 'getItem' | 'setItem'> = {

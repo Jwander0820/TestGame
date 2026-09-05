@@ -1,17 +1,118 @@
 :root {
-  color: #1d2a33;
-  background: #fff9e8;
-  font-family: Nunito, "Noto Sans TC", system-ui, sans-serif;
+  color-scheme: dark;
+  color: var(--color-text-on-dark);
+  background: var(--color-page-bg);
+  font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --paper: #fff9e8;
-  --sky: #ddf4ff;
-  --ink: #1d2a33;
-  --play-yellow: #ffd447;
-  --grass: #1faf9d;
-  --danger: #e95d5d;
-  --mercy-ink: #b9382c;
-  --focus: #1769e0;
+
+  /* Primitive tokens: raw palette, type, spacing and shape values. */
+  --primitive-color-ink-950: #14232b;
+  --primitive-color-teal-800: #25634e;
+  --primitive-color-teal-700: #2d4650;
+  --primitive-color-stone-500: #8d9a90;
+  --primitive-color-mist-200: #bfdde0;
+  --primitive-color-parchment-50: #fff3d6;
+  --primitive-color-parchment-100: #fff3d6;
+  --primitive-color-parchment-300: #c9c9b6;
+  --primitive-color-gold-400: #f3c743;
+  --primitive-color-gold-600: #86613e;
+  --primitive-color-cape-500: #c84c42;
+  --primitive-color-cape-700: #9d342f;
+  --primitive-color-focus-400: #2f78d8;
+  --primitive-color-sky-100: #ddf4ff;
+  --primitive-color-page-glow: rgb(33 139 147 / 0.34);
+  --primitive-color-overlay: rgb(20 35 43 / 0.82);
+  --primitive-color-shadow: rgb(20 35 43 / 0.72);
+  --primitive-font-display: "Noto Serif TC", "PMingLiU", serif;
+  --primitive-font-body: "Noto Sans TC", system-ui, sans-serif;
+  --primitive-font-size-caption: 0.75rem;
+  --primitive-font-size-body: 1rem;
+  --primitive-font-size-title: clamp(1.55rem, 4vw, 2.45rem);
+  --primitive-font-size-panel-title: clamp(1.35rem, 4vw, 2.2rem);
+  --primitive-space-1: 4px;
+  --primitive-space-2: 8px;
+  --primitive-space-3: 12px;
+  --primitive-space-4: 16px;
+  --primitive-space-6: 24px;
+  --primitive-space-8: 32px;
+  --primitive-border-1: 2px;
+  --primitive-border-2: 4px;
+  --primitive-border-3: 6px;
+  --primitive-radius-hard: 2px;
+  --primitive-radius-frame: 6px;
+  --primitive-duration-fast: 120ms;
+
+  /* Semantic tokens: meaning shared across the outer shell. */
+  --color-page-bg: var(--primitive-color-ink-950);
+  --color-page-glow: var(--primitive-color-page-glow);
+  --color-text-on-dark: var(--primitive-color-parchment-50);
+  --color-text-muted: var(--primitive-color-mist-200);
+  --color-text-on-light: var(--primitive-color-ink-950);
+  --color-frame-border: var(--primitive-color-stone-500);
+  --color-frame-inset: var(--primitive-color-teal-800);
+  --color-frame-accent: var(--primitive-color-gold-600);
+  --color-royal-primary: var(--primitive-color-gold-400);
+  --color-cape: var(--primitive-color-cape-500);
+  --color-danger: var(--primitive-color-cape-700);
+  --color-menu-bg: var(--primitive-color-parchment-50);
+  --color-menu-surface: var(--primitive-color-parchment-100);
+  --color-menu-border: var(--primitive-color-parchment-300);
+  --color-control-bg: var(--primitive-color-teal-800);
+  --color-control-bg-hover: var(--primitive-color-teal-700);
+  --color-control-border: var(--primitive-color-stone-500);
+  --color-focus: var(--primitive-color-focus-400);
+  --color-game-sky: var(--primitive-color-sky-100);
+  --color-overlay: var(--primitive-color-overlay);
+  --shadow-strong: var(--primitive-color-shadow);
+  --font-display: var(--primitive-font-display);
+  --font-body: var(--primitive-font-body);
+  --font-size-caption: var(--primitive-font-size-caption);
+  --font-size-body: var(--primitive-font-size-body);
+  --font-size-title: var(--primitive-font-size-title);
+  --font-size-panel-title: var(--primitive-font-size-panel-title);
+  --space-xs: var(--primitive-space-1);
+  --space-sm: var(--primitive-space-2);
+  --space-md: var(--primitive-space-3);
+  --space-lg: var(--primitive-space-4);
+  --space-xl: var(--primitive-space-6);
+  --space-2xl: var(--primitive-space-8);
+  --border-thin: var(--primitive-border-1);
+  --border-medium: var(--primitive-border-2);
+  --border-heavy: var(--primitive-border-3);
+  --radius-control: var(--primitive-radius-hard);
+  --radius-frame: var(--primitive-radius-frame);
+  --duration-interaction: var(--primitive-duration-fast);
+  --size-touch-target: 64px;
+
+  /* Component tokens: the game shell's concrete visual contract. */
+  --game-shell-max-width: 1120px;
+  --game-shell-gap: var(--space-md);
+  --header-divider: var(--color-frame-border);
+  --header-accent: var(--color-royal-primary);
+  --death-badge-bg: var(--color-royal-primary);
+  --death-badge-border: var(--color-text-on-light);
+  --death-badge-accent: var(--color-cape);
+  --stage-border-width: var(--border-heavy);
+  --stage-border: var(--color-frame-border);
+  --stage-accent: var(--color-frame-accent);
+  --stage-radius: var(--radius-frame);
+  --menu-backdrop: var(--color-overlay);
+  --menu-panel-bg: var(--color-menu-bg);
+  --menu-panel-border: var(--color-text-on-light);
+  --menu-panel-outline: var(--color-menu-border);
+  --menu-panel-padding: var(--space-xl);
+  --menu-button-bg: var(--color-menu-surface);
+  --menu-button-bg-hover: var(--color-menu-bg);
+  --menu-button-primary-bg: var(--color-royal-primary);
+  --menu-button-border: var(--color-text-on-light);
+  --utility-button-bg: var(--color-control-bg);
+  --utility-button-bg-hover: var(--color-control-bg-hover);
+  --utility-button-border: var(--color-control-border);
+  --touch-button-bg: var(--color-control-bg);
+  --touch-button-bg-hover: var(--color-control-bg-hover);
+  --touch-button-active-bg: var(--color-royal-primary);
+  --touch-button-border: var(--color-control-border);
 }
 
 * {
@@ -31,9 +132,8 @@ body {
   overflow-x: hidden;
   overscroll-behavior: none;
   background:
-    linear-gradient(rgba(29, 42, 51, 0.045) 1px, transparent 1px),
-    var(--paper);
-  background-size: 100% 28px;
+    radial-gradient(circle at 50% -10%, var(--color-page-glow), transparent 56%),
+    var(--color-page-bg);
 }
 
 button {
@@ -41,61 +141,123 @@ button {
 }
 
 .game-shell {
-  width: min(1120px, 100%);
+  width: min(var(--game-shell-max-width), 100%);
   min-height: 100dvh;
   margin: 0 auto;
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  padding: max(var(--space-lg), env(safe-area-inset-top))
+    max(var(--space-lg), env(safe-area-inset-right))
+    max(var(--space-lg), env(safe-area-inset-bottom))
+    max(var(--space-lg), env(safe-area-inset-left));
   display: grid;
   align-content: center;
-  gap: 14px;
+  gap: var(--game-shell-gap);
 }
 
 .game-header {
+  position: relative;
+  padding: 0 var(--space-xs) var(--space-md);
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--space-xl);
+  border-bottom: var(--border-thin) solid var(--header-divider);
+}
+
+.game-header::after {
+  position: absolute;
+  bottom: calc(0px - var(--border-thin));
+  left: var(--space-xs);
+  width: 72px;
+  height: var(--border-thin);
+  background: var(--header-accent);
+  content: "";
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .eyebrow {
-  margin: 0 0 2px;
-  color: var(--mercy-ink);
-  font: 800 0.72rem/1.2 ui-monospace, "Cascadia Mono", monospace;
-  letter-spacing: 0.14em;
+  margin: 0 0 var(--space-xs);
+  color: var(--color-royal-primary);
+  font-family: var(--font-display);
+  font-size: var(--font-size-caption);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
 }
 
 h1 {
   margin: 0;
-  font-family: Fredoka, "Noto Sans TC", system-ui, sans-serif;
-  font-size: clamp(1.55rem, 4vw, 2.5rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
+  color: var(--color-text-on-dark);
+  font-family: var(--font-display);
+  font-size: var(--font-size-title);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
 }
 
 .death-ticket {
-  min-width: 112px;
-  padding: 8px 12px;
+  position: relative;
+  isolation: isolate;
+  min-width: 120px;
+  min-height: 58px;
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  border: 3px solid var(--ink);
-  background: var(--play-yellow);
-  box-shadow: 4px 4px 0 var(--ink);
-  transform: rotate(1deg);
-  font-weight: 800;
+  clip-path: polygon(5% 0, 95% 0, 100% 68%, 50% 100%, 0 68%);
+  color: var(--color-text-on-light);
+  background: var(--death-badge-border);
+  filter: drop-shadow(0 5px 0 var(--shadow-strong));
+  font-weight: 900;
   white-space: nowrap;
 }
 
+.death-ticket::before,
+.death-ticket::after {
+  position: absolute;
+  content: "";
+}
+
+.death-ticket::before {
+  z-index: 0;
+  inset: 3px;
+  clip-path: inherit;
+  background: var(--death-badge-bg);
+}
+
+.death-ticket::after {
+  z-index: 1;
+  right: 4px;
+  bottom: 5px;
+  left: 4px;
+  height: 0;
+  background: var(--death-badge-accent);
+  transition: height var(--duration-interaction) ease-out;
+}
+
+.game-shell[data-visual-stage="observed"] .death-ticket::after {
+  height: var(--space-xs);
+}
+
+.game-shell[data-visual-stage="assisted"] .death-ticket::after {
+  height: var(--space-sm);
+}
+
+.death-ticket > * {
+  position: relative;
+  z-index: 2;
+}
+
 .death-ticket strong {
-  font: 800 1.65rem/1 Fredoka, system-ui, sans-serif;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .stage-frame {
@@ -103,10 +265,13 @@ h1 {
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border: 4px solid var(--ink);
-  border-radius: 14px 10px 16px 9px;
-  background: var(--sky);
-  box-shadow: 8px 9px 0 rgba(29, 42, 51, 0.18);
+  border: var(--stage-border-width) solid var(--stage-border);
+  border-radius: var(--stage-radius);
+  background: var(--color-game-sky);
+  box-shadow:
+    0 0 0 var(--border-thin) var(--stage-accent),
+    inset 0 0 0 var(--border-thin) var(--color-frame-inset),
+    0 var(--space-md) var(--space-xl) var(--shadow-strong);
 }
 
 .game-menu {
@@ -115,8 +280,8 @@ h1 {
   inset: 0;
   display: grid;
   place-items: center;
-  padding: clamp(12px, 3vw, 28px);
-  background: rgba(255, 249, 232, 0.94);
+  padding: clamp(var(--space-md), 3vw, var(--space-2xl));
+  background: var(--menu-backdrop);
 }
 
 .game-menu[hidden],
@@ -129,91 +294,147 @@ h1 {
   width: min(620px, 100%);
   max-height: 100%;
   overflow: auto;
-  padding: clamp(12px, 3vw, 28px);
-  border: 3px solid var(--ink);
-  border-radius: 16px 11px 18px 12px;
-  background: var(--paper);
-  box-shadow: 7px 7px 0 rgba(29, 42, 51, 0.18);
+  padding: var(--menu-panel-padding);
+  border: var(--border-thin) solid var(--menu-panel-border);
+  border-radius: var(--radius-control);
+  color: var(--color-text-on-light);
+  background: var(--menu-panel-bg);
+  box-shadow:
+    0 0 0 var(--border-medium) var(--menu-panel-outline),
+    0 var(--space-md) var(--space-xl) var(--shadow-strong);
   text-align: center;
 }
 
+.menu-panel::before {
+  width: 80px;
+  height: var(--border-medium);
+  margin: 0 auto var(--space-md);
+  display: block;
+  background: linear-gradient(
+    to right,
+    transparent 0 10%,
+    var(--color-royal-primary) 10% 44%,
+    var(--color-cape) 44% 56%,
+    var(--color-royal-primary) 56% 90%,
+    transparent 90% 100%
+  );
+  content: "";
+}
+
 .menu-kicker {
-  margin: 0 0 4px;
-  color: var(--mercy-ink);
-  font: 800 0.72rem/1.2 ui-monospace, "Cascadia Mono", monospace;
+  margin: 0 0 var(--space-xs);
+  color: var(--color-danger);
+  font-family: var(--font-display);
+  font-size: var(--font-size-caption);
+  font-weight: 900;
+  line-height: 1.2;
   letter-spacing: 0.12em;
 }
 
 .menu-panel h2 {
   margin: 0;
-  font-family: Fredoka, "Noto Sans TC", system-ui, sans-serif;
-  font-size: clamp(1.3rem, 4vw, 2.2rem);
-  line-height: 1.08;
+  font-family: var(--font-display);
+  font-size: var(--font-size-panel-title);
+  font-weight: 900;
+  line-height: 1.15;
 }
 
 .menu-copy {
-  margin: 8px 0 0;
-  font-size: clamp(0.78rem, 2vw, 0.95rem);
+  margin: var(--space-sm) 0 0;
+  font-size: clamp(0.82rem, 2vw, 1rem);
   font-weight: 700;
+  line-height: 1.5;
 }
 
 .menu-actions {
-  margin-top: clamp(10px, 2.5vw, 18px);
+  margin-top: clamp(var(--space-md), 2.5vw, var(--space-xl));
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: var(--space-md);
 }
 
 .menu-button,
-.utility-button {
-  min-height: 48px;
-  border: 3px solid var(--ink);
-  border-radius: 13px 10px 15px 11px;
-  color: var(--ink);
-  background: var(--paper);
-  box-shadow: 0 5px 0 var(--ink);
+.utility-button,
+.control-button {
+  border-radius: var(--radius-control);
   font-weight: 900;
   cursor: pointer;
-  touch-action: manipulation;
   transition:
-    transform 160ms ease-out,
-    box-shadow 160ms ease-out,
-    background-color 160ms ease-out;
+    transform var(--duration-interaction) ease-out,
+    box-shadow var(--duration-interaction) ease-out,
+    background-color var(--duration-interaction) ease-out;
 }
 
-.menu-button:hover,
-.utility-button:hover {
-  background: #fff1b2;
+.menu-button {
+  min-height: 48px;
+  border: var(--border-thin) solid var(--menu-button-border);
+  color: var(--color-text-on-light);
+  background: var(--menu-button-bg);
+  box-shadow: 0 var(--border-medium) 0 var(--menu-button-border);
+  touch-action: manipulation;
+}
+
+.menu-button:hover {
+  background: var(--menu-button-bg-hover);
 }
 
 .menu-button:active,
-.utility-button:active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 var(--ink);
+.utility-button:active,
+.control-button:active,
+.control-button[data-pressed="true"] {
+  transform: translateY(var(--border-thin));
+}
+
+.menu-button:active {
+  box-shadow: 0 var(--border-thin) 0 var(--menu-button-border);
 }
 
 .menu-button:focus-visible,
-.utility-button:focus-visible {
-  outline: 4px solid var(--focus);
-  outline-offset: 3px;
+.utility-button:focus-visible,
+.control-button:focus-visible {
+  outline: var(--border-medium) solid var(--color-focus);
+  outline-offset: var(--space-xs);
 }
 
 .primary-action {
   grid-column: 1 / -1;
-  background: var(--play-yellow);
+  background: var(--menu-button-primary-bg);
 }
 
 .danger-action {
-  color: var(--mercy-ink);
+  color: var(--color-danger);
+  box-shadow:
+    inset var(--border-medium) 0 0 var(--color-cape),
+    0 var(--border-medium) 0 var(--menu-button-border);
+}
+
+.danger-action:active {
+  box-shadow:
+    inset var(--border-medium) 0 0 var(--color-cape),
+    0 var(--border-thin) 0 var(--menu-button-border);
 }
 
 .utility-button {
+  min-width: 48px;
   min-height: 44px;
-  padding: 6px 12px;
+  padding: 6px var(--space-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: var(--space-xs);
+  border: var(--border-thin) solid var(--utility-button-border);
+  color: var(--color-text-on-dark);
+  background: var(--utility-button-bg);
+  box-shadow: 0 var(--border-medium) 0 var(--color-page-bg);
+  touch-action: manipulation;
+}
+
+.utility-button:hover {
+  background: var(--utility-button-bg-hover);
+}
+
+.utility-button:active {
+  box-shadow: 0 var(--border-thin) 0 var(--color-page-bg);
 }
 
 #game-root,
@@ -222,12 +443,17 @@ h1 {
   height: 100% !important;
 }
 
+#game-root canvas {
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
 #game-root {
   outline: none;
 }
 
 #game-root:focus-visible {
-  box-shadow: inset 0 0 0 5px var(--focus);
+  box-shadow: inset 0 0 0 var(--border-medium) var(--color-focus);
 }
 
 .rotation-notice {
@@ -245,75 +471,70 @@ h1 {
 .game-status {
   min-height: 1.5em;
   margin: 0;
-  padding-left: 4px;
-  color: var(--mercy-ink);
+  padding-left: var(--space-xs);
+  color: var(--color-text-muted);
   font-size: 0.95rem;
   font-weight: 800;
-  transform: rotate(-0.25deg);
+  line-height: 1.5;
 }
 
 .touch-controls {
   display: none;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: var(--space-xl);
   user-select: none;
   -webkit-user-select: none;
 }
 
 .movement-controls {
   display: flex;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .control-button {
-  min-width: 64px;
-  min-height: 64px;
-  padding: 8px 16px;
-  border: 3px solid var(--ink);
-  border-radius: 18px 14px 20px 13px;
-  color: var(--ink);
-  background: var(--paper);
-  box-shadow: 0 6px 0 var(--ink);
-  cursor: pointer;
+  min-width: var(--size-touch-target);
+  min-height: var(--size-touch-target);
+  padding: var(--space-sm) var(--space-lg);
+  border: var(--border-thin) solid var(--touch-button-border);
+  color: var(--color-text-on-dark);
+  background: var(--touch-button-bg);
+  box-shadow:
+    inset 0 var(--border-thin) 0 var(--color-control-border),
+    0 var(--border-medium) 0 var(--color-page-bg);
   touch-action: none;
-  transition:
-    transform 160ms ease-out,
-    box-shadow 160ms ease-out,
-    background-color 160ms ease-out;
 }
 
 .control-button > span {
-  font: 900 1.7rem/1 Fredoka, system-ui, sans-serif;
+  font-family: var(--font-body);
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .control-button:hover {
-  background: #fff1b2;
+  background: var(--touch-button-bg-hover);
 }
 
 .control-button[data-pressed="true"],
 .control-button:active {
-  transform: translateY(5px);
-  box-shadow: 0 1px 0 var(--ink);
-  background: var(--play-yellow);
-}
-
-.control-button:focus-visible {
-  outline: 4px solid var(--focus);
-  outline-offset: 3px;
+  color: var(--color-text-on-light);
+  background: var(--touch-button-active-bg);
+  box-shadow: 0 var(--border-thin) 0 var(--color-page-bg);
 }
 
 .jump-button {
-  min-width: 104px;
+  min-width: 112px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  background: var(--play-yellow);
+  gap: var(--space-xs);
+  color: var(--color-text-on-light);
+  background: var(--touch-button-active-bg);
 }
 
 .jump-button > span {
-  font-size: 1rem;
+  font-size: var(--font-size-body);
 }
 
 @media (pointer: coarse) {
@@ -325,13 +546,17 @@ h1 {
 @media (orientation: portrait) and (max-width: 900px) {
   .game-shell {
     min-height: 100dvh;
-    padding-top: max(20px, env(safe-area-inset-top));
+    padding: max(var(--space-xl), env(safe-area-inset-top))
+      max(var(--space-md), env(safe-area-inset-right))
+      max(var(--space-md), env(safe-area-inset-bottom))
+      max(var(--space-md), env(safe-area-inset-left));
     align-content: start;
     grid-template-rows: auto auto auto auto;
   }
 
   .game-header {
     align-items: center;
+    gap: var(--space-sm);
   }
 
   .eyebrow {
@@ -343,10 +568,9 @@ h1 {
   }
 
   .death-ticket {
-    min-width: 88px;
-    padding: 7px 9px;
-    transform: scale(0.9) rotate(1deg);
-    transform-origin: right center;
+    min-width: 96px;
+    min-height: 54px;
+    padding: 7px 10px 14px;
   }
 
   .header-actions {
@@ -363,36 +587,38 @@ h1 {
   }
 
   .game-menu {
-    padding: 6px;
+    padding: var(--space-sm);
   }
 
   .menu-panel {
-    padding: 6px 10px 9px;
-    overflow: visible;
+    padding: var(--space-sm) var(--space-md) var(--space-md);
+  }
+
+  .menu-panel::before {
+    margin-bottom: var(--space-sm);
   }
 
   .menu-kicker {
-    margin-bottom: 2px;
-    font-size: 0.62rem;
+    margin-bottom: var(--space-xs);
+    font-size: 0.68rem;
   }
 
   .menu-panel h2 {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
 
   .menu-copy {
-    margin-top: 3px;
-    font-size: 0.7rem;
+    margin-top: var(--space-xs);
+    font-size: 0.74rem;
   }
 
   .menu-actions {
-    margin-top: 6px;
-    gap: 6px;
+    margin-top: var(--space-sm);
+    gap: var(--space-sm);
   }
 
   .menu-button {
-    min-height: 44px;
-    box-shadow: 0 3px 0 var(--ink);
+    min-height: 48px;
   }
 
   [data-menu-panel="pause"] .primary-action {
@@ -401,12 +627,7 @@ h1 {
 
   .touch-controls {
     display: flex;
-    padding: 4px 2px max(8px, env(safe-area-inset-bottom));
-  }
-
-  .control-button {
-    min-width: 64px;
-    min-height: 64px;
+    padding: var(--space-xs) var(--border-thin) max(var(--space-sm), env(safe-area-inset-bottom));
   }
 }
 
@@ -416,14 +637,17 @@ h1 {
   }
 
   .death-ticket {
-    min-width: 84px;
+    min-width: 92px;
   }
 }
 
 @media (max-height: 560px) and (orientation: landscape) {
   .game-shell {
     width: 100%;
-    padding-block: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-bottom));
+    padding: max(var(--space-sm), env(safe-area-inset-top))
+      max(var(--space-md), env(safe-area-inset-right))
+      max(var(--space-sm), env(safe-area-inset-bottom))
+      max(var(--space-md), env(safe-area-inset-left));
     gap: 6px;
   }
 
@@ -431,13 +655,26 @@ h1 {
     position: absolute;
     z-index: 2;
     top: max(10px, env(safe-area-inset-top));
-    left: max(18px, env(safe-area-inset-left));
     right: max(18px, env(safe-area-inset-right));
+    left: max(18px, env(safe-area-inset-left));
+    padding: 0;
+    border: 0;
     pointer-events: none;
+  }
+
+  .game-header::after {
+    display: none;
   }
 
   .header-actions {
     pointer-events: auto;
+  }
+
+  #pause-button {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .eyebrow,
@@ -446,9 +683,10 @@ h1 {
   }
 
   .death-ticket {
+    min-width: 100px;
+    min-height: 54px;
     margin-left: auto;
-    transform: scale(0.82) rotate(1deg);
-    transform-origin: top right;
+    padding: 7px 10px 14px;
   }
 
   .stage-frame {
@@ -466,11 +704,11 @@ h1 {
   }
 
   .touch-controls {
-    display: flex;
     position: fixed;
     z-index: 3;
     inset: auto max(18px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom))
       max(18px, env(safe-area-inset-left));
+    display: flex;
     pointer-events: none;
   }
 
@@ -478,7 +716,7 @@ h1 {
     min-width: 60px;
     min-height: 60px;
     padding: 6px 14px;
-    opacity: 0.88;
+    opacity: 0.9;
     pointer-events: auto;
   }
 }
@@ -493,8 +731,10 @@ h1 {
     animation-iteration-count: 1 !important;
   }
 
-  .death-ticket,
-  .game-status {
+  .menu-button:active,
+  .utility-button:active,
+  .control-button:active,
+  .control-button[data-pressed="true"] {
     transform: none;
   }
 }

@@ -1,78 +1,148 @@
 import Phaser from 'phaser';
-import { LEVEL_ONE_COLORS } from '../content/levelOneVisuals';
+import {
+  LEVEL_ONE_COLORS,
+  LEVEL_ONE_COMPONENT_COLORS,
+  PIXEL_PALETTE,
+} from '../content/levelOneVisuals';
 
 export const PLATFORM_TEXTURE_WIDTH = 96;
 
+function createPlayerTexture(scene: Phaser.Scene): void {
+  const hero = LEVEL_ONE_COMPONENT_COLORS.hero;
+  const player = scene.make.graphics({ x: 0, y: 0 });
+
+  // Cape and shield sit behind the body and preserve a clear side-view silhouette.
+  player.fillStyle(hero.outline, 1);
+  player.fillRect(4, 20, 22, 24);
+  player.fillRect(0, 25, 10, 15);
+  player.fillStyle(hero.capeShadow, 1);
+  player.fillRect(6, 22, 18, 21);
+  player.fillStyle(hero.cape, 1);
+  player.fillRect(8, 22, 15, 17);
+  player.fillStyle(hero.shield, 1);
+  player.fillRect(2, 27, 6, 11);
+  player.fillStyle(PIXEL_PALETTE.gold700, 1);
+  player.fillRect(4, 29, 2, 7);
+
+  // Boots and compact armor keep the fallback inside the 32×48 contract.
+  player.fillStyle(hero.outline, 1);
+  player.fillRect(9, 38, 7, 10);
+  player.fillRect(19, 38, 7, 10);
+  player.fillRect(8, 20, 19, 21);
+  player.fillStyle(PIXEL_PALETTE.wood800, 1);
+  player.fillRect(11, 41, 5, 6);
+  player.fillRect(20, 41, 5, 6);
+  player.fillStyle(hero.helmet, 1);
+  player.fillRect(10, 22, 15, 15);
+  player.fillStyle(hero.helmetLight, 1);
+  player.fillRect(12, 23, 10, 5);
+  player.fillStyle(hero.outline, 1);
+  player.fillRect(9, 31, 17, 3);
+  player.fillStyle(PIXEL_PALETTE.gold700, 1);
+  player.fillRect(17, 31, 3, 3);
+
+  // Oversized round helmet built from hard-edged steps, with no weapon silhouette.
+  player.fillStyle(hero.outline, 1);
+  player.fillRect(9, 1, 15, 2);
+  player.fillRect(6, 3, 21, 4);
+  player.fillRect(4, 7, 25, 11);
+  player.fillRect(7, 18, 21, 7);
+  player.fillStyle(hero.helmet, 1);
+  player.fillRect(10, 3, 13, 2);
+  player.fillRect(7, 5, 19, 4);
+  player.fillRect(6, 9, 21, 8);
+  player.fillRect(9, 17, 17, 5);
+  player.fillStyle(hero.helmetLight, 1);
+  player.fillRect(11, 4, 9, 2);
+  player.fillRect(8, 7, 6, 3);
+  player.fillRect(7, 10, 4, 4);
+  player.fillStyle(hero.outline, 1);
+  player.fillRect(18, 9, 3, 12);
+  player.fillStyle(hero.skin, 1);
+  player.fillRect(19, 12, 7, 8);
+  player.fillStyle(hero.outline, 1);
+  player.fillRect(23, 14, 2, 2);
+  player.fillRect(25, 19, 2, 2);
+  player.fillStyle(hero.cape, 1);
+  player.fillRect(8, 20, 18, 3);
+
+  player.generateTexture('player', 32, 48);
+  player.destroy();
+}
+
+function createPlatformTexture(scene: Phaser.Scene): void {
+  const platformColors = LEVEL_ONE_COMPONENT_COLORS.platform;
+  const platform = scene.make.graphics({ x: 0, y: 0 });
+  platform.fillStyle(platformColors.outline, 1);
+  platform.fillRect(0, 0, PLATFORM_TEXTURE_WIDTH, 24);
+  platform.fillStyle(platformColors.face, 1);
+  platform.fillRect(2, 9, PLATFORM_TEXTURE_WIDTH - 4, 13);
+  platform.fillStyle(platformColors.shadow, 1);
+  platform.fillRect(2, 18, PLATFORM_TEXTURE_WIDTH - 4, 4);
+  platform.fillStyle(platformColors.top, 1);
+  platform.fillRect(2, 3, PLATFORM_TEXTURE_WIDTH - 4, 8);
+  platform.fillStyle(PIXEL_PALETTE.grass200, 1);
+  for (const x of [4, 18, 36, 58, 78, 88]) {
+    platform.fillRect(x, 1, 4, 5);
+  }
+  platform.fillStyle(PIXEL_PALETTE.stone800, 1);
+  for (const x of [31, 63]) {
+    platform.fillRect(x, 12, 2, 10);
+  }
+  platform.generateTexture('platform', PLATFORM_TEXTURE_WIDTH, 24);
+  platform.destroy();
+}
+
+function createSlimeSpringTexture(scene: Phaser.Scene): void {
+  const spring = scene.make.graphics({ x: 0, y: 0 });
+  spring.fillStyle(LEVEL_ONE_COLORS.outline, 1);
+  spring.fillRect(12, 5, 30, 3);
+  spring.fillRect(8, 8, 38, 4);
+  spring.fillRect(5, 12, 44, 12);
+  spring.fillRect(9, 24, 36, 4);
+  spring.fillStyle(LEVEL_ONE_COLORS.assist, 1);
+  spring.fillRect(13, 8, 28, 3);
+  spring.fillRect(9, 11, 36, 12);
+  spring.fillRect(13, 23, 28, 3);
+  spring.fillStyle(LEVEL_ONE_COLORS.assistHighlight, 1);
+  spring.fillRect(13, 11, 12, 4);
+  spring.fillStyle(LEVEL_ONE_COLORS.outline, 1);
+  spring.fillRect(16, 15, 3, 4);
+  spring.fillRect(34, 15, 3, 4);
+  spring.fillRect(24, 21, 7, 2);
+  spring.generateTexture('spring', 54, 30);
+  spring.destroy();
+}
+
+function createMercyPlatformTexture(scene: Phaser.Scene): void {
+  const bridge = LEVEL_ONE_COMPONENT_COLORS.mercyBridge;
+  const platform = scene.make.graphics({ x: 0, y: 0 });
+  platform.fillStyle(bridge.outline, 1);
+  platform.fillRect(0, 0, PLATFORM_TEXTURE_WIDTH, 20);
+  platform.fillStyle(bridge.plankShadow, 1);
+  platform.fillRect(2, 4, PLATFORM_TEXTURE_WIDTH - 4, 14);
+  platform.fillStyle(bridge.plank, 1);
+  platform.fillRect(3, 3, 28, 11);
+  platform.fillRect(34, 3, 28, 11);
+  platform.fillRect(65, 3, 28, 11);
+  platform.fillStyle(bridge.rope, 1);
+  platform.fillRect(8, 1, 4, 18);
+  platform.fillRect(84, 1, 4, 18);
+  platform.generateTexture('mercy-platform', PLATFORM_TEXTURE_WIDTH, 20);
+  platform.destroy();
+}
+
 export function createGameTextures(scene: Phaser.Scene): void {
   if (!scene.textures.exists('player')) {
-    const player = scene.make.graphics({ x: 0, y: 0 });
-    player.fillStyle(LEVEL_ONE_COLORS.documentYellow, 1);
-    player.fillRoundedRect(0, 0, 34, 42, 10);
-    player.lineStyle(4, LEVEL_ONE_COLORS.ink, 1);
-    player.strokeRoundedRect(2, 2, 30, 38, 8);
-    player.fillStyle(LEVEL_ONE_COLORS.paper, 1);
-    player.fillRoundedRect(6, 5, 22, 8, 3);
-    player.lineStyle(2, LEVEL_ONE_COLORS.warningRed, 0.9);
-    player.lineBetween(8, 9, 26, 9);
-    player.fillStyle(LEVEL_ONE_COLORS.ink, 1);
-    player.fillCircle(11, 17, 2.5);
-    player.fillCircle(23, 17, 2.5);
-    player.lineStyle(2, LEVEL_ONE_COLORS.ink, 1);
-    player.beginPath();
-    player.arc(17, 24, 6, 0.2, Math.PI - 0.2, false);
-    player.strokePath();
-    player.fillStyle(LEVEL_ONE_COLORS.warningRed, 1);
-    player.fillRoundedRect(8, 34, 18, 4, 2);
-    player.generateTexture('player', 34, 42);
-    player.destroy();
+    createPlayerTexture(scene);
   }
-
   if (!scene.textures.exists('platform')) {
-    const platform = scene.make.graphics({ x: 0, y: 0 });
-    platform.fillStyle(LEVEL_ONE_COLORS.royalGreenDark, 1);
-    platform.fillRoundedRect(0, 2, PLATFORM_TEXTURE_WIDTH, 22, 4);
-    platform.fillStyle(LEVEL_ONE_COLORS.royalGreen, 1);
-    platform.fillRoundedRect(0, 0, PLATFORM_TEXTURE_WIDTH, 16, 4);
-    platform.fillStyle(LEVEL_ONE_COLORS.paper, 0.52);
-    platform.fillRect(5, 4, PLATFORM_TEXTURE_WIDTH - 10, 3);
-    platform.lineStyle(3, LEVEL_ONE_COLORS.ink, 1);
-    platform.strokeRoundedRect(1.5, 1.5, 93, 21, 3);
-    platform.lineStyle(2, LEVEL_ONE_COLORS.ink, 0.35);
-    platform.lineBetween(31, 16, 31, 22);
-    platform.lineBetween(64, 16, 64, 22);
-    platform.fillStyle(LEVEL_ONE_COLORS.documentYellow, 1);
-    platform.fillCircle(10, 18, 2);
-    platform.fillCircle(86, 18, 2);
-    platform.generateTexture('platform', PLATFORM_TEXTURE_WIDTH, 24);
-    platform.destroy();
+    createPlatformTexture(scene);
   }
-
   if (!scene.textures.exists('spring')) {
-    const spring = scene.make.graphics({ x: 0, y: 0 });
-    spring.fillStyle(LEVEL_ONE_COLORS.documentYellow, 1);
-    spring.fillRoundedRect(0, 0, 54, 14, 5);
-    spring.lineStyle(3, LEVEL_ONE_COLORS.ink, 1);
-    spring.strokeRoundedRect(1.5, 1.5, 51, 11, 4);
-    spring.lineStyle(4, LEVEL_ONE_COLORS.warningRed, 1);
-    spring.lineBetween(10, 14, 18, 28);
-    spring.lineBetween(18, 28, 27, 14);
-    spring.lineBetween(27, 14, 36, 28);
-    spring.lineBetween(36, 28, 44, 14);
-    spring.generateTexture('spring', 54, 30);
-    spring.destroy();
+    createSlimeSpringTexture(scene);
   }
-
-  if (!scene.textures.exists('tape-platform')) {
-    const tape = scene.make.graphics({ x: 0, y: 0 });
-    tape.fillStyle(LEVEL_ONE_COLORS.paper, 1);
-    tape.fillRoundedRect(0, 0, PLATFORM_TEXTURE_WIDTH, 20, 4);
-    tape.lineStyle(3, LEVEL_ONE_COLORS.warningRed, 1);
-    tape.strokeRoundedRect(1.5, 1.5, 93, 17, 3);
-    tape.lineStyle(2, LEVEL_ONE_COLORS.warningRed, 0.55);
-    tape.lineBetween(12, 4, 26, 16);
-    tape.lineBetween(48, 4, 62, 16);
-    tape.lineBetween(78, 4, 90, 15);
-    tape.generateTexture('tape-platform', PLATFORM_TEXTURE_WIDTH, 20);
-    tape.destroy();
+  if (!scene.textures.exists('mercy-platform')) {
+    createMercyPlatformTexture(scene);
   }
 }

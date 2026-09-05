@@ -55,6 +55,11 @@ let clearArmed = false;
 let clearArmTimer: number | null = null;
 let muted = loadMutedPreference();
 
+function updateDeathBadge(deaths: number): void {
+  deathCount.textContent = String(deaths);
+  gameShell.dataset.visualStage = deaths === 0 ? 'royal-trial' : deaths < 3 ? 'observed' : 'assisted';
+}
+
 function loadMutedPreference(): boolean {
   try {
     return window.localStorage.getItem(AUDIO_MUTED_STORAGE_KEY) === 'true';
@@ -82,20 +87,20 @@ function updateMuteButton(): void {
 function updateProgressSummary(): void {
   const snapshot = progressStore.snapshot;
   const level = snapshot.levels[LEVEL_ONE_ID];
-  deathCount.textContent = String(snapshot.totalDeaths);
+  updateDeathBadge(snapshot.totalDeaths);
 
   if (level === undefined) {
-    startButton.textContent = '開始';
-    continueSummary.textContent = '尚未留下任何可疑紀錄。';
+    startButton.textContent = '踏上旅程';
+    continueSummary.textContent = '從王城外圍的新手森林出發。';
     return;
   }
   if (level.completed) {
-    startButton.textContent = '再寫一次';
-    continueSummary.textContent = `本題已完成，累積死亡 ${snapshot.totalDeaths} 次。可以再寫一次。`;
+    startButton.textContent = '再次啟程';
+    continueSummary.textContent = `王城試煉已完成，累積陣亡 ${snapshot.totalDeaths} 次。可以再次啟程。`;
     return;
   }
-  startButton.textContent = '繼續';
-  continueSummary.textContent = `從「${level.progressMarkerId}」繼續，累積死亡 ${snapshot.totalDeaths} 次。`;
+  startButton.textContent = '繼續旅程';
+  continueSummary.textContent = `從上次的安全據點繼續，累積陣亡 ${snapshot.totalDeaths} 次。`;
 }
 
 function resetClearConfirmation(): void {
@@ -197,7 +202,7 @@ function toggleMuted(): void {
 function requestClearProgress(): void {
   if (!clearArmed) {
     clearArmed = true;
-    clearButton.textContent = '真的全部清除？';
+    clearButton.textContent = '確認清除旅程？';
     clearArmTimer = window.setTimeout(resetClearConfirmation, 4_000);
     return;
   }
@@ -205,16 +210,16 @@ function requestClearProgress(): void {
   resetClearConfirmation();
   progressStore.replace(createDefaultProgress());
   updateProgressSummary();
-  gameStatus.textContent = '紀錄已清除。遊戲決定當作第一次見面。';
+  gameStatus.textContent = '旅程紀錄已清除。王城決定當作第一次見面。';
   restartGame();
 }
 
 const unsubscribe = subscribeToGameStatus((detail) => {
-  deathCount.textContent = String(detail.deaths);
+  updateDeathBadge(detail.deaths);
   gameStatus.textContent = detail.message;
   if (detail.phase === 'completed') {
     const eggCount = progressStore.snapshot.discoveredEasterEggIds.length;
-    completeSummary.textContent = `死亡 ${detail.deaths} 次，發現 ${eggCount} 個特殊事件。沒有能力評級。`;
+    completeSummary.textContent = `陣亡 ${detail.deaths} 次，發現 ${eggCount} 個特殊事件。王城沒有留下能力評級。`;
     inputController.actions.releaseAll();
     showMenu('complete');
   }

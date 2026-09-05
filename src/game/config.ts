@@ -4,6 +4,7 @@ import type { InputController } from './input/InputController';
 import { VerticalSliceScene } from './scenes/VerticalSliceScene';
 import type { ProgressStore } from './state/progress';
 import type { PlaytestDriver } from './testing/PlaytestDriver';
+import { GAME_RENDERING } from './rendering';
 
 export interface GameDependencies {
   readonly inputController: InputController;
@@ -18,8 +19,7 @@ export function createGame(dependencies: GameDependencies): Phaser.Game {
     width: 960,
     height: 540,
     backgroundColor: '#ddf4ff',
-    pixelArt: false,
-    antialias: true,
+    ...GAME_RENDERING,
     physics: {
       default: 'arcade',
       arcade: {
