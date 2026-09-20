@@ -1,3 +1,6 @@
+import { drawHero } from './heroPixels';
+import { paintGroundTile } from './forestPainting';
+import { graphicsPainter } from './pixelPainter';
 import Phaser from 'phaser';
 import {
   LEVEL_ONE_COLORS,
@@ -8,68 +11,18 @@ import {
 export const PLATFORM_TEXTURE_WIDTH = 96;
 
 function createPlayerTexture(scene: Phaser.Scene): void {
-  const hero = LEVEL_ONE_COMPONENT_COLORS.hero;
-  const player = scene.make.graphics({ x: 0, y: 0 });
-
-  // Cape and shield sit behind the body and preserve a clear side-view silhouette.
-  player.fillStyle(hero.outline, 1);
-  player.fillRect(4, 20, 22, 24);
-  player.fillRect(0, 25, 10, 15);
-  player.fillStyle(hero.capeShadow, 1);
-  player.fillRect(6, 22, 18, 21);
-  player.fillStyle(hero.cape, 1);
-  player.fillRect(8, 22, 15, 17);
-  player.fillStyle(hero.shield, 1);
-  player.fillRect(2, 27, 6, 11);
-  player.fillStyle(PIXEL_PALETTE.gold700, 1);
-  player.fillRect(4, 29, 2, 7);
-
-  // Boots and compact armor keep the fallback inside the 32×48 contract.
-  player.fillStyle(hero.outline, 1);
-  player.fillRect(9, 38, 7, 10);
-  player.fillRect(19, 38, 7, 10);
-  player.fillRect(8, 20, 19, 21);
-  player.fillStyle(PIXEL_PALETTE.wood800, 1);
-  player.fillRect(11, 41, 5, 6);
-  player.fillRect(20, 41, 5, 6);
-  player.fillStyle(hero.helmet, 1);
-  player.fillRect(10, 22, 15, 15);
-  player.fillStyle(hero.helmetLight, 1);
-  player.fillRect(12, 23, 10, 5);
-  player.fillStyle(hero.outline, 1);
-  player.fillRect(9, 31, 17, 3);
-  player.fillStyle(PIXEL_PALETTE.gold700, 1);
-  player.fillRect(17, 31, 3, 3);
-
-  // Oversized round helmet built from hard-edged steps, with no weapon silhouette.
-  player.fillStyle(hero.outline, 1);
-  player.fillRect(9, 1, 15, 2);
-  player.fillRect(6, 3, 21, 4);
-  player.fillRect(4, 7, 25, 11);
-  player.fillRect(7, 18, 21, 7);
-  player.fillStyle(hero.helmet, 1);
-  player.fillRect(10, 3, 13, 2);
-  player.fillRect(7, 5, 19, 4);
-  player.fillRect(6, 9, 21, 8);
-  player.fillRect(9, 17, 17, 5);
-  player.fillStyle(hero.helmetLight, 1);
-  player.fillRect(11, 4, 9, 2);
-  player.fillRect(8, 7, 6, 3);
-  player.fillRect(7, 10, 4, 4);
-  player.fillStyle(hero.outline, 1);
-  player.fillRect(18, 9, 3, 12);
-  player.fillStyle(hero.skin, 1);
-  player.fillRect(19, 12, 7, 8);
-  player.fillStyle(hero.outline, 1);
-  player.fillRect(23, 14, 2, 2);
-  player.fillRect(25, 19, 2, 2);
-  player.fillStyle(hero.cape, 1);
-  player.fillRect(8, 20, 18, 3);
-
-  player.generateTexture('player', 32, 48);
-  player.destroy();
+  for (const pose of ['idle', 'stride', 'pass', 'jump'] as const) {
+    const graphic = scene.make.graphics({ x: 0, y: 0 });
+    drawHero(graphicsPainter(graphic), 0, 0, 2, pose);
+    graphic.generateTexture(pose === 'idle' ? 'player' : `player-${pose}`, 32, 48);
+    graphic.destroy();
+  }
+  if (!scene.anims.exists('hero-run')) {
+    scene.anims.create({ key: 'hero-run', frames: [
+      { key: 'player-stride' }, { key: 'player-pass' }, { key: 'player' }, { key: 'player-pass' },
+    ], frameRate: 10, repeat: -1 });
+  }
 }
-
 function createPlatformTexture(scene: Phaser.Scene): void {
   const platformColors = LEVEL_ONE_COMPONENT_COLORS.platform;
   const platform = scene.make.graphics({ x: 0, y: 0 });
@@ -90,6 +43,9 @@ function createPlatformTexture(scene: Phaser.Scene): void {
     platform.fillRect(x, 12, 2, 10);
   }
   platform.generateTexture('platform', PLATFORM_TEXTURE_WIDTH, 24);
+  platform.clear();
+  paintGroundTile(graphicsPainter(platform));
+  platform.generateTexture('forest-ground', PLATFORM_TEXTURE_WIDTH, 54);
   platform.destroy();
 }
 

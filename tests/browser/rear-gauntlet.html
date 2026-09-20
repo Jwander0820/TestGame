@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>後半段連環惡意驗證</title>
+  <style>
+    body { margin: 0; background: #fff9e8; color: #24322a; font-family: system-ui; }
+    main { max-width: 960px; margin: auto; } #game-root { width: 100%; aspect-ratio: 16/9; }
+    nav, output, pre { display: block; padding: 12px; white-space: pre-wrap; } a { margin-right: 18px; }
+  </style>
+</head>
+<body><main>
+  <nav><a href="?case=step">高台崩落</a><a href="?case=sweep">迎面橫掃</a><a href="?case=exit">橋尾地刺</a><a href="?case=ceiling">起跳伏擊</a><a href="?case=finish">落地伏擊</a><a href="?case=pause">暫停</a><a href="?case=reload">重載援助</a></nav>
+  <div id="game-root" aria-label="後半段連環陷阱自動測試"></div>
+  <output id="playtest-result" data-status="running">執行中，使用獨立測試存檔。</output>
+  <pre id="rear-evidence"></pre>
+</main><script type="module" src="./rear-gauntlet.ts"></script></body>
+</html>

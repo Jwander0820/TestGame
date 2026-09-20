@@ -1,22 +1,15 @@
 import type { ActionState } from '../../src/game/input/ActionState';
 import type { PlaytestDriver, PlaytestFrame } from '../../src/game/testing/PlaytestDriver';
+import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 const LEFT_SOURCE = 'playtest:reverse-easter-egg:left';
 const RIGHT_SOURCE = 'playtest:reverse-easter-egg:right';
 const JUMP_SOURCE = 'playtest:reverse-easter-egg:jump';
 
-const MAIN_ROUTE_JUMP_ZONES = [
-  { minX: 376, maxX: 405 },
-  { minX: 580, maxX: 625 },
-  { minX: 970, maxX: 1_005 },
-  { minX: 1_405, maxX: 1_455 },
-  { minX: 2_385, maxX: 2_430 },
-  { minX: 2_585, maxX: 2_635 },
-] as const;
-
-type DriverPhase = 'first-jump' | 'second-jump' | 'main-route';
+type DriverPhase = 'first-jump' | 'second-jump' | 'coin-greed' | 'main-route';
 
 export class ReverseEasterEggDriver implements PlaytestDriver {
+  private readonly mainRoute = new ZeroAssistDriver();
   private phase: DriverPhase = 'first-jump';
   private firstJumpStarted = false;
   private secondJumpStarted = false;
@@ -24,11 +17,14 @@ export class ReverseEasterEggDriver implements PlaytestDriver {
   reachedReverseCache = false;
   lastFrame: PlaytestFrame | null = null;
 
+  constructor(private readonly greedyCoins = false) {}
+
   get currentPhase(): DriverPhase {
     return this.phase;
   }
 
   reset(actions: ActionState): void {
+    this.mainRoute.reset(actions);
     actions.releaseSource(LEFT_SOURCE);
     actions.releaseSource(RIGHT_SOURCE);
     actions.releaseSource(JUMP_SOURCE);
@@ -46,6 +42,9 @@ export class ReverseEasterEggDriver implements PlaytestDriver {
       this.updateFirstJump(frame, actions);
     } else if (this.phase === 'second-jump') {
       this.updateSecondJump(frame, actions);
+    } else if (this.phase === 'coin-greed') {
+      actions.releaseSource(JUMP_SOURCE);
+      if (frame.x > 90 && frame.y > 330) this.phase = 'main-route';
     } else {
       this.updateMainRoute(frame, actions);
     }
@@ -93,22 +92,16 @@ export class ReverseEasterEggDriver implements PlaytestDriver {
       actions.releaseSource(JUMP_SOURCE);
       this.jumpHeld = false;
       this.reachedReverseCache = true;
-      this.phase = 'main-route';
-      actions.press('right', RIGHT_SOURCE);
+      this.phase = this.greedyCoins ? 'coin-greed' : 'main-route';
+      if (!this.greedyCoins) actions.press('right', RIGHT_SOURCE);
     }
   }
 
   private updateMainRoute(frame: PlaytestFrame, actions: ActionState): void {
     actions.releaseSource(LEFT_SOURCE);
-    actions.press('right', RIGHT_SOURCE);
-    const shouldJump =
-      frame.grounded &&
-      MAIN_ROUTE_JUMP_ZONES.some((zone) => frame.x >= zone.minX && frame.x <= zone.maxX);
-    if (shouldJump && !this.jumpHeld) {
-      this.pressJump(actions);
-    } else {
-      this.releaseJumpAfterTakeoff(frame, actions);
-    }
+    actions.releaseSource(RIGHT_SOURCE);
+    actions.releaseSource(JUMP_SOURCE);
+    this.mainRoute.update(frame, actions);
   }
 
   private pressJump(actions: ActionState): void {

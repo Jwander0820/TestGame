@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { LEVEL_ONE_TRAPS } from './levelOneTraps';
 import {
   LEVEL_ONE_PLATFORM_LAYOUT,
   LEVEL_ONE_PLAYER_PHYSICS,
@@ -133,6 +134,18 @@ describe('level one assistance geometry', () => {
 });
 
 describe('level one learned ambush routes', () => {
+  it('supports walking across the false gap with head clearance below the airborne trap', () => {
+    const { falseFloor, airAmbush } = LEVEL_ONE_TRAPS;
+    const floorTop = falseFloor.y - falseFloor.height / 2;
+    const playerTop = floorTop - LEVEL_ONE_PLAYER_PHYSICS.bodyHeight;
+    expect(playerTop - (airAmbush.y + airAmbush.height / 2)).toBeGreaterThanOrEqual(20);
+    const leftBank = LEVEL_ONE_PLATFORM_LAYOUT.find((entry) => entry.id === 'after-first-gap')!;
+    const rightBank = LEVEL_ONE_PLATFORM_LAYOUT.find((entry) => entry.id === 'after-warning-strip')!;
+    expect(falseFloor.x - falseFloor.width / 2).toBeLessThanOrEqual(leftBank.x + leftBank.width / 2);
+    expect(falseFloor.x + falseFloor.width / 2).toBeGreaterThanOrEqual(rightBank.x - rightBank.width / 2);
+    expect(falseFloor.y).toBe(leftBank.y);
+    expect(falseFloor.y).toBe(rightBank.y);
+  });
   it('places the landing stamp where a blind runner reaches it as it appears', () => {
     const stamp = LEVEL_ONE_AMBUSH_LAYOUT.landingStamp;
     const runnerX = stamp.triggerX +

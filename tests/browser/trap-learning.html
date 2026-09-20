@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SPEC-0008 陷阱與援助實測</title>
+    <style>
+      body { margin: 0; background: #fff9e8; color: #24322a; font-family: system-ui, sans-serif; }
+      main { max-width: 960px; margin: auto; }
+      #game-root { width: 100%; aspect-ratio: 16 / 9; }
+      output, pre, p { display: block; padding: 12px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>直覺操作實測：第一落點提早跳、假斷路也跳。預期撞頂板 3 次、空中伏擊 5 次，援助後通關。僅使用測試記憶體存檔。</p>
+      <div id="game-root" aria-label="陷阱與援助自動測試舞台"></div>
+      <output id="playtest-result" data-status="running">執行中</output>
+      <pre id="trap-evidence"></pre>
+    </main>
+    <script type="module" src="./trap-learning.ts"></script>
+  </body>
+</html>

@@ -1,3 +1,4 @@
+import { requireTestElement, getTestFrameWindow } from './dom';
 import { LEVEL_ONE_ID } from '../../src/game/content/levelOne';
 import { PROGRESS_STORAGE_KEY, parseProgress } from '../../src/game/state/progress';
 
@@ -5,15 +6,12 @@ type TestPhase = 'initial' | 'reloading' | 'finished';
 
 const IDLE_EGG_ID = 'idle-apology';
 const IDLE_MESSAGE = '你是在等遊戲先道歉嗎？';
-const frame = document.querySelector<HTMLIFrameElement>('#production-frame');
-const focusSink = document.querySelector<HTMLButtonElement>('#focus-sink');
-const result = document.querySelector<HTMLOutputElement>('#playtest-result');
-if (frame === null || focusSink === null || result === null) {
-  throw new Error('Idle easter egg playtest elements are missing.');
-}
+const frame = requireTestElement<HTMLIFrameElement>('#production-frame');
+const focusSink = requireTestElement<HTMLButtonElement>('#focus-sink');
+const result = requireTestElement<HTMLOutputElement>('#playtest-result');
 
 let phase: TestPhase = 'initial';
-let frameWindow: Window | null = null;
+let frameWindow: (Window & typeof globalThis) | null = null;
 let frameDocument: Document | null = null;
 let timeoutTimer: number | null = null;
 let consoleWarningCount = 0;
@@ -49,7 +47,7 @@ function reportConsoleCounts(): void {
   result.dataset.consoleErrors = String(consoleErrorCount);
 }
 
-function attachConsoleDiagnostics(target: Window): void {
+function attachConsoleDiagnostics(target: Window & typeof globalThis): void {
   const originalWarn = target.console.warn.bind(target.console);
   const originalError = target.console.error.bind(target.console);
   target.console.warn = (...data: unknown[]): void => {
@@ -190,7 +188,7 @@ async function runReloadPass(): Promise<void> {
 }
 
 frame.addEventListener('load', () => {
-  frameWindow = frame.contentWindow;
+  frameWindow = getTestFrameWindow(frame);
   frameDocument = frame.contentDocument;
   if (frameWindow === null || frameDocument === null) {
     fail('無法讀取正式 dist iframe。');

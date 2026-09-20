@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>首關玩法試玩</title>
+  <style>
+    body { margin: 0; background: #14232b; color: #fff3d6; font: 14px system-ui; }
+    main { max-width: 960px; margin: auto; }
+    nav { display: flex; gap: 12px; padding: 12px; flex-wrap: wrap; }
+    button { min-height: 56px; padding: 8px 16px; background: #fff3d6; color: #14232b; border: 2px solid #86613e; font: inherit; cursor: pointer; }
+    button[aria-pressed="true"] { background: #f3c743; }
+    button:focus-visible { outline: 3px solid #2f78d8; outline-offset: 2px; }
+    #game-root { width: min(100%, calc((100dvh - 224px) * 16 / 9)); margin: auto; aspect-ratio: 16/9; }
+    .controls { display: flex; gap: 12px; padding: 0 12px; }
+    .controls button { flex: 1; touch-action: none; user-select: none; }
+    .controls button[data-pressed="true"] { background: #f3c743; }
+    #game-root canvas { image-rendering: pixelated; }
+    p { padding: 0 12px; }
+    @media (max-height: 560px) { main > p:last-child { display: none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <nav aria-label="測試進度">
+      <button data-state="zero" aria-pressed="true">零死亡</button>
+      <button data-state="first" aria-pressed="false">首次死亡</button>
+      <button data-state="max" aria-pressed="false">最高援助</button>
+      <button data-state="rear" aria-pressed="false">後半段零援助</button>
+    </nav>
+    <div id="game-root" aria-label="可操作的首關試玩舞台"></div>
+    <div class="controls" aria-label="移動操作">
+      <button data-action="left" aria-label="向左">←</button>
+      <button data-action="right" aria-label="向右">→</button>
+      <button data-action="jump">跳躍</button>
+    </div>
+    <p id="art-state" role="status">零死亡</p>
+    <p>方向鍵／空白鍵或下方三鍵試玩。此頁只用記憶體進度，不讀寫正式存檔；上方按鈕是測試工具。</p>
+  </main>
+  <script type="module" src="./art-review.ts"></script>
+</body>
+</html>

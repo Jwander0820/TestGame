@@ -1,4 +1,5 @@
 import './styles.css';
+import { paintTitle } from './game/visuals/titlePainting';
 import { createGame } from './game/config';
 import { LEVEL_ONE_ID } from './game/content/levelOne';
 import { subscribeToGameStatus } from './game/events';
@@ -23,6 +24,7 @@ const gameShell = requireElement<HTMLElement>('.game-shell');
 const deathCount = requireElement<HTMLElement>('#death-count');
 const gameStatus = requireElement<HTMLElement>('#game-status');
 const gameRoot = requireElement<HTMLElement>('#game-root');
+paintTitle(requireElement<HTMLCanvasElement>('#title-landscape'));
 const gameMenu = requireElement<HTMLElement>('#game-menu');
 const touchControls = requireElement<HTMLElement>('.touch-controls');
 const pauseButton = requireElement<HTMLButtonElement>('#pause-button');

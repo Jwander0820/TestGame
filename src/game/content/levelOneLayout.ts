@@ -23,7 +23,7 @@ export const LEVEL_ONE_SPAWNS = {
   start: { x: 110, y: 350 },
   afterFirstGap: { x: 820, y: 360 },
   afterWarningStrip: { x: 1_340, y: 360 },
-  afterInternBridge: { x: 2_330, y: 360 },
+  afterInternBridge: { x: 2_250, y: 360 },
 } as const;
 
 export const LEVEL_ONE_PLATFORM_LAYOUT: readonly PlatformDefinition[] = [

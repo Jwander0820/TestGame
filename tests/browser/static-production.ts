@@ -1,16 +1,23 @@
+import { requireTestElement, getTestFrameWindow } from './dom';
 import { LEVEL_ONE_ID } from '../../src/game/content/levelOne';
 import { PROGRESS_STORAGE_KEY, parseProgress } from '../../src/game/state/progress';
 
 type TestPhase = 'initial' | 'playing' | 'reloading' | 'finished';
 
-const frame = document.querySelector<HTMLIFrameElement>('#production-frame');
-const result = document.querySelector<HTMLOutputElement>('#playtest-result');
-if (frame === null || result === null) {
-  throw new Error('Static production playtest elements are missing.');
+const frame = requireTestElement<HTMLIFrameElement>('#production-frame');
+const result = requireTestElement<HTMLOutputElement>('#playtest-result');
+const originalProgress = window.localStorage.getItem(PROGRESS_STORAGE_KEY);
+
+function restoreOriginalProgress(): void {
+  if (originalProgress === null) window.localStorage.removeItem(PROGRESS_STORAGE_KEY);
+  else window.localStorage.setItem(PROGRESS_STORAGE_KEY, originalProgress);
+  result.dataset.originalProgressRestored = String(window.localStorage.getItem(PROGRESS_STORAGE_KEY) === originalProgress);
 }
 
+window.addEventListener('beforeunload', restoreOriginalProgress, { once: true });
+
 let phase: TestPhase = 'initial';
-let frameWindow: Window | null = null;
+let frameWindow: (Window & typeof globalThis) | null = null;
 let frameDocument: Document | null = null;
 let jumpInterval: number | null = null;
 let jumpReleaseTimer: number | null = null;
@@ -38,7 +45,7 @@ function reportConsoleCounts(): void {
   result.dataset.consoleErrors = String(consoleErrorCount);
 }
 
-function attachConsoleDiagnostics(target: Window): void {
+function attachConsoleDiagnostics(target: Window & typeof globalThis): void {
   const originalWarn = target.console.warn.bind(target.console);
   const originalError = target.console.error.bind(target.console);
   target.console.warn = (...data: unknown[]): void => {
@@ -165,7 +172,7 @@ function beginProductionRun(): void {
     stopDriving();
     result.dataset.status = 'timeout';
     result.textContent = '正式產物未在 90 秒內完成。';
-    window.localStorage.removeItem(PROGRESS_STORAGE_KEY);
+    restoreOriginalProgress();
   }, 90_000);
 }
 
@@ -196,11 +203,11 @@ function verifyReloadedTitle(): void {
     window.clearTimeout(timeoutTimer);
     timeoutTimer = null;
   }
-  window.localStorage.removeItem(PROGRESS_STORAGE_KEY);
+  restoreOriginalProgress();
 }
 
 frame.addEventListener('load', () => {
-  frameWindow = frame.contentWindow;
+  frameWindow = getTestFrameWindow(frame);
   frameDocument = frame.contentDocument;
   if (frameWindow === null || frameDocument === null) {
     result.dataset.status = 'frame-unavailable';

@@ -12,12 +12,23 @@ import {
 import { LEVEL_ONE_COLORS, LEVEL_ONE_TEXT_COLORS } from '../../content/levelOneVisuals';
 import { addGameText } from '../../visuals/addGameText';
 import { PLATFORM_TEXTURE_WIDTH } from '../../visuals/createTextures';
-import { LEVEL_ONE_ART_KEYS, hasLevelOneArt } from '../../visuals/levelOneArt';
+import { LearnedTrapState } from '../../state/LearnedTrapState';
+import { LearnedTraps } from './LearnedTraps';
+import { LEVEL_ONE_COPY as copy } from '../../content/levelOneCopy';
+import { FirstPitAmbush } from './FirstPitAmbush';
+import { FirstPitState } from '../../state/FirstPitState';
+import type { FirstPitCause } from '../../content/firstPitAmbush';
+import { RearGauntlet } from './RearGauntlet';
+import { RearGauntletState } from '../../state/RearGauntletState';
+import type { RearCause, RearHazardId } from '../../content/rearGauntlet';
 
 interface LevelOneWorldCallbacks {
   readonly onWarningHazard: () => void;
   readonly onLandingAmbush: () => void;
   readonly onGoalAmbush: () => void;
+  readonly onAirAmbush: () => void;
+  readonly onFirstPitDeath: (cause: FirstPitCause) => void;
+  readonly onRearDeath: (cause: RearCause) => void;
   readonly isPlayerDying: () => boolean;
 }
 
@@ -26,9 +37,23 @@ export interface LevelOneWorldInitialState {
   readonly landingAmbushRevealed: boolean;
   readonly bridgeWeaknessRevealed: boolean;
   readonly goalAmbushSpent: boolean;
+  readonly ceilingRevealed: boolean;
+  readonly airAmbushRevealed: boolean;
+  readonly pitBrickRevealed: boolean;
+  readonly coinsRevealed: boolean;
+  readonly rearRevealed: readonly RearHazardId[];
 }
 
 export class LevelOneWorld {
+  private readonly rearState: RearGauntletState;
+  private rear: RearGauntlet | null = null;
+  private raisedStep: Phaser.Physics.Arcade.Sprite | null = null;
+  private readonly firstPitState: FirstPitState;
+  private firstPit: FirstPitAmbush | null = null;
+  private readonly trapState: LearnedTrapState;
+  private learnedTraps: LearnedTraps | null = null;
+  private landingStamp: Phaser.GameObjects.Rectangle | null = null;
+  private landingStampLabel: Phaser.GameObjects.Text | null = null;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
   private readonly platformVisuals = new Map<Phaser.Physics.Arcade.Sprite, Phaser.GameObjects.TileSprite>();
   private firstLanding: Phaser.Physics.Arcade.Sprite | null = null;
@@ -53,6 +78,9 @@ export class LevelOneWorld {
     private readonly callbacks: LevelOneWorldCallbacks,
     initialState: LevelOneWorldInitialState,
   ) {
+    this.rearState = new RearGauntletState(initialState.rearRevealed);
+    this.firstPitState = new FirstPitState(initialState.pitBrickRevealed, initialState.coinsRevealed);
+    this.trapState = new LearnedTrapState(initialState.ceilingRevealed, initialState.airAmbushRevealed);
     this.warningHazardRevealed = initialState.warningHazardRevealed;
     this.bridgeWeaknessRevealed = initialState.bridgeWeaknessRevealed;
     this.goalAmbushSpent = initialState.goalAmbushSpent;
@@ -67,6 +95,7 @@ export class LevelOneWorld {
         continue;
       }
       const platform = this.addPlatform(definition.x, definition.y, definition.width);
+      if (definition.id === 'raised-step') this.raisedStep = platform;
       if (definition.id === 'first-landing') {
         this.firstLanding = platform;
       }
@@ -79,12 +108,42 @@ export class LevelOneWorld {
 
   attachPlayer(player: Phaser.Physics.Arcade.Sprite): void {
     this.player = player;
-    this.scene.physics.add.collider(player, this.platforms);
+    this.scene.physics.add.collider(player, this.platforms, (_player, platform) => {
+      if (platform === this.raisedStep && player.body?.blocked.down && !this.callbacks.isPlayerDying()) {
+        this.rear?.landOnStep();
+      }
+    });
     if (this.collapsingBridge !== null) {
       this.scene.physics.add.collider(player, this.collapsingBridge, () => this.armCollapsingBridge());
     }
     this.createLandingAmbush();
     this.createGoalAmbush();
+    this.learnedTraps = new LearnedTraps(this.scene, player, this.trapState,
+      this.callbacks.isPlayerDying, this.callbacks.onAirAmbush);
+    this.firstPit = new FirstPitAmbush(this.scene, player, this.firstPitState,
+      this.callbacks.isPlayerDying, this.callbacks.onFirstPitDeath);
+    this.rear = new RearGauntlet(this.scene, player, this.rearState,
+      this.callbacks.isPlayerDying, this.callbacks.onRearDeath, (collapsed) => {
+        const step = this.raisedStep;
+        if (step?.body) step.body.enable = !collapsed;
+        if (step) this.platformVisuals.get(step)?.setAlpha(collapsed ? 0.2 : 1)
+          .setY(step.y + 15 + (collapsed ? 90 : 0));
+      });
+  }
+
+  update(deltaMs: number): void {
+    this.firstPit?.update(deltaMs);
+    this.rear?.update(deltaMs);
+  }
+
+  get raisedStepCollapsed(): boolean { return this.rear?.stepCollapsed ?? false; }
+
+  get hitPitBrickThisAttempt(): boolean {
+    return this.firstPitState.hitBrickThisAttempt;
+  }
+
+  get hitCeilingThisAttempt(): boolean {
+    return this.trapState.hitCeilingThisAttempt;
   }
 
   createWarningHazard(width: number = LEVEL_ONE_WARNING_HAZARD.width): void {
@@ -123,7 +182,7 @@ export class LevelOneWorld {
       this.scene,
       LEVEL_ONE_WARNING_HAZARD.x,
       470,
-      '守衛翻牌：危險',
+      copy.warningRevealed,
       16,
       LEVEL_ONE_TEXT_COLORS.parchment,
     )
@@ -134,6 +193,15 @@ export class LevelOneWorld {
   }
 
   applyAssistEffect(effectId: LevelOneEffectId): void {
+    this.rear?.applyEffect(effectId);
+    this.firstPit?.applyEffect(effectId);
+    this.learnedTraps?.applyEffect(effectId);
+    if (!this.trapState.landingStampEnabled) {
+      const stampBody = this.landingStamp?.body as Phaser.Physics.Arcade.StaticBody | null;
+      if (stampBody) stampBody.enable = false;
+      this.landingStamp?.setAlpha(0.18);
+      this.landingStampLabel?.setAlpha(0.18);
+    }
     switch (effectId) {
       case LEVEL_ONE_EFFECT_IDS.moveFirstLanding:
         this.movePlatform(
@@ -169,7 +237,7 @@ export class LevelOneWorld {
           ?.setFillStyle(LEVEL_ONE_COLORS.midSilhouette, 0.58)
           .setStrokeStyle(3, LEVEL_ONE_COLORS.assist, 1);
         const label = LEVEL_ONE_ASSISTANCE_LAYOUT.retiredLabel;
-        addGameText(this.scene, label.x, label.y, '王命停用', 17, LEVEL_ONE_TEXT_COLORS.ink)
+        addGameText(this.scene, label.x, label.y, copy.warningRetired, 17, LEVEL_ONE_TEXT_COLORS.ink)
           .setOrigin(0.5)
           .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.assist)
           .setPadding(7, 4);
@@ -187,7 +255,7 @@ export class LevelOneWorld {
             this.scene,
             net.x,
             net.y + 14,
-            '守衛臨時接住區',
+            copy.safetyNet,
             14,
             LEVEL_ONE_TEXT_COLORS.ink,
           )
@@ -206,7 +274,7 @@ export class LevelOneWorld {
           this.scene,
           label.x,
           label.y,
-          '王命：此橋不得再塌',
+          copy.bridgeCertified,
           16,
           LEVEL_ONE_TEXT_COLORS.danger,
         )
@@ -223,6 +291,9 @@ export class LevelOneWorld {
   }
 
   resetTransientHazards(): void {
+    this.rear?.resetAttempt();
+    this.firstPit?.resetAttempt();
+    this.trapState.resetAttempt();
     this.bridgeCollapseTimer?.remove(false);
     this.bridgeCollapseTimer = null;
 
@@ -250,10 +321,10 @@ export class LevelOneWorld {
   private addPlatform(x: number, y: number, width: number, texture = 'platform'): Phaser.Physics.Arcade.Sprite {
     const platform = this.platforms.create(x, y, texture) as Phaser.Physics.Arcade.Sprite;
     platform.setScale(width / PLATFORM_TEXTURE_WIDTH, 1).refreshBody();
-    if (texture === 'platform' && hasLevelOneArt(this.scene, LEVEL_ONE_ART_KEYS.forestGround)) {
+    if (texture === 'platform') {
       platform.setAlpha(0);
       const visual = this.scene.add
-        .tileSprite(x, y + 15, width, 54, LEVEL_ONE_ART_KEYS.forestGround, 'grass-platform')
+        .tileSprite(x, y + 15, width, 54, 'forest-ground')
         .setDepth(0);
       this.platformVisuals.set(platform, visual);
     }
@@ -340,32 +411,37 @@ export class LevelOneWorld {
       revealed ? 1 : 0,
     );
     stamp.setStrokeStyle(4, LEVEL_ONE_COLORS.outline, revealed ? 1 : 0);
+    this.landingStamp = stamp;
     this.scene.physics.add.existing(stamp, true);
     const stampBody = stamp.body as Phaser.Physics.Arcade.StaticBody | null;
     if (stampBody !== null) {
       stampBody.enable = revealed;
     }
-    this.scene.physics.add.overlap(this.requirePlayer(), stamp, this.callbacks.onLandingAmbush);
+    this.scene.physics.add.overlap(this.requirePlayer(), stamp, () => {
+      if (this.trapState.landingStampEnabled) this.callbacks.onLandingAmbush();
+    });
 
     const label = addGameText(
       this.scene,
       definition.x,
       definition.revealedY,
-      '王徽',
+      copy.landingStamp,
       14,
       LEVEL_ONE_TEXT_COLORS.parchment,
     )
       .setOrigin(0.5)
       .setAlpha(revealed ? 1 : 0)
       .setDepth(2);
+    this.landingStampLabel = label;
     const trigger = this.scene.add.zone(definition.triggerX, 360, 70, 150);
     this.scene.physics.add.existing(trigger, true);
     this.scene.physics.add.overlap(this.requirePlayer(), trigger, () => {
-      if (this.landingAmbushArmed || this.callbacks.isPlayerDying()) {
+      if (!this.trapState.landingStampEnabled || this.landingAmbushArmed || this.callbacks.isPlayerDying()) {
         return;
       }
       this.landingAmbushArmed = true;
       this.scene.time.delayedCall(definition.revealDelayMs, () => {
+        if (!this.trapState.landingStampEnabled) return;
         stamp.setAlpha(1).setStrokeStyle(4, LEVEL_ONE_COLORS.outline, 1);
         label.setAlpha(1);
         if (stampBody !== null) {
@@ -391,7 +467,7 @@ export class LevelOneWorld {
       this.scene,
       definition.x,
       initialY,
-      '王\n令',
+      copy.goalStamp,
       19,
       LEVEL_ONE_TEXT_COLORS.danger,
     )

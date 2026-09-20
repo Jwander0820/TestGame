@@ -4,6 +4,7 @@ import { subscribeToGameStatus } from '../../src/game/events';
 import { InputController } from '../../src/game/input/InputController';
 import { PROGRESS_STORAGE_KEY, ProgressStore } from '../../src/game/state/progress';
 import { MaxAssistanceDriver } from './MaxAssistanceDriver';
+import { ZeroAssistDriver } from './ZeroAssistDriver';
 import { createMaxAssistanceCheckpointProgress } from './maxAssistanceState';
 
 const EXPECTED_DEATHS = 14;
@@ -99,7 +100,21 @@ if (window.sessionStorage.getItem(STAGE_KEY) !== 'seeded') {
   }
 
   const inputController = new InputController();
-  const playtestDriver = new MaxAssistanceDriver();
+  const frontDriver = new MaxAssistanceDriver();
+  const rearDriver = new ZeroAssistDriver();
+  const playtestDriver = {
+    reset: (actions: Parameters<ZeroAssistDriver['reset']>[0]) => {
+      frontDriver.reset(actions); rearDriver.reset(actions);
+    },
+    update: (...args: Parameters<ZeroAssistDriver['update']>) => {
+      if (args[0].x < 1_300) frontDriver.update(...args);
+      else {
+        args[1].releaseSource('playtest:max-assistance:right');
+        args[1].releaseSource('playtest:max-assistance:jump');
+        rearDriver.update(...args);
+      }
+    },
+  };
   const unsubscribe = subscribeToGameStatus((detail) => {
     result.textContent = detail.message;
     result.dataset.finalDeaths = String(detail.deaths);

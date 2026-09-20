@@ -6,14 +6,14 @@
     <meta name="theme-color" content="#14232b" />
     <meta name="description" content="一款會因為玩家一直死亡，開始偷偷作弊幫忙的橫向平台遊戲。" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 8h40v19c0 14-9 23-20 29C21 50 12 41 12 27Z' fill='%23f3c743' stroke='%2314232b' stroke-width='5'/%3E%3Cpath d='M20 17h24v8H20z' fill='%23c84c42'/%3E%3Cpath d='M32 14v33' stroke='%232d4650' stroke-width='5'/%3E%3C/svg%3E" />
-    <title>遊戲開始心軟了｜首個垂直切片</title>
+    <title>遊戲開始心軟了｜見習勇者的森林試煉</title>
   </head>
   <body>
     <div id="app">
       <main class="game-shell" data-game-started="false" data-menu-open="true" data-visual-stage="royal-trial" aria-labelledby="game-title">
         <header class="game-header">
           <div>
-            <p class="eyebrow">王城外圍 · 勇者試煉</p>
+            <p class="eyebrow">王城外圍　／　第一章</p>
             <h1 id="game-title">遊戲開始心軟了</h1>
           </div>
           <div class="header-actions">
@@ -32,15 +32,17 @@
         </header>
 
         <section class="stage-frame" aria-label="遊戲舞台">
+          <canvas id="title-landscape" width="960" height="540" aria-hidden="true"></canvas>
           <div id="game-root" tabindex="0" aria-label="2D 橫向平台遊戲；使用左右方向與跳躍操作"></div>
           <div id="game-menu" class="game-menu">
             <section class="menu-panel" data-menu-panel="title" aria-labelledby="title-panel-heading">
-              <p class="menu-kicker">王室試煉</p>
-              <h2 id="title-panel-heading">穿過新手森林，<br />抵達遠方王城。</h2>
+              <p class="menu-kicker">見習勇者的第一場試煉</p>
+              <h2 id="title-panel-heading">往森林深處，<br />再走一步。</h2>
               <p id="continue-summary" class="menu-copy">從王城外圍的新手森林出發。</p>
               <div class="menu-actions">
                 <button id="start-button" class="menu-button primary-action" type="button">踏上旅程</button>
               </div>
+              <p class="title-controls">← → 移動　·　空白鍵跳躍<br />手機使用畫面下方的三個按鍵</p>
             </section>
 
             <section class="menu-panel" data-menu-panel="pause" aria-labelledby="pause-panel-heading" hidden>

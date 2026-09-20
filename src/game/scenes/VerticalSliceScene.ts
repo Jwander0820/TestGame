@@ -1,4 +1,9 @@
 import Phaser from 'phaser';
+import { FIRST_PIT_DEATHS, LEVEL_ONE_DEATHS, LEVEL_ONE_TRAP_DEATHS, REAR_DEATHS, type DeathContext } from '../content/levelOneDeaths';
+import { REAR_CAUSES, REAR_HAZARDS, REAR_STEP } from '../content/rearGauntlet';
+import { FIRST_PIT_CAUSES } from '../content/firstPitAmbush';
+import { LEVEL_ONE_TRAP_CAUSES } from '../content/levelOneTraps';
+import { LEVEL_ONE_COPY as copy } from '../content/levelOneCopy';
 import {
   LEVEL_ONE_ID,
   LEVEL_ONE_ROUTE_BANTER,
@@ -30,7 +35,6 @@ import { addGameText } from '../visuals/addGameText';
 import { createGameTextures } from '../visuals/createTextures';
 import { drawLevelOneScenery } from '../visuals/LevelOneScenery';
 import {
-  preloadLevelOneArt,
   prepareLevelOneArt,
 } from '../visuals/levelOneArt';
 
@@ -38,12 +42,6 @@ interface VerticalSliceSceneDependencies {
   readonly inputController: InputController;
   readonly progressStore: ProgressStore;
   readonly playtestDriver?: PlaytestDriver;
-}
-
-interface DeathContext {
-  readonly causeId: string;
-  readonly blockerId: string | null;
-  readonly messages: readonly string[];
 }
 
 export class VerticalSliceScene extends Phaser.Scene {
@@ -54,7 +52,7 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   private player!: Phaser.Physics.Arcade.Sprite;
   private world!: LevelOneWorld;
-  private reverseCoins: Phaser.GameObjects.Container[] = [];
+  private playTimeMs = 0;
   private reverseCoinLabel: Phaser.GameObjects.Text | null = null;
   private inspectionDossier: Phaser.GameObjects.Container | null = null;
   private inspectionDossierRevealed = false;
@@ -78,10 +76,6 @@ export class VerticalSliceScene extends Phaser.Scene {
   constructor(private readonly dependencies: VerticalSliceSceneDependencies) {
     super('VerticalSliceScene');
     this.session = new LevelOneSession(dependencies.progressStore);
-  }
-
-  preload(): void {
-    preloadLevelOneArt(this);
   }
 
   create(): void {
@@ -114,7 +108,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     const deaths = this.session.totalDeaths;
     publishGameStatus({
       deaths,
-      message: deaths === 0 ? '方向鍵或 A／D 移動，空白鍵跳躍。' : '紀錄還在。世界也記得自己放過多少水。',
+      message: deaths === 0 ? copy.controls : copy.resume,
     });
   }
 
@@ -124,46 +118,32 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.world = new LevelOneWorld(this, {
       onWarningHazard: () => {
         this.world.revealWarningHazard();
-        this.beginDeath({
-          causeId: 'trusted-warning-strip',
-          blockerId: 'warning-strip',
-          messages: [
-            '王城認證是真的。認證內容不是「安全」。',
-            '告示牌正在確認自己是不是也算受害者。',
-            '步道表示：變紅只是停止偽裝，不是承認錯誤。',
-          ],
-        });
+        this.beginDeath(LEVEL_ONE_DEATHS.warning);
       },
       onLandingAmbush: () => {
-        this.beginDeath({
-          causeId: 'landing-stamp-ambush',
-          blockerId: 'landing-ambush',
-          messages: [
-            '安全落地。然後王徽從地裡跳了出來。',
-            '守衛表示：站穩也可能觸發古老傳統。',
-            '你已經知道它在這裡，它還是很想撞。',
-          ],
-        });
+        this.beginDeath(this.world.hitCeilingThisAttempt ? LEVEL_ONE_TRAP_DEATHS.ceiling : LEVEL_ONE_DEATHS.landing);
       },
       onGoalAmbush: () => {
         this.goalRelocationPending = true;
-        this.beginDeath({
-          causeId: 'goal-approval-stamp',
-          blockerId: 'goal-ambush',
-          messages: [
-            '終點審核通過了。你沒有。',
-            '那顆章只蓋第一次。行政流程偶爾也有良心。',
-          ],
-        });
+        this.beginDeath(LEVEL_ONE_DEATHS.goal);
       },
+      onAirAmbush: () => this.beginDeath(LEVEL_ONE_TRAP_DEATHS.airAmbush),
+      onFirstPitDeath: (cause) => this.beginDeath(FIRST_PIT_DEATHS[cause]),
+      onRearDeath: (cause) => this.beginDeath(REAR_DEATHS[cause]),
       isPlayerDying: () => this.lifecycle.isDying,
     }, {
       warningHazardRevealed: this.session.causeDeaths('trusted-warning-strip') > 0,
-      landingAmbushRevealed: this.session.causeDeaths('landing-stamp-ambush') > 0,
+      landingAmbushRevealed: this.session.causeDeaths('landing-stamp-ambush') > 0 ||
+        this.session.causeDeaths(LEVEL_ONE_TRAP_CAUSES.ceiling) > 0,
+      ceilingRevealed: this.session.causeDeaths(LEVEL_ONE_TRAP_CAUSES.ceiling) > 0,
+      airAmbushRevealed: this.session.causeDeaths(LEVEL_ONE_TRAP_CAUSES.airAmbush) > 0,
+      pitBrickRevealed: this.session.causeDeaths(FIRST_PIT_CAUSES.brick) > 0,
+      coinsRevealed: this.session.causeDeaths(FIRST_PIT_CAUSES.coin) > 0,
+      rearRevealed: REAR_HAZARDS.filter((hazard) => this.session.causeDeaths(REAR_CAUSES[hazard.id]) > 0).map((hazard) => hazard.id),
       bridgeWeaknessRevealed: this.session.blockerDeaths('intern-bridge') > 0,
       goalAmbushSpent: this.session.causeDeaths('goal-approval-stamp') > 0,
     });
-    this.reverseCoins = [];
+    this.playTimeMs = 0;
     this.reverseCoinLabel = null;
     this.inspectionDossier = null;
     this.inspectionDossierRevealed = false;
@@ -181,10 +161,13 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.idleTrigger.resetAll();
   }
 
-  override update(): void {
+  override update(_time: number, delta: number): void {
     if (!this.lifecycle.isPlaying) {
       return;
     }
+
+    this.playTimeMs += delta;
+    this.world.update(delta);
 
     const actions = this.dependencies.inputController.actions;
     this.dependencies.playtestDriver?.update(
@@ -192,6 +175,7 @@ export class VerticalSliceScene extends Phaser.Scene {
         x: this.player.x,
         y: this.player.y,
         grounded: this.player.body?.blocked.down === true,
+        timeMs: this.playTimeMs,
       },
       actions,
     );
@@ -208,6 +192,17 @@ export class VerticalSliceScene extends Phaser.Scene {
     const body = this.player.body;
     if (actions.consumeJumpPressed() && body?.blocked.down === true) {
       this.player.setVelocityY(-this.jumpSpeed);
+    }
+
+    // Texture-only animation: body dimensions and movement remain unchanged.
+    if (body?.blocked.down !== true) {
+      this.player.anims.stop();
+      this.player.setTexture('player-jump');
+    } else if (horizontal !== 0) {
+      this.player.play('hero-run', true);
+    } else {
+      this.player.anims.stop();
+      this.player.setTexture('player');
     }
 
     if (this.player.y > LEVEL_ONE_WORLD.height + 30) {
@@ -238,28 +233,12 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   private createReverseEasterEgg(): void {
     const discovered = this.session.hasDiscoveredEasterEgg('reverse-zero-coins');
-    const coinPositions = [6, 20, 34, 48, 62, 76, 90, 104];
-
-    this.reverseCoins = coinPositions.map((x) => {
-      const disc = this.add
-        .circle(0, 0, 9, LEVEL_ONE_COLORS.royalGold, 1)
-        .setStrokeStyle(3, LEVEL_ONE_COLORS.outline, 1);
-      const value = this.add
-        .text(0, 0, '0', {
-          color: LEVEL_ONE_TEXT_COLORS.ink,
-          fontFamily: 'Fredoka, Nunito, sans-serif',
-          fontSize: '11px',
-          fontStyle: 'bold',
-        })
-        .setOrigin(0.5);
-      return this.add.container(x, 225, [disc, value]).setAlpha(discovered ? 0.42 : 1);
-    });
 
     this.reverseCoinLabel = addGameText(
       this,
       8,
       289,
-      discovered ? '清點完畢 · 面值仍零' : '王庫退役幣 × 8',
+      discovered ? copy.reverseCollected : copy.reverseLabel,
       14,
       LEVEL_ONE_TEXT_COLORS.ink,
     )
@@ -279,24 +258,15 @@ export class VerticalSliceScene extends Phaser.Scene {
       return;
     }
 
-    this.reverseCoinLabel?.setText('清點完畢 · 面值仍零');
-    const message = '你特地往左找到了 8 枚王庫退役幣。守衛拒絕收兌。';
+    this.reverseCoinLabel?.setText(copy.reverseCollected);
+    const message = copy.reverseDiscovery;
     publishGameStatus({ deaths: next.totalDeaths, message });
-    this.tweens.add({
-      targets: this.reverseCoins,
-      y: '-=14',
-      duration: 180,
-      ease: 'Sine.Out',
-      yoyo: true,
-      repeat: 1,
-      onComplete: () => this.reverseCoins.forEach((coin) => coin.setAlpha(0.42)),
-    });
 
     const annotation = addGameText(
       this,
       165,
       120,
-      '王庫清點完成\n八枚，面值共零。',
+      copy.reverseBanner,
       21,
       LEVEL_ONE_TEXT_COLORS.ink,
     )
@@ -343,7 +313,7 @@ export class VerticalSliceScene extends Phaser.Scene {
         this,
         LEVEL_ONE_GOAL.x + shiftX - 8,
         198,
-        '王命特許通行\n終點已主動靠近',
+        copy.goalMovedLabel,
         15,
         LEVEL_ONE_TEXT_COLORS.danger,
       )
@@ -381,7 +351,7 @@ export class VerticalSliceScene extends Phaser.Scene {
         this,
         dossierX - 84,
         24,
-        '王城事故簿 · 見習者',
+        copy.ledgerTitle,
         12,
         LEVEL_ONE_TEXT_COLORS.danger,
       )
@@ -406,7 +376,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       this,
       dossierX + 20,
       82,
-      '王命通過',
+      copy.ledgerStamp,
       19,
       LEVEL_ONE_TEXT_COLORS.danger,
     )
@@ -428,7 +398,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
     for (const row of LEVEL_ONE_INSPECTION_ROWS) {
       const deaths = this.session.blockerDeaths(row.blockerId);
-      const status = deaths === 0 ? '未記錄' : deaths >= 7 ? `× ${deaths}　王命通過` : `事故 × ${deaths}`;
+      const status = copy.ledgerStatus(deaths);
       this.inspectionRows.get(row.blockerId)
         ?.setText(`${row.label}　${status}`)
         .setColor(deaths === 0 ? LEVEL_ONE_TEXT_COLORS.ink : LEVEL_ONE_TEXT_COLORS.danger);
@@ -457,7 +427,7 @@ export class VerticalSliceScene extends Phaser.Scene {
         'after-first-gap',
         1,
         new Phaser.Math.Vector2(LEVEL_ONE_SPAWNS.afterFirstGap.x, LEVEL_ONE_SPAWNS.afterFirstGap.y),
-        '第一道斷崖通過。王城鐘聲假裝沒緊張。',
+        copy.firstCheckpoint,
       );
     } else if (currentOrder < 2 && this.player.x >= 1_300) {
       this.advanceMarker(
@@ -467,7 +437,7 @@ export class VerticalSliceScene extends Phaser.Scene {
           LEVEL_ONE_SPAWNS.afterWarningStrip.x,
           LEVEL_ONE_SPAWNS.afterWarningStrip.y,
         ),
-        '「完全安全」區已經在你後面了。',
+        copy.secondCheckpoint,
       );
     } else if (currentOrder < 3 && this.player.x >= 2_230) {
       this.advanceMarker(
@@ -477,7 +447,7 @@ export class VerticalSliceScene extends Phaser.Scene {
           LEVEL_ONE_SPAWNS.afterInternBridge.x,
           LEVEL_ONE_SPAWNS.afterInternBridge.y,
         ),
-        '王家木橋通過。守衛迅速把修繕槌藏回披風。',
+        copy.thirdCheckpoint,
       );
     }
   }
@@ -542,7 +512,7 @@ export class VerticalSliceScene extends Phaser.Scene {
 
     const causeDeaths = result.state.levels[LEVEL_ONE_ID]?.deathsByCause[context.causeId] ?? 1;
     const fallbackMessage = context.messages[(causeDeaths - 1) % context.messages.length] ?? context.messages[0];
-    const message = result.reaction?.message ?? fallbackMessage ?? '這次事故仍在調查中。';
+    const message = result.reaction?.message ?? fallbackMessage ?? copy.fallbackDeath;
     publishGameStatus({ deaths: result.state.totalDeaths, message });
     const annotation = this.createMercyAnnotation(message, result.reaction);
 
@@ -553,7 +523,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private createMercyAnnotation(message: string, reaction: ReactionDefinition | null): Phaser.GameObjects.Text {
-    const prefix = reaction === null ? '事故' : `王城介入 ${reaction.tier}`;
+    const prefix = copy.accidentPrefix(reaction?.tier ?? null);
     return addGameText(
       this,
       this.player.x,
@@ -590,8 +560,8 @@ export class VerticalSliceScene extends Phaser.Scene {
     publishGameStatus({
       deaths: this.session.totalDeaths,
       message: goalRelocated
-        ? '鑑於剛才的審核事故，客服把終點搬近了。這次算公開放水。'
-        : '再一次。已經發生的援助不會收回。',
+        ? copy.goalMoved
+        : copy.respawn,
     });
   }
 
@@ -624,7 +594,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       this,
       poleTargetX - 8,
       198,
-      '王命特許通行\n終點已主動靠近',
+      copy.goalMovedLabel,
       15,
       LEVEL_ONE_TEXT_COLORS.danger,
     )
@@ -646,7 +616,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       this,
       LEVEL_ONE_GOAL.x + 18,
       246,
-      '守衛搬運中　←',
+      copy.movingGoal,
       15,
       LEVEL_ONE_TEXT_COLORS.ink,
     )
@@ -704,7 +674,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     if (next === null) {
       return;
     }
-    const message = '你是在等遊戲先道歉嗎？';
+    const message = copy.idle;
     publishGameStatus({ deaths: next.totalDeaths, message });
     const annotation = addGameText(
       this,
@@ -812,34 +782,18 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private resolveFallDeathContext(): DeathContext {
+    if (this.world.raisedStepCollapsed && this.player.x >= REAR_STEP.minFallX && this.player.x <= REAR_STEP.maxFallX) {
+      return REAR_DEATHS[REAR_CAUSES.step];
+    }
     const { firstGap, internBridge } = LEVEL_ONE_BLOCKER_ZONES;
     if (this.player.x >= firstGap.minX && this.player.x < firstGap.maxX) {
-      return {
-        causeId: 'fell-out-of-world',
-        blockerId: 'first-gap',
-        messages: [
-          '那個坑確實比看起來更有企圖。',
-          '坑洞提出異議：是勇者自己走進來的。',
-          '考官正在確認「跨過去」是否寫得不夠具體。',
-        ],
-      };
+      if (this.world.hitPitBrickThisAttempt) return FIRST_PIT_DEATHS[FIRST_PIT_CAUSES.brick];
+      return this.world.hitCeilingThisAttempt ? LEVEL_ONE_TRAP_DEATHS.ceiling : LEVEL_ONE_DEATHS.firstGap;
     }
     if (this.player.x >= internBridge.minX && this.player.x < internBridge.maxX) {
-      return {
-        causeId: 'intern-bridge-collapse',
-        blockerId: 'intern-bridge',
-        messages: [
-          '橋的保固剛好在你踏上去時到期。',
-          '實習生說那不是塌，是快速收納。',
-          '王橋的修繕紀錄正在安靜地改日期。',
-        ],
-      };
+      return LEVEL_ONE_DEATHS.bridge;
     }
-    return {
-      causeId: 'fell-out-of-world',
-      blockerId: null,
-      messages: ['地圖下面沒有隱藏道路。剛剛確認過了。', '這一帶的虛空目前不開放觀光。'],
-    };
+    return LEVEL_ONE_DEATHS.void;
   }
 
 }

@@ -3,6 +3,18 @@ import { ActionState } from '../../src/game/input/ActionState';
 import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 describe('ZeroAssistDriver', () => {
+  it('waits past the hidden ceiling and walks across the false gap on the learned route', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 580, y: 376, grounded: true }, actions);
+    expect(actions.consumeJumpPressed()).toBe(false);
+    driver.update({ x: 618, y: 376, grounded: true }, actions);
+    expect(actions.consumeJumpPressed()).toBe(true);
+    driver.update({ x: 640, y: 350, grounded: false }, actions);
+    driver.update({ x: 980, y: 398, grounded: true }, actions);
+    expect(actions.consumeJumpPressed()).toBe(false);
+    expect(actions.isDown('right')).toBe(true);
+  });
   it('holds right and sends one jump edge while crossing a configured takeoff zone', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver();
@@ -32,10 +44,10 @@ describe('ZeroAssistDriver', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver({ allowFirstGoalAmbush: true });
 
-    driver.update({ x: 2_600, y: 390, grounded: true }, actions);
-    expect(actions.consumeJumpPressed()).toBe(false);
     driver.update({ x: 2_650, y: 390, grounded: true }, actions);
-    driver.update({ x: 2_600, y: 390, grounded: true }, actions);
+    expect(actions.consumeJumpPressed()).toBe(false);
+    driver.update({ x: 2_680, y: 390, grounded: true }, actions);
+    driver.update({ x: 2_650, y: 390, grounded: true }, actions);
     expect(actions.consumeJumpPressed()).toBe(true);
   });
 });

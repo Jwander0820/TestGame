@@ -1,40 +1,24 @@
 # 專案文件索引
 
-本專案採用 Spec-Driven Development（SDD）。所有需求、決策、驗收條件與開發紀錄，均應先寫入 `docs/`，再進入實作。
-
-## 文件地圖
+- 最後更新：2026-09-20
+- 開始：[工作守則](AGENT.md) → [當前狀態](STATUS.md) → 本次相關規格
+- 開發與命令：[根 README](../README.md)、[Astra 開發方式](development.md)
 
 | 位置 | 用途 |
 | --- | --- |
-| `AGENT.md` | 專案治理與代理工作守則 |
-| `discovery/product-vision.md` | 產品願景、核心循環、範圍與成功條件 |
-| `discovery/open-questions.md` | 尚待確認的產品問題與建議預設值 |
-| `decisions/` | Architecture Decision Records（ADR） |
-| `design/` | 技術尖峰、架構與實作設計 |
-| `design-system/` | 視覺系統與各頁／場景覆寫 |
-| `art-outsourcing/` | 像素美術生成／外包需求、提示詞、交付規格與驗收清單 |
-| `specs/` | 可審閱、可驗收的功能規格與狀態索引 |
-| `templates/feature-spec-template.md` | 新功能規格範本 |
-| `testing/` | 本機試玩、驗證方式與測試操作說明 |
-| `logs/` | 階段進程、測試與重要問題紀錄 |
+| [STATUS.md](STATUS.md) | 目前工作、最近證據與未解問題 |
+| [specs/README.md](specs/README.md) | 規格索引與核准狀態 |
+| [discovery/product-vision.md](discovery/product-vision.md) | 核心產品承諾 |
+| [discovery/open-questions.md](discovery/open-questions.md) | 未決產品問題 |
+| decisions/、design/ | 決策與架構 |
+| [design-system/pity-platformer/MASTER.md](design-system/pity-platformer/MASTER.md) | 共用視覺基準 |
+| art-outsourcing/ | 過去外包需求、資產清單及退件稽核 |
+| [templates/feature-spec-template.md](templates/feature-spec-template.md) | 新規格格式 |
+| testing/ | 整關測試與驗收矩陣 |
+| logs/、archive/ | 歷史證據，並非當前授權 |
 
-## SDD 狀態流程
+## 狀態規則
 
 `探索中 → 草案 → 待確認 → 已核准 → 實作中 → 已驗收 → 已封存`
 
-只有「已核准」的規格能進入正式實作。探索性原型必須明確標示為原型，不能反向被視為已核准需求。
-
-## 當前狀態
-
-- 階段：首個垂直切片已形成可暫停的穩定里程碑；自動驗證完成，等待真人鍵盤與真實觸控整關試玩
-- 原始輸入：專案根目錄的 `初始概念.md`
-- 已確認：單關卡垂直切片、橫向優先與直向等比例備援、三鍵操作、Vite + TypeScript + Phaser
-- 已確認：同一阻礙 2／3／5／7 次的援助門檻、原地等待彩蛋
-- 已實作：標題、暫停／繼續、重玩、靜音、清除紀錄二次確認及結算外框
-- 已實作：第一關深化為三個主要阻礙，加入落腳伏擊、安全地板偽裝、模範橋塌落、終點審核章與分區吐槽
-- 已實作：以程式美術統一「王城驗收造假」視覺，加入三區景深、驗收檔案、事故後搬近終點與免驗錄取演出
-- 已試套：P1 主角待機、森林主平台與史萊姆援助素材；保留程式 fallback，退回比例不合格的跑步 sheet，最終商業授權仍待補件
-- 已驗證：54 項自動測試、正式靜態建置、零援助／最高援助／終點公開放水整關、保存重載、兩個彩蛋與正式產物流程
-- 維護邊界：純資料導演、進度交易、Phaser 世界效果及場景生命週期已分離並可測試
-- 交接：`logs/2026-07-16-vertical-slice-milestone-handoff.md`
-- 暫停點：先不實作 SPEC-0003 與 SPEC-0004；下次從真人試玩回報、美術方向或草案規格確認擇一繼續
+使用者已明確要求的範圍可記錄為核准來源並連續實作；草案的其他項目不隨之核准。新美術技術檢查通過後仍需使用者試看。前版首頁保存於 [archive/README-before-2026-09-20.md](archive/README-before-2026-09-20.md)。
