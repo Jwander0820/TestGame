@@ -12,7 +12,9 @@
 <body><main>
   <nav><a href="?case=step">高台崩落</a><a href="?case=sweep">迎面橫掃</a><a href="?case=exit">橋尾地刺</a><a href="?case=ceiling">起跳伏擊</a><a href="?case=finish">落地伏擊</a><a href="?case=pause">暫停</a><a href="?case=reload">重載援助</a></nav>
   <div id="game-root" aria-label="後半段連環陷阱自動測試"></div>
+  <nav><a href="?case=returnSweep">回頭追擊</a><a href="?case=restHammer">休息處重槌</a><a href="?case=returnPause">追擊中暫停</a><a href="?case=hammerReload">重槌援助重載</a></nav>
   <output id="playtest-result" data-status="running">執行中，使用獨立測試存檔。</output>
+  <button id="resume-review" hidden>繼續驗證</button>
   <pre id="rear-evidence"></pre>
 </main><script type="module" src="./rear-gauntlet.ts"></script></body>
 </html>

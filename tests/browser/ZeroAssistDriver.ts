@@ -21,13 +21,18 @@ interface ZeroAssistDriverOptions {
   readonly jumpAtFalseGap?: boolean;
   readonly rushFirstPit?: boolean;
   readonly lateFirstPitJump?: boolean;
-  readonly rearFault?: 'step' | 'sweep' | 'exit' | 'ceiling';
+  readonly rearFault?: 'step' | 'sweep' | 'exit' | 'ceiling' | 'returnSweep';
+  readonly slimeFault?: 'charger' | 'jumper';
 }
 
 export class ZeroAssistDriver implements PlaytestDriver {
   private jumpHeld = false;
   private goalAmbushAttempted = false;
   private readonly pitApproach = new FirstPitApproach();
+  private slimeBaitAt: number | null = null;
+  private slimeBaitCleared = false;
+  private lastX = 0;
+  private landingBeforeCharger = false;
 
   constructor(private readonly options: ZeroAssistDriverOptions = {}) {}
 
@@ -37,9 +42,49 @@ export class ZeroAssistDriver implements PlaytestDriver {
     this.jumpHeld = false;
     this.goalAmbushAttempted = false;
     this.pitApproach.reset();
+    this.slimeBaitAt = null;
+    this.slimeBaitCleared = false;
+    this.lastX = 0;
+    this.landingBeforeCharger = false;
   }
 
   update(frame: PlaytestFrame, actions: ActionState): void {
+    if (frame.x < this.lastX - 80) {
+      this.slimeBaitAt = null;
+      this.slimeBaitCleared = false;
+      this.landingBeforeCharger = false;
+    }
+    this.lastX = frame.x;
+    // 從左側高台返回時，先在突進範圍邊緣落地，再用地面跳躍避開。
+    if (frame.x >= 180 && frame.x < 210 && frame.y < 270 && !frame.grounded) this.landingBeforeCharger = true;
+    if (this.landingBeforeCharger && !frame.grounded) {
+      actions.releaseSource(RIGHT_SOURCE);
+      actions.releaseSource(JUMP_SOURCE);
+      this.jumpHeld = false;
+      return;
+    }
+    this.landingBeforeCharger = false;
+    // 跳過方塊後先在岸內落地，保留第一坑原本的引怪起跳位置。
+    if (frame.x >= 340 && frame.x < 372 && !frame.grounded) {
+      actions.releaseSource(RIGHT_SOURCE);
+      actions.releaseSource(JUMP_SOURCE);
+      this.jumpHeld = false;
+      return;
+    }
+    if (this.options.slimeFault !== 'jumper' && !this.slimeBaitCleared &&
+      frame.x >= 850 && frame.x < 880 && frame.timeMs !== undefined) {
+      actions.releaseSource(RIGHT_SOURCE);
+      if (this.slimeBaitAt === null && frame.grounded) {
+        this.slimeBaitAt = frame.timeMs;
+        actions.press('jump', JUMP_SOURCE);
+        this.jumpHeld = true;
+      } else {
+        actions.releaseSource(JUMP_SOURCE);
+        this.jumpHeld = false;
+      }
+      if (this.slimeBaitAt === null || frame.timeMs - this.slimeBaitAt < 1_100) return;
+      this.slimeBaitCleared = true;
+    }
     if (!this.options.rushFirstPit && this.pitApproach.shouldWait(frame)) {
       actions.releaseSource(RIGHT_SOURCE);
       actions.releaseSource(JUMP_SOURCE);
@@ -60,7 +105,10 @@ export class ZeroAssistDriver implements PlaytestDriver {
     const shouldJump = frame.grounded && (zones.some((zone, index) => {
       const isGoalJump = index === JUMP_ZONES.length - 1;
       return (!isGoalJump || !shouldSkipGoalJump) && frame.x >= zone.minX && frame.x <= zone.maxX;
-    }) || (this.options.jumpAtFalseGap === true && frame.x >= 970 && frame.x <= 1_005));
+    }) || (this.options.jumpAtFalseGap === true && frame.x >= 970 && frame.x <= 1_005) ||
+      (this.options.rearFault !== 'returnSweep' && frame.x >= 2_100 && frame.x <= 2_120) ||
+      (this.options.slimeFault !== 'charger' && frame.x >= 180 && frame.x <= 210) ||
+      (this.options.slimeFault === 'jumper' && frame.x >= 885 && frame.x <= 900));
 
     if (frame.x > 2_670) {
       this.goalAmbushAttempted = true;

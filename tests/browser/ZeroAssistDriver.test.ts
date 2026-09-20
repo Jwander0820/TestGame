@@ -3,6 +3,17 @@ import { ActionState } from '../../src/game/input/ActionState';
 import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 describe('ZeroAssistDriver', () => {
+  it('從反向高台返回時先在突進怪前落地，不直接落進攻擊路線', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 180, y: 250, grounded: false }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 180, y: 340, grounded: false }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 180, y: 398, grounded: true }, actions);
+    expect(actions.isDown('right')).toBe(true);
+    expect(actions.consumeJumpPressed()).toBe(true);
+  });
   it('waits past the hidden ceiling and walks across the false gap on the learned route', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver();
@@ -19,7 +30,7 @@ describe('ZeroAssistDriver', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver();
 
-    driver.update({ x: 200, y: 390, grounded: true }, actions);
+    driver.update({ x: 150, y: 390, grounded: true }, actions);
     expect(actions.isDown('right')).toBe(true);
     expect(actions.consumeJumpPressed()).toBe(false);
 

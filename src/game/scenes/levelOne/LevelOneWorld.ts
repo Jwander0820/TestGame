@@ -21,6 +21,9 @@ import type { FirstPitCause } from '../../content/firstPitAmbush';
 import { RearGauntlet } from './RearGauntlet';
 import { RearGauntletState } from '../../state/RearGauntletState';
 import type { RearCause, RearHazardId } from '../../content/rearGauntlet';
+import { SlimeEnemies } from './SlimeEnemies';
+import { SlimeState } from '../../state/SlimeState';
+import type { SlimeId } from '../../content/levelOneSlimes';
 
 interface LevelOneWorldCallbacks {
   readonly onWarningHazard: () => void;
@@ -29,6 +32,7 @@ interface LevelOneWorldCallbacks {
   readonly onAirAmbush: () => void;
   readonly onFirstPitDeath: (cause: FirstPitCause) => void;
   readonly onRearDeath: (cause: RearCause) => void;
+  readonly onSlimeDeath: (id: SlimeId) => void;
   readonly isPlayerDying: () => boolean;
 }
 
@@ -42,9 +46,12 @@ export interface LevelOneWorldInitialState {
   readonly pitBrickRevealed: boolean;
   readonly coinsRevealed: boolean;
   readonly rearRevealed: readonly RearHazardId[];
+  readonly slimesRevealed: readonly SlimeId[];
 }
 
 export class LevelOneWorld {
+  private readonly slimeState: SlimeState;
+  private slimes: SlimeEnemies | null = null;
   private readonly rearState: RearGauntletState;
   private rear: RearGauntlet | null = null;
   private raisedStep: Phaser.Physics.Arcade.Sprite | null = null;
@@ -79,6 +86,7 @@ export class LevelOneWorld {
     initialState: LevelOneWorldInitialState,
   ) {
     this.rearState = new RearGauntletState(initialState.rearRevealed);
+    this.slimeState = new SlimeState(initialState.slimesRevealed);
     this.firstPitState = new FirstPitState(initialState.pitBrickRevealed, initialState.coinsRevealed);
     this.trapState = new LearnedTrapState(initialState.ceilingRevealed, initialState.airAmbushRevealed);
     this.warningHazardRevealed = initialState.warningHazardRevealed;
@@ -117,6 +125,8 @@ export class LevelOneWorld {
       this.scene.physics.add.collider(player, this.collapsingBridge, () => this.armCollapsingBridge());
     }
     this.createLandingAmbush();
+    this.slimes = new SlimeEnemies(this.scene, player, this.slimeState,
+      this.callbacks.isPlayerDying, this.callbacks.onSlimeDeath);
     this.createGoalAmbush();
     this.learnedTraps = new LearnedTraps(this.scene, player, this.trapState,
       this.callbacks.isPlayerDying, this.callbacks.onAirAmbush);
@@ -132,6 +142,7 @@ export class LevelOneWorld {
   }
 
   update(deltaMs: number): void {
+    this.slimes?.update(deltaMs);
     this.firstPit?.update(deltaMs);
     this.rear?.update(deltaMs);
   }
@@ -193,6 +204,7 @@ export class LevelOneWorld {
   }
 
   applyAssistEffect(effectId: LevelOneEffectId): void {
+    this.slimes?.applyEffect(effectId);
     this.rear?.applyEffect(effectId);
     this.firstPit?.applyEffect(effectId);
     this.learnedTraps?.applyEffect(effectId);
@@ -291,6 +303,7 @@ export class LevelOneWorld {
   }
 
   resetTransientHazards(): void {
+    this.slimes?.resetAttempt();
     this.rear?.resetAttempt();
     this.firstPit?.resetAttempt();
     this.trapState.resetAttempt();

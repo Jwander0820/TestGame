@@ -10,19 +10,24 @@ import { requireTestElement } from './dom';
 import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 const testCase = new URLSearchParams(location.search).get('case') ?? 'step';
-const fault = testCase === 'pause' ? 'sweep' : testCase === 'reload' ? 'finish' : testCase;
+const holdForReview = new URLSearchParams(location.search).get('review') === '1';
+const fault = testCase === 'pause' ? 'sweep' : testCase === 'reload' ? 'finish' :
+  testCase === 'returnPause' ? 'returnSweep' : testCase === 'hammerReload' ? 'restHammer' : testCase;
 if (!(fault in REAR_CAUSES)) throw new Error('Unknown rear gauntlet case');
 const cause = REAR_CAUSES[fault as keyof typeof REAR_CAUSES];
-const expectedDeaths = fault === 'step' ? 3 : fault === 'sweep' ? 5 : 7;
+const expectedDeaths = fault === 'step' ? 3 : ['sweep', 'returnSweep', 'restHammer'].includes(fault) ? 5 : 7;
+const isReloadCase = testCase === 'reload' || testCase === 'hammerReload';
+const isPauseCase = testCase === 'pause' || testCase === 'returnPause';
 // An early final jump still lands on the last trap after ceiling assistance.
 const expectedCauses: Readonly<Record<string, number>> = fault === 'ceiling'
   ? { [cause]: 5, [REAR_CAUSES.finish]: 2 } : { [cause]: expectedDeaths };
 const result = requireTestElement<HTMLOutputElement>('#playtest-result');
 const evidence = requireTestElement<HTMLPreElement>('#rear-evidence');
-const namespace = 'playtest:rear-reload:';
-const reloadPending = testCase === 'reload' && sessionStorage.getItem(`${namespace}pending`) === 'yes';
+const resumeReview = requireTestElement<HTMLButtonElement>('#resume-review');
+const namespace = `playtest:rear-reload:${testCase}:`;
+const reloadPending = isReloadCase && sessionStorage.getItem(`${namespace}pending`) === 'yes';
 const memory = new Map<string, string>();
-const progressStore = new ProgressStore(testCase === 'reload' ? {
+const progressStore = new ProgressStore(isReloadCase ? {
   getItem: (key) => reloadPending ? sessionStorage.getItem(namespace + key) : null,
   setItem: (key, value) => sessionStorage.setItem(namespace + key, value),
 } : {
@@ -36,24 +41,26 @@ if (reloadPending) {
   progressStore.replace(advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-warning-strip', 2));
 }
 const inputController = new InputController();
-const driver = new ZeroAssistDriver({ rearFault: fault === 'finish' ? undefined : fault as 'step' | 'sweep' | 'exit' | 'ceiling' });
+const driver = new ZeroAssistDriver({ rearFault: fault === 'finish' || fault === 'restHammer' ? undefined : fault as 'step' | 'sweep' | 'exit' | 'ceiling' | 'returnSweep' });
 let lastFrame: PlaytestFrame | null = null;
 let paused = false;
 let reloading = false;
+let reviewHeld = false;
+let hammerArrivalMs: number | null = null;
 const unsubscribe = subscribeToGameStatus((detail) => {
   const level = progressStore.snapshot.levels[LEVEL_ONE_ID];
   result.textContent = detail.message;
   result.dataset.deaths = String(detail.deaths);
   evidence.textContent = JSON.stringify({ expectedDeaths, expectedCauses, causes: level?.deathsByCause, blockers: level?.blockers, lastFrame }, null, 2);
-  if (testCase === 'reload' && !reloadPending && !reloading && detail.deaths === 7) {
+  if (isReloadCase && !reloadPending && !reloading && detail.deaths === expectedDeaths) {
     reloading = true;
     sessionStorage.setItem(`${namespace}pending`, 'yes');
     window.setTimeout(() => location.reload(), 50);
   }
   if (detail.phase === 'completed') {
     result.dataset.status = detail.deaths === expectedDeaths && Object.entries(expectedCauses).every(([id, count]) => level?.deathsByCause[id] === count) &&
-      (testCase !== 'pause' || result.dataset.pauseHeld === 'true') &&
-      (testCase !== 'reload' || result.dataset.restoredDeaths === '7') ? 'completed' : 'unexpected-deaths';
+      (!isPauseCase || result.dataset.pauseHeld === 'true') &&
+      (!isReloadCase || result.dataset.restoredDeaths === String(expectedDeaths)) ? 'completed' : 'unexpected-deaths';
   }
 });
 const game = createGame({ inputController, progressStore, playtestDriver: {
@@ -64,7 +71,21 @@ const game = createGame({ inputController, progressStore, playtestDriver: {
     if (fault === 'finish' && frame.x >= 2_780 && frame.x < 2_820 && progressStore.snapshot.totalDeaths < 7) {
       actions.releaseSource('playtest:zero-assist:right');
     }
-    if (testCase === 'pause' && !paused && frame.x >= 1_830) {
+    if (fault === 'restHammer' && frame.x >= 2_534 && frame.x < 2_558 && progressStore.snapshot.totalDeaths < 5) {
+      actions.releaseSource('playtest:zero-assist:right');
+      hammerArrivalMs ??= frame.timeMs ?? 0;
+    }
+    if (holdForReview && !reviewHeld &&
+      ((fault === 'returnSweep' && frame.x >= 2_070) ||
+        (fault === 'restHammer' && hammerArrivalMs !== null && (frame.timeMs ?? 0) - hammerArrivalMs >= 150))) {
+      reviewHeld = true;
+      game.scene.pause('VerticalSliceScene');
+      resumeReview.hidden = false;
+      result.dataset.status = 'review-paused';
+      result.textContent = '機關畫面已暫停，可檢查輪廓與落點後繼續驗證。';
+      evidence.textContent = JSON.stringify({ testCase, reviewFrame: frame }, null, 2);
+    }
+    if (isPauseCase && !paused && frame.x >= (testCase === 'returnPause' ? 2_070 : 1_830)) {
       paused = true;
       game.scene.pause('VerticalSliceScene');
       window.setTimeout(() => {
@@ -74,6 +95,11 @@ const game = createGame({ inputController, progressStore, playtestDriver: {
     }
   },
 } });
+resumeReview.addEventListener('click', () => {
+  resumeReview.hidden = true;
+  result.dataset.status = 'running';
+  game.scene.resume('VerticalSliceScene');
+});
 window.setTimeout(() => {
   if (result.dataset.status === 'running') {
     result.dataset.status = 'timeout';

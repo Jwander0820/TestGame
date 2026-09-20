@@ -1,0 +1,18 @@
+import { requireTestElement } from './dom';
+
+// 固定 iframe 的內部 viewport；不依賴桌面面板是否採用裝置尺寸設定。
+const routes = {
+  play: 'art-review.html',
+  zero: 'zero-assist.html',
+  return: 'rear-gauntlet.html?case=returnPause',
+  hammer: 'rear-gauntlet.html?case=hammerReload',
+  max: 'max-assistance.html',
+  hammerView: 'rear-gauntlet.html?case=restHammer&review=1',
+  returnView: 'rear-gauntlet.html?case=returnSweep&review=1',
+  slimePause: 'slime-malice.html?case=pause',
+  slimeReload: 'slime-malice.html?case=reload',
+  slimeView: 'slime-malice.html?case=jumper&review=1',
+} as const;
+const selected = new URLSearchParams(location.search).get('case') ?? 'play';
+if (!Object.hasOwn(routes, selected)) throw new Error('未知的手機驗證路線');
+requireTestElement<HTMLIFrameElement>('#mobile-frame').src = routes[selected as keyof typeof routes];

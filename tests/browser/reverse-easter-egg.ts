@@ -87,8 +87,12 @@ let reverseMessageCount = 0;
 let reloadScheduled = false;
 
 const unsubscribe = subscribeToGameStatus((detail) => {
+  if (detail.deaths > Number(result.dataset.deaths ?? '0')) {
+    result.dataset.deathFrame = JSON.stringify(playtestDriver.lastFrame);
+  }
   result.textContent = detail.message;
   result.dataset.deaths = String(detail.deaths);
+  result.dataset.deathCauses = JSON.stringify(progressStore.snapshot.levels[LEVEL_ONE_ID]?.deathsByCause ?? {});
   if (detail.message === REVERSE_MESSAGE) {
     reverseMessageCount += 1;
   }

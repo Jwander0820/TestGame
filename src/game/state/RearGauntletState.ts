@@ -31,19 +31,25 @@ export class RearGauntletState {
     const armed = this.armedAt.get(definition.id);
     const age = armed === undefined ? -Infinity : now - armed - definition.delayMs;
     const active = !retired && (definition.triggerX === null || (age >= 0 && age < definition.durationMs));
+    const pending = !retired && armed !== undefined && age < 0;
     // A ceiling stays hidden until it actually catches someone or assistance exposes it.
-    const visible = this.revealed.has(definition.id) || (definition.triggerX !== null && active);
-    return { active, visible, retired,
-      x: definition.x + (active && definition.velocityX !== 0 ? Math.max(0, age) * definition.velocityX / 1_000 : 0) };
+    const visible = this.revealed.has(definition.id) || (definition.triggerX !== null && active) ||
+      (pending && definition.warnDuringDelay === true);
+    const travelSeconds = active ? Math.max(0, age) / 1_000 : 0;
+    return { active, visible, retired, pending,
+      x: definition.x + travelSeconds * definition.velocityX,
+      y: definition.y + travelSeconds * (definition.velocityY ?? 0) };
   }
 
   applyEffect(effect: LevelOneEffectId): void {
     if ([effects.reinforceInternBridge, effects.deployBridgeSafetyNet, effects.certifyBridgePermanent].some((id) => id === effect)) {
       this.stepRetired = true;
       this.revealed.add('exit'); this.revealed.add('ceiling'); this.revealed.add('finish');
+      this.revealed.add('returnSweep'); this.revealed.add('restHammer');
     }
     if (effect === effects.deployBridgeSafetyNet || effect === effects.certifyBridgePermanent) {
       this.retired.add('sweep'); this.retired.add('ceiling');
+      this.retired.add('returnSweep'); this.retired.add('restHammer');
     }
     if (effect === effects.certifyBridgePermanent) {
       this.retired.add('exit'); this.retired.add('finish');

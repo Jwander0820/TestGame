@@ -1,6 +1,7 @@
 import { LEVEL_ONE_TRAP_CAUSES } from './levelOneTraps';
 import { FIRST_PIT_CAUSES, type FirstPitCause } from './firstPitAmbush';
 import { REAR_CAUSES, type RearCause } from './rearGauntlet';
+import { LEVEL_ONE_SLIMES, type SlimeId } from './levelOneSlimes';
 
 export interface DeathContext {
   readonly causeId: string;
@@ -8,7 +9,14 @@ export interface DeathContext {
   readonly messages: readonly string[];
 }
 
+export const SLIME_DEATHS = {
+  charger: { causeId: LEVEL_ONE_SLIMES[0].causeId, blockerId: 'first-gap', messages: ['它剛才不動，是因為還沒看到你。'] },
+  jumper: { causeId: LEVEL_ONE_SLIMES[1].causeId, blockerId: 'warning-strip', messages: ['你會跳。它也會，而且一直在等這一刻。'] },
+} as const satisfies Record<SlimeId, DeathContext>;
+
 export const REAR_DEATHS = {
+  [REAR_CAUSES.returnSweep]: { causeId: REAR_CAUSES.returnSweep, blockerId: 'intern-bridge', messages: ['剛才那一發附有回程票。'] },
+  [REAR_CAUSES.restHammer]: { causeId: REAR_CAUSES.restHammer, blockerId: 'intern-bridge', messages: ['休息處到了。重槌也到了。'] },
   [REAR_CAUSES.step]: { causeId: REAR_CAUSES.step, blockerId: 'intern-bridge', messages: ['落點已簽收。地板已下班。'] },
   [REAR_CAUSES.sweep]: { causeId: REAR_CAUSES.sweep, blockerId: 'intern-bridge', messages: ['橋還在。迎面來的東西也在。'] },
   [REAR_CAUSES.exit]: { causeId: REAR_CAUSES.exit, blockerId: 'intern-bridge', messages: ['過橋成功。橋尾另計。'] },

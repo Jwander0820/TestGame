@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>375×667 首關驗證</title>
+  <style>
+    body { margin: 12px; background: #14232b; color: #fff3d6; font: 14px system-ui; }
+    nav { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+    a { color: #ffe48a; } iframe { display: block; width: 375px; height: 667px; border: 0; }
+  </style>
+</head>
+<body>
+  <nav aria-label="手機尺寸驗證路線">
+    <a href="?case=play">手動試玩</a><a href="?case=zero">零死路線</a>
+    <a href="?case=return">追擊暫停</a><a href="?case=hammer">重槌重載</a>
+    <a href="?case=max">最高援助</a><a href="?case=hammerView">重槌截圖</a>
+    <a href="?case=returnView">追擊截圖</a>
+    <a href="?case=slimePause">方塊暫停</a><a href="?case=slimeReload">圓形重載</a><a href="?case=slimeView">小怪截圖</a>
+  </nav>
+  <iframe id="mobile-frame" title="375×667 遊戲測試框"></iframe>
+  <script type="module" src="./mobile-review.ts"></script>
+</body>
+</html>

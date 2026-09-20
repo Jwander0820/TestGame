@@ -25,6 +25,7 @@ for (const button of buttons) {
     let state = createDefaultProgress();
     if (button.dataset.state === 'max') state = createMaxAssistanceProgress();
     if (button.dataset.state === 'rear') state = advanceProgress(state, LEVEL_ONE_ID, 'after-warning-strip', 2);
+    if (button.dataset.state === 'slimes') state = advanceProgress(state, LEVEL_ONE_ID, 'after-first-gap', 1);
     if (button.dataset.state === 'first') {
       state = recordDeath(state, {
         id: 'art-review-first-death', levelId: LEVEL_ONE_ID,

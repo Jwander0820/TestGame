@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { FIRST_PIT_DEATHS, LEVEL_ONE_DEATHS, LEVEL_ONE_TRAP_DEATHS, REAR_DEATHS, type DeathContext } from '../content/levelOneDeaths';
 import { REAR_CAUSES, REAR_HAZARDS, REAR_STEP } from '../content/rearGauntlet';
 import { FIRST_PIT_CAUSES } from '../content/firstPitAmbush';
+import { LEVEL_ONE_SLIMES } from '../content/levelOneSlimes';
+import { SLIME_DEATHS } from '../content/levelOneDeaths';
 import { LEVEL_ONE_TRAP_CAUSES } from '../content/levelOneTraps';
 import { LEVEL_ONE_COPY as copy } from '../content/levelOneCopy';
 import {
@@ -130,6 +132,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       onAirAmbush: () => this.beginDeath(LEVEL_ONE_TRAP_DEATHS.airAmbush),
       onFirstPitDeath: (cause) => this.beginDeath(FIRST_PIT_DEATHS[cause]),
       onRearDeath: (cause) => this.beginDeath(REAR_DEATHS[cause]),
+      onSlimeDeath: (id) => this.beginDeath(SLIME_DEATHS[id]),
       isPlayerDying: () => this.lifecycle.isDying,
     }, {
       warningHazardRevealed: this.session.causeDeaths('trusted-warning-strip') > 0,
@@ -140,6 +143,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       pitBrickRevealed: this.session.causeDeaths(FIRST_PIT_CAUSES.brick) > 0,
       coinsRevealed: this.session.causeDeaths(FIRST_PIT_CAUSES.coin) > 0,
       rearRevealed: REAR_HAZARDS.filter((hazard) => this.session.causeDeaths(REAR_CAUSES[hazard.id]) > 0).map((hazard) => hazard.id),
+      slimesRevealed: LEVEL_ONE_SLIMES.filter((slime) => this.session.causeDeaths(slime.causeId) > 0).map((slime) => slime.id),
       bridgeWeaknessRevealed: this.session.blockerDeaths('intern-bridge') > 0,
       goalAmbushSpent: this.session.causeDeaths('goal-approval-stamp') > 0,
     });

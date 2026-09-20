@@ -56,9 +56,9 @@ export class RearGauntlet {
     for (const hazard of this.hazards) {
       const sample = this.state.sample(hazard.definition, this.elapsedMs);
       hazard.body.enable = sample.active;
-      hazard.zone.setX(sample.x);
+      hazard.zone.setPosition(sample.x, sample.y);
       hazard.body.updateFromGameObject();
-      hazard.visual.show(sample.x, sample.visible, sample.active, sample.retired);
+      hazard.visual.show(sample);
     }
   }
 
