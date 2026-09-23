@@ -3,6 +3,16 @@ import { ActionState } from '../../src/game/input/ActionState';
 import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 describe('ZeroAssistDriver', () => {
+  it('在最後高台等待兩次蓋章結束再前進', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 2626, y: 350, grounded: true, timeMs: 1000 }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 2626, y: 350, grounded: true, timeMs: 2900 }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 2626, y: 350, grounded: true, timeMs: 3100 }, actions);
+    expect(actions.isDown('right')).toBe(true);
+  });
   it('從反向高台返回時先在突進怪前落地，不直接落進攻擊路線', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver();

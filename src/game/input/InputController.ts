@@ -12,10 +12,18 @@ const KEY_ACTIONS: Readonly<Partial<Record<string, GameAction>>> = {
 
 export class InputController {
   readonly actions = new ActionState();
+  private enabled = true;
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    this.actions.releaseAll();
+  }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (typeof Element !== 'undefined' && event.target instanceof Element &&
+      event.target.closest('button, input, textarea, select, [contenteditable="true"]')) return;
     const action = KEY_ACTIONS[event.code];
-    if (action === undefined || event.repeat) {
+    if (!this.enabled || action === undefined || event.repeat) {
       return;
     }
 
@@ -25,12 +33,13 @@ export class InputController {
 
   private readonly onKeyUp = (event: KeyboardEvent): void => {
     const action = KEY_ACTIONS[event.code];
-    if (action === undefined) {
+    if (!this.enabled || action === undefined) {
       return;
     }
 
-    event.preventDefault();
     this.actions.release(action, `keyboard:${event.code}`);
+    if (typeof Element === 'undefined' || !(event.target instanceof Element) ||
+      !event.target.closest('button, input, textarea, select, [contenteditable="true"]')) event.preventDefault();
   };
 
   private readonly onBlur = (): void => {
@@ -47,6 +56,7 @@ export class InputController {
     const activePointers = new Set<number>();
 
     const press = (event: PointerEvent): void => {
+      if (!this.enabled) return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
       activePointers.add(event.pointerId);

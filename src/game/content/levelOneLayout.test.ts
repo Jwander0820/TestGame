@@ -155,17 +155,6 @@ describe('level one learned ambush routes', () => {
     expect(runnerX).toBeLessThanOrEqual(stamp.x + stamp.width / 2);
   });
 
-  it('drops the goal stamp onto the natural run-up while allowing a jump to clear it', () => {
-    const stamp = LEVEL_ONE_AMBUSH_LAYOUT.goalStamp;
-    const triggerEntryX = stamp.triggerX - stamp.triggerWidth / 2 - LEVEL_ONE_PLAYER_PHYSICS.bodyWidth / 2;
-    const runnerX = triggerEntryX +
-      LEVEL_ONE_PLAYER_PHYSICS.moveSpeed * (stamp.dropDelayMs / 1_000);
-
-    expect(runnerX).toBeGreaterThanOrEqual(stamp.dangerMinX);
-    expect(runnerX).toBeLessThanOrEqual(stamp.dangerMaxX);
-    expect(stamp.safeJumpY).toBeGreaterThan(0);
-  });
-
   it('moves the goal closer after an audit death without placing it inside the spent stamp', () => {
     const mercyGoalX = LEVEL_ONE_GOAL.x + LEVEL_ONE_GOAL.mercyShiftX;
     const stamp = LEVEL_ONE_AMBUSH_LAYOUT.goalStamp;
@@ -178,7 +167,7 @@ describe('level one learned ambush routes', () => {
     const routeLeft = goalApproach.x - goalApproach.width / 2;
     const routeRight = goalPlatform.x + goalPlatform.width / 2;
     expect(LEVEL_ONE_GOAL.mercyShiftX).toBeLessThan(0);
-    expect(mercyGoalX).toBeGreaterThan(stamp.dangerMaxX);
+    expect(mercyGoalX).toBeGreaterThan(stamp.x + stamp.width / 2);
     expect(mercyGoalX).toBeGreaterThanOrEqual(routeLeft);
     expect(mercyGoalX).toBeLessThanOrEqual(routeRight);
   });

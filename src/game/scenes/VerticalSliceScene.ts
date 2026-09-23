@@ -172,6 +172,7 @@ export class VerticalSliceScene extends Phaser.Scene {
 
     this.playTimeMs += delta;
     this.world.update(delta);
+    if (!this.lifecycle.isPlaying) return;
 
     const actions = this.dependencies.inputController.actions;
     this.dependencies.playtestDriver?.update(
@@ -517,7 +518,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     const causeDeaths = result.state.levels[LEVEL_ONE_ID]?.deathsByCause[context.causeId] ?? 1;
     const fallbackMessage = context.messages[(causeDeaths - 1) % context.messages.length] ?? context.messages[0];
     const message = result.reaction?.message ?? fallbackMessage ?? copy.fallbackDeath;
-    publishGameStatus({ deaths: result.state.totalDeaths, message });
+    publishGameStatus({ deaths: result.state.totalDeaths, message, phase: 'dying' });
     const annotation = this.createMercyAnnotation(message, result.reaction);
 
     this.time.delayedCall(900, () => {

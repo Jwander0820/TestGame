@@ -435,13 +435,39 @@ h1 {
 }
 
 .game-status {
-  min-height: 1.5em;
+  height: 3em;
+  overflow: auto;
   margin: 0;
   padding-left: var(--space-xs);
   color: var(--color-text-muted);
   font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.5;
+}
+
+.journey-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.journey-bar[hidden] { display: none; }
+.checkpoint-track {
+  display: flex;
+  list-style: none;
+  gap: var(--space-md);
+  padding: 0;
+  margin: 0;
+}
+.checkpoint-track li { border-top: 2px solid var(--color-frame-inset); padding-top: 4px; }
+.checkpoint-track [data-reached="true"] { border-color: var(--color-royal-primary); }
+.checkpoint-track [aria-current] { color: var(--color-royal-primary); font-weight: 700; }
+.game-shell[data-phase="dying"] .game-status {
+  border-left: 4px solid var(--color-cape);
+  padding-left: var(--space-sm);
+  color: var(--color-text-on-dark);
 }
 
 .touch-controls {
@@ -808,4 +834,34 @@ h1 {
     font-size: 1.65rem;
   }
   .title-controls { display: none; }
+}
+
+/* 遊玩資訊固定在舞台外；窄螢幕選單使用可讀的全頁空間。 */
+@media (min-height: 561px) and (orientation: landscape) {
+  .game-shell { width: min(var(--game-shell-max-width), 100%, calc((100dvh - 212px) * 16 / 9 + 32px)); }
+}
+@media (max-width: 900px) {
+  .keyboard-hint { display: none; }
+  .journey-bar { flex-wrap: wrap; }
+  .game-menu:has([data-menu-panel="pause"]:not([hidden])),
+  .game-menu:has([data-menu-panel="complete"]:not([hidden])) {
+    position: fixed;
+    padding: max(var(--space-xl), env(safe-area-inset-top)) var(--space-lg);
+    z-index: 20;
+  }
+  .menu-panel:not([data-menu-panel="title"]) {
+    padding: var(--space-xl);
+    max-height: calc(100dvh - 48px);
+    width: min(520px, 100%);
+  }
+  .menu-panel:not([data-menu-panel="title"]) h2 { font-size: 1.4rem; }
+  .menu-panel:not([data-menu-panel="title"]) .menu-copy { font-size: 0.9rem; font-weight: 400; }
+  .menu-panel:not([data-menu-panel="title"]) .menu-actions { margin-top: var(--space-xl); }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  .journey-bar { position: fixed; z-index: 2; top: 16px; left: 18px; padding: 6px 10px; background: var(--color-page-bg); }
+  .checkpoint-track, .keyboard-hint { display: none; }
+  .game-status { display: block; position: fixed; z-index: 2; top: 74px; left: 18px; width: min(55vw, 420px); height: 3em; font-size: 0.8rem; text-shadow: 1px 1px var(--color-page-bg); background: var(--color-overlay); padding-inline: 6px; }
+  .game-shell[data-menu-open="true"] .game-status,
+  .game-shell[data-menu-open="true"] .journey-bar { visibility: hidden; }
 }

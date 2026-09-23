@@ -3,6 +3,9 @@ import { requireTestElement } from './dom';
 // 固定 iframe 的內部 viewport；不依賴桌面面板是否採用裝置尺寸設定。
 const routes = {
   play: 'art-review.html',
+  shell: 'shell-review.html?state=goal',
+  shellZero: 'shell-review.html',
+  shellMax: 'shell-review.html?state=max',
   zero: 'zero-assist.html',
   return: 'rear-gauntlet.html?case=returnPause',
   hammer: 'rear-gauntlet.html?case=hammerReload',
@@ -16,3 +19,11 @@ const routes = {
 const selected = new URLSearchParams(location.search).get('case') ?? 'play';
 if (!Object.hasOwn(routes, selected)) throw new Error('未知的手機驗證路線');
 requireTestElement<HTMLIFrameElement>('#mobile-frame').src = routes[selected as keyof typeof routes];
+const dimensions = { portrait: [375, 667], landscape: [667, 375], wide: [844, 390], desktop: [960, 540] } as const;
+const size = new URLSearchParams(location.search).get('size') ?? 'portrait';
+if (!Object.hasOwn(dimensions, size)) throw new Error('未知尺寸');
+const [width, height] = dimensions[size as keyof typeof dimensions];
+const frame = requireTestElement<HTMLIFrameElement>('#mobile-frame');
+frame.style.width = `${width}px`;
+frame.style.height = `${height}px`;
+frame.title = `${width}×${height} 遊戲測試框`;

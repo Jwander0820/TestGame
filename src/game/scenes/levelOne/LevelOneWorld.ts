@@ -21,6 +21,7 @@ import type { FirstPitCause } from '../../content/firstPitAmbush';
 import { RearGauntlet } from './RearGauntlet';
 import { RearGauntletState } from '../../state/RearGauntletState';
 import type { RearCause, RearHazardId } from '../../content/rearGauntlet';
+import { GoalStamp } from './GoalStamp';
 import { SlimeEnemies } from './SlimeEnemies';
 import { SlimeState } from '../../state/SlimeState';
 import type { SlimeId } from '../../content/levelOneSlimes';
@@ -78,7 +79,8 @@ export class LevelOneWorld {
   private warningHazardRevealed: boolean;
   private landingAmbushArmed = false;
   private bridgeWeaknessRevealed: boolean;
-  private goalAmbushSpent: boolean;
+  private readonly goalAmbushSpent: boolean;
+  private goalStamp: GoalStamp | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -142,6 +144,8 @@ export class LevelOneWorld {
   }
 
   update(deltaMs: number): void {
+    this.goalStamp?.update(deltaMs);
+    if (this.callbacks.isPlayerDying()) return;
     this.slimes?.update(deltaMs);
     this.firstPit?.update(deltaMs);
     this.rear?.update(deltaMs);
@@ -204,6 +208,7 @@ export class LevelOneWorld {
   }
 
   applyAssistEffect(effectId: LevelOneEffectId): void {
+    if (effectId === LEVEL_ONE_EFFECT_IDS.certifyBridgePermanent) this.goalStamp?.retire();
     this.slimes?.applyEffect(effectId);
     this.rear?.applyEffect(effectId);
     this.firstPit?.applyEffect(effectId);
@@ -303,6 +308,7 @@ export class LevelOneWorld {
   }
 
   resetTransientHazards(): void {
+    this.goalStamp?.resetAttempt();
     this.slimes?.resetAttempt();
     this.rear?.resetAttempt();
     this.firstPit?.resetAttempt();
@@ -465,54 +471,7 @@ export class LevelOneWorld {
   }
 
   private createGoalAmbush(): void {
-    const definition = LEVEL_ONE_AMBUSH_LAYOUT.goalStamp;
-    const initialY = this.goalAmbushSpent ? definition.revealedY : definition.hiddenY;
-    const seal = this.scene.add.rectangle(
-      definition.x,
-      initialY,
-      definition.width,
-      definition.height,
-      LEVEL_ONE_COLORS.royalGold,
-      1,
-    );
-    seal.setStrokeStyle(5, LEVEL_ONE_COLORS.hazardDark, 1).setDepth(3);
-    const label = addGameText(
-      this.scene,
-      definition.x,
-      initialY,
-      copy.goalStamp,
-      19,
-      LEVEL_ONE_TEXT_COLORS.danger,
-    )
-      .setOrigin(0.5)
-      .setAlign('center')
-      .setDepth(4);
-
-    const trigger = this.scene.add.zone(definition.triggerX, 350, definition.triggerWidth, 170);
-    this.scene.physics.add.existing(trigger, true);
-    this.scene.physics.add.overlap(this.requirePlayer(), trigger, () => {
-      if (this.goalAmbushSpent || this.callbacks.isPlayerDying()) {
-        return;
-      }
-      this.goalAmbushSpent = true;
-      this.scene.tweens.add({
-        targets: [seal, label],
-        y: definition.revealedY,
-        duration: definition.dropDelayMs,
-        ease: 'Quad.In',
-        onComplete: () => {
-          const player = this.requirePlayer();
-          if (
-            !this.callbacks.isPlayerDying() &&
-            player.x >= definition.dangerMinX &&
-            player.x <= definition.dangerMaxX &&
-            player.y >= definition.safeJumpY
-          ) {
-            this.callbacks.onGoalAmbush();
-          }
-        },
-      });
-    });
+    this.goalStamp = new GoalStamp(this.scene, this.requirePlayer(), this.goalAmbushSpent, this.callbacks.onGoalAmbush);
   }
 
   private collapseBridge(): void {

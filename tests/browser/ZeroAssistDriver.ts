@@ -23,6 +23,8 @@ interface ZeroAssistDriverOptions {
   readonly lateFirstPitJump?: boolean;
   readonly rearFault?: 'step' | 'sweep' | 'exit' | 'ceiling' | 'returnSweep';
   readonly slimeFault?: 'charger' | 'jumper';
+  readonly rushGoalStamp?: boolean;
+  readonly goalWaitMs?: number;
 }
 
 export class ZeroAssistDriver implements PlaytestDriver {
@@ -33,6 +35,7 @@ export class ZeroAssistDriver implements PlaytestDriver {
   private slimeBaitCleared = false;
   private lastX = 0;
   private landingBeforeCharger = false;
+  private goalBaitAt: number | null = null;
 
   constructor(private readonly options: ZeroAssistDriverOptions = {}) {}
 
@@ -46,10 +49,12 @@ export class ZeroAssistDriver implements PlaytestDriver {
     this.slimeBaitCleared = false;
     this.lastX = 0;
     this.landingBeforeCharger = false;
+    this.goalBaitAt = null;
   }
 
   update(frame: PlaytestFrame, actions: ActionState): void {
     if (frame.x < this.lastX - 80) {
+      this.goalBaitAt = null;
       this.slimeBaitAt = null;
       this.slimeBaitCleared = false;
       this.landingBeforeCharger = false;
@@ -64,6 +69,17 @@ export class ZeroAssistDriver implements PlaytestDriver {
       return;
     }
     this.landingBeforeCharger = false;
+    // 先在最後高台引完兩次落印，再執行原本避開地刺的跳躍。
+    if (!this.options.rushGoalStamp && !this.options.allowFirstGoalAmbush &&
+      frame.x >= 2_626 && frame.x < 2_646 && frame.timeMs !== undefined) {
+      this.goalBaitAt ??= frame.timeMs;
+      if (frame.timeMs - this.goalBaitAt < (this.options.goalWaitMs ?? 2_050)) {
+        actions.releaseSource(RIGHT_SOURCE);
+        actions.releaseSource(JUMP_SOURCE);
+        this.jumpHeld = false;
+        return;
+      }
+    }
     // 跳過方塊後先在岸內落地，保留第一坑原本的引怪起跳位置。
     if (frame.x >= 340 && frame.x < 372 && !frame.grounded) {
       actions.releaseSource(RIGHT_SOURCE);

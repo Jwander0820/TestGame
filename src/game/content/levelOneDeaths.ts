@@ -39,7 +39,7 @@ export const LEVEL_ONE_DEATHS = {
   },
   goal: {
     causeId: 'goal-approval-stamp', blockerId: 'goal-ambush',
-    messages: ['終點審核通過了。你沒有。', '那顆章只蓋第一次。行政流程偶爾也有良心。'],
+    messages: ['終點審核通過了。你沒有。', '兩顆章都下班了。行政流程偶爾也有良心。'],
   },
   firstGap: {
     causeId: 'fell-out-of-world', blockerId: 'first-gap',

@@ -53,6 +53,8 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 | 第一坑與金幣機關 | content/firstPitAmbush.ts、state/FirstPitState.ts、scenes/levelOne/FirstPitAmbush.ts、visuals/firstPitVisuals.ts（皆位於 src/game） |
 | 後半段連環陷阱 | content/rearGauntlet.ts、state/RearGauntletState.ts、scenes/levelOne/RearGauntlet.ts、visuals/rearGauntletVisuals.ts（皆位於 src/game） |
 | 幾何史萊姆原型 | content/levelOneSlimes.ts、state/SlimeState.ts、scenes/levelOne/SlimeEnemies.ts、visuals/slimePrototypeVisuals.ts（皆位於 src/game） |
+| 終點二連落印 | content/goalStamp.ts、state/GoalStampState.ts、scenes/levelOne/GoalStamp.ts（皆位於 src/game）；矩形圖形與傷害共用位置尺寸 |
+| 遊戲介面 | src/gameShell.ts；src/main.ts 提供正式保存，測試入口提供獨立記憶體保存 |
 | 場景、彩蛋、機關文字 | src/game/content/levelOneCopy.ts |
 | 死亡文字 | src/game/content/levelOneDeaths.ts |
 | 援助、路上對話、結算文字 | src/game/content/levelOne.ts |
@@ -73,3 +75,5 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 [SPEC-0012](docs/specs/SPEC-0012-slime-prototypes.md) 增加起點方塊突進史萊姆與第一坑後的圓形跟跳史萊姆，依使用者要求只用幾何佔位圖形。接觸會受傷，沒有踩怪或戰鬥；先引出一次攻擊，等牠攤平休息即可通過。對應區段第 5 次死亡援助會讓牠「奉命休息」。`art-review.html` 選「零死亡」可試方塊，選「圓形史萊姆區」可直接試跟跳；`slime-malice.html` 驗證精確死因、暫停與援助重載，`mobile-review.html` 提供對應手機框。
 
 開發伺服器啟動後開啟 `/tests/browser/art-review.html`，可切換零死亡、首次死亡與最高援助。它使用記憶體進度，可用方向鍵試玩，不讀寫正式存檔。美術來源與狀態見 [原創美術紀錄](docs/art-outsourcing/07-original-pixel-refresh.md)。
+
+[SPEC-0013](docs/specs/SPEC-0013-goal-collision-and-ux.md) 修正終點印章下落與邊緣碰撞，加入右側補蓋。最後高台先引完兩招再跳；首次中印章後仍撤除並移近終點。`/tests/browser/shell-review.html?state=goal` 使用正式介面從城門據點試玩，但不動正式存檔。省略參數從入口開始，`?state=max` 試最高援助。手機框 `mobile-review.html?case=shell` 支援 `size=landscape|wide|desktop`；`goal-collision.html?case=rush|second|pause|reload` 驗證精確死因、暫停與保存重載。

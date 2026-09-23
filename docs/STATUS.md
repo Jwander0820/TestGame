@@ -1,7 +1,7 @@
 # 當前狀態
 
-- 最後更新：2026-09-20
-- 目前工作：[SPEC-0012：幾何史萊姆小怪原型](specs/SPEC-0012-slime-prototypes.md)
+- 最後更新：2026-09-23
+- 目前工作：[SPEC-0013：終點判定、連續蓋章與遊玩介面](specs/SPEC-0013-goal-collision-and-ux.md)
 - 階段：新增玩法已實作，技術回歸通過。美術與台詞維持暫用，真人初見與觸控手感待試玩。
 
 ## 已確認
@@ -18,9 +18,14 @@
 
 ## 最近證據
 
+2026-09-23：重現舊終點印章 17 幀重疊卻零死，修正下落與邊緣碰撞，新增右側補蓋。98 項測試、型別與 build 通過；印章死因、補蓋、暫停、重載、零死及最高援助通關通過。新增據點進度、固定回饋、手機暫停選單及原生按鈕鍵盤操作；四種尺寸已抽樣目視，正式建置啟動／暫停無 console 警告或錯誤。詳見 [本輪紀錄](logs/2026-09-23-goal-collision-and-ux.md)。以下為 2026-09-20 的前輪證據。
+
 本輪通過 20 檔 91 項測試、型別與 build。桌面及固定 375×667 框內的已知路線 0 死；方塊與圓形小怪各精確 5 次死亡後援助完成，突進暫停及圓形援助重載通過。最高援助維持 21 死、原 checkpoint 14 死，前段頂板／假斷路、撞磚及後段追擊回歸通過。反向金幣探索、重載與整關亦 0 死。正式 dist 盲跳本輪 17 死完成，重玩／保存／重載正常，console 0 警告／錯誤，原保存還原。詳見 [SPEC-0012 紀錄](logs/2026-09-20-slime-prototypes.md)。前輪證據：[SPEC-0011](logs/2026-09-20-second-wave-malice.md)、[SPEC-0010](logs/2026-09-20-rear-gauntlet.md)、[SPEC-0009](logs/2026-09-20-coin-and-pit-ambush.md)。Phaser 主 bundle 大於 500 kB 為既有警告。
 
 ## 現在可用
+
+- /tests/browser/shell-review.html?state=goal：新版正式介面，從城門據點試玩二連落印，獨立記憶體保存。
+- /tests/browser/goal-collision.html?case=rush|second|pause|reload：終點碰撞、補蓋、暫停與保存重載。
 
 - 根 README：啟動、check 命令與模組入口。
 - 共用原創騎士、森林、城堡、地表與標題插畫，來源見 [美術紀錄](art-outsourcing/07-original-pixel-refresh.md)。

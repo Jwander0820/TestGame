@@ -89,13 +89,9 @@ export const LEVEL_ONE_AMBUSH_LAYOUT = {
     triggerWidth: 18,
     x: 2_740,
     hiddenY: 125,
-    revealedY: 350,
+    revealedY: 376,
     width: 76,
     height: 84,
-    dropDelayMs: 460,
-    dangerMinX: 2_695,
-    dangerMaxX: 2_785,
-    safeJumpY: 310,
   },
 } as const;
 
