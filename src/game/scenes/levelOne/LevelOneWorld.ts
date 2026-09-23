@@ -33,7 +33,7 @@ interface LevelOneWorldCallbacks {
   readonly onAirAmbush: () => void;
   readonly onFirstPitDeath: (cause: FirstPitCause) => void;
   readonly onRearDeath: (cause: RearCause) => void;
-  readonly onSlimeDeath: (id: SlimeId) => void;
+  readonly onSlimeDeath: (id: SlimeId, revenge: boolean) => void;
   readonly isPlayerDying: () => boolean;
 }
 

@@ -1,7 +1,7 @@
 import type { LevelOneEffectId } from '../content/levelOne';
 import { LEVEL_ONE_SLIMES, type SlimeDefinition, type SlimeId } from '../content/levelOneSlimes';
 
-export type SlimePhase = 'idle' | 'tell' | 'attack' | 'spent' | 'retired';
+export type SlimePhase = 'idle' | 'tell' | 'attack' | 'fake-rest' | 'wake' | 'revenge' | 'spent' | 'retired';
 export interface SlimeSample {
   readonly phase: SlimePhase;
   readonly x: number;
@@ -29,13 +29,19 @@ export class SlimeState {
   sample(definition: SlimeDefinition, now: number): SlimeSample {
     const armed = this.armedAt.get(definition.id);
     const age = armed === undefined ? 0 : Math.max(0, now - armed);
+    const restAt = definition.tellMs + definition.actionMs;
+    const wakeAt = restAt + definition.fakeRestMs;
+    const revengeAt = wakeAt + definition.wakeMs;
     const phase: SlimePhase = this.retired.has(definition.id) ? 'retired' : armed === undefined ? 'idle' :
-      age < definition.tellMs ? 'tell' : age < definition.tellMs + definition.actionMs ? 'attack' : 'spent';
-    const progress = phase === 'attack' ? (age - definition.tellMs) / definition.actionMs : phase === 'spent' ? 1 : 0;
-    return { phase, dangerous: phase === 'idle' || phase === 'tell' || phase === 'attack',
+      age < definition.tellMs ? 'tell' : age < restAt ? 'attack' : age < wakeAt ? 'fake-rest' :
+      age < revengeAt ? 'wake' : age < revengeAt + definition.revengeMs ? 'revenge' : 'spent';
+    const progress = phase === 'retired' ? 0 : Math.min(1, Math.max(0, (age - definition.tellMs) / definition.actionMs));
+    const revenge = phase === 'retired' ? 0 : Math.min(1, Math.max(0, (age - revengeAt) / definition.revengeMs));
+    return { phase, dangerous: phase === 'idle' || phase === 'tell' || phase === 'attack' || phase === 'revenge',
       revealed: this.revealed.has(definition.id),
-      x: definition.x + definition.travelX * progress,
-      y: definition.y - 4 * definition.jumpHeight * progress * (1 - progress) };
+      x: definition.x + definition.travelX * progress + definition.revengeTravelX * revenge,
+      y: definition.y - 4 * definition.jumpHeight * progress * (1 - progress) -
+        4 * definition.revengeJumpHeight * revenge * (1 - revenge) };
   }
 
   reveal(id: SlimeId): void { this.revealed.add(id); }

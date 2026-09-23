@@ -15,6 +15,10 @@ const routes = {
   slimePause: 'slime-malice.html?case=pause',
   slimeReload: 'slime-malice.html?case=reload',
   slimeView: 'slime-malice.html?case=jumper&review=1',
+  revengePause: 'slime-malice.html?case=revengePause',
+  revengeReload: 'slime-malice.html?case=revengeReload',
+  revengeView: 'slime-malice.html?case=revengeJumper&review=1',
+  sleepView: 'slime-malice.html?case=revengeCharger&review=1&view=sleep',
 } as const;
 const selected = new URLSearchParams(location.search).get('case') ?? 'play';
 if (!Object.hasOwn(routes, selected)) throw new Error('未知的手機驗證路線');

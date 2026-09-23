@@ -3,6 +3,46 @@ import { ActionState } from '../../src/game/input/ActionState';
 import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 describe('ZeroAssistDriver', () => {
+  it('從高台下落進觸發高度時就開始計時，不延到落地才計時', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 180, y: 250, grounded: false, timeMs: 0 }, actions);
+    driver.update({ x: 180, y: 275, grounded: false, timeMs: 100 }, actions);
+    driver.update({ x: 180, y: 398, grounded: true, timeMs: 400 }, actions);
+    actions.consumeJumpPressed();
+    driver.update({ x: 340, y: 370, grounded: false, timeMs: 1_080 }, actions);
+    driver.update({ x: 340, y: 398, grounded: true, timeMs: 1_280 }, actions);
+    expect(actions.consumeJumpPressed()).toBe(true);
+    expect(actions.isDown('right')).toBe(false);
+  });
+  it('留在岸內原地跳過方塊的回頭追撞，再接第一坑', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 180, y: 398, grounded: true, timeMs: 0 }, actions);
+    actions.consumeJumpPressed();
+    driver.update({ x: 340, y: 370, grounded: false, timeMs: 700 }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 340, y: 398, grounded: true, timeMs: 1_100 }, actions);
+    expect(actions.consumeJumpPressed()).toBe(true);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 340, y: 398, grounded: true, timeMs: 1_900 }, actions);
+    expect(actions.isDown('right')).toBe(true);
+  });
+  it('在圓形補跳結束前留在安全區，重生後重新引招', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 850, y: 398, grounded: true, timeMs: 0 }, actions);
+    expect(actions.consumeJumpPressed()).toBe(true);
+    driver.update({ x: 850, y: 350, grounded: false, timeMs: 100 }, actions);
+    driver.update({ x: 850, y: 398, grounded: true, timeMs: 1_500 }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 850, y: 398, grounded: true, timeMs: 2_200 }, actions);
+    expect(actions.isDown('right')).toBe(true);
+    driver.reset(actions);
+    driver.update({ x: 850, y: 398, grounded: true, timeMs: 3_000 }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    expect(actions.consumeJumpPressed()).toBe(true);
+  });
   it('在最後高台等待兩次蓋章結束再前進', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver();

@@ -72,7 +72,7 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 
 [SPEC-0011](docs/specs/SPEC-0011-second-wave-malice.md) 增加飛行物回頭追擊與最後高台的延遲重槌；橋上需補跳，重槌落點需及時離開。後段第 3 次援助揭露線索，第 5 次撤除兩招。`rear-gauntlet.html?case=returnSweep`／`?case=restHammer` 驗證各自死因；`?case=returnPause`／`?case=hammerReload` 驗證暫停與保存。加上 `&review=1` 可暫停在新機關畫面，再按「繼續驗證」。`/tests/browser/mobile-review.html` 提供真正 375×667 的 iframe 試玩與回歸入口，使用獨立測試進度。
 
-[SPEC-0012](docs/specs/SPEC-0012-slime-prototypes.md) 增加起點方塊突進史萊姆與第一坑後的圓形跟跳史萊姆，依使用者要求只用幾何佔位圖形。接觸會受傷，沒有踩怪或戰鬥；先引出一次攻擊，等牠攤平休息即可通過。對應區段第 5 次死亡援助會讓牠「奉命休息」。`art-review.html` 選「零死亡」可試方塊，選「圓形史萊姆區」可直接試跟跳；`slime-malice.html` 驗證精確死因、暫停與援助重載，`mobile-review.html` 提供對應手機框。
+[SPEC-0012](docs/specs/SPEC-0012-slime-prototypes.md) 增加起點方塊突進史萊姆與第一坑後的圓形跟跳史萊姆，依使用者要求只用幾何佔位圖形。接觸會受傷，沒有踩怪或戰鬥。後續 [SPEC-0014](docs/specs/SPEC-0014-slime-fake-rest.md) 加入假睡：方塊攤平後回頭追撞，圓形落地後向前補跳，需躲完兩招才真正休息。對應區段第 5 次死亡援助會讓牠永久「奉命休息」。`art-review.html` 選「零死亡」可試方塊，選「圓形史萊姆區」可直接試跟跳；`shell-review.html?state=slimes` 使用正式介面直接試圓形區。`slime-malice.html?case=revengeCharger|revengeJumper|revengePause|revengeReload` 驗證新死因、暫停與援助重載，`mobile-review.html` 提供對應手機框與截圖入口。測試頁使用獨立進度。
 
 開發伺服器啟動後開啟 `/tests/browser/art-review.html`，可切換零死亡、首次死亡與最高援助。它使用記憶體進度，可用方向鍵試玩，不讀寫正式存檔。美術來源與狀態見 [原創美術紀錄](docs/art-outsourcing/07-original-pixel-refresh.md)。
 

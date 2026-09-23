@@ -23,6 +23,7 @@ interface ZeroAssistDriverOptions {
   readonly lateFirstPitJump?: boolean;
   readonly rearFault?: 'step' | 'sweep' | 'exit' | 'ceiling' | 'returnSweep';
   readonly slimeFault?: 'charger' | 'jumper';
+  readonly slimeRevengeFault?: 'charger' | 'jumper';
   readonly rushGoalStamp?: boolean;
   readonly goalWaitMs?: number;
 }
@@ -36,6 +37,7 @@ export class ZeroAssistDriver implements PlaytestDriver {
   private lastX = 0;
   private landingBeforeCharger = false;
   private goalBaitAt: number | null = null;
+  private chargerBaitAt: number | null = null;
 
   constructor(private readonly options: ZeroAssistDriverOptions = {}) {}
 
@@ -50,6 +52,7 @@ export class ZeroAssistDriver implements PlaytestDriver {
     this.lastX = 0;
     this.landingBeforeCharger = false;
     this.goalBaitAt = null;
+    this.chargerBaitAt = null;
   }
 
   update(frame: PlaytestFrame, actions: ActionState): void {
@@ -58,8 +61,13 @@ export class ZeroAssistDriver implements PlaytestDriver {
       this.slimeBaitAt = null;
       this.slimeBaitCleared = false;
       this.landingBeforeCharger = false;
+      this.chargerBaitAt = null;
     }
     this.lastX = frame.x;
+    // 高台返回時下落至觸發高度就已引怪，不能等落地才計時。
+    if (frame.x >= 180 && frame.x < 340 && frame.y >= 270 && frame.timeMs !== undefined) {
+      this.chargerBaitAt ??= frame.timeMs;
+    }
     // 從左側高台返回時，先在突進範圍邊緣落地，再用地面跳躍避開。
     if (frame.x >= 180 && frame.x < 210 && frame.y < 270 && !frame.grounded) this.landingBeforeCharger = true;
     if (this.landingBeforeCharger && !frame.grounded) {
@@ -69,6 +77,19 @@ export class ZeroAssistDriver implements PlaytestDriver {
       return;
     }
     this.landingBeforeCharger = false;
+    // 方塊假睡後會折返；先留在岸內，第二次原地跳過追撞才進坑。
+    if (this.options.slimeRevengeFault !== 'charger' && frame.x >= 340 && frame.x < 372 &&
+      frame.timeMs !== undefined && this.chargerBaitAt !== null && frame.timeMs - this.chargerBaitAt < 1_800) {
+      actions.releaseSource(RIGHT_SOURCE);
+      if (frame.grounded && frame.timeMs - this.chargerBaitAt >= 1_100 && !this.jumpHeld) {
+        actions.press('jump', JUMP_SOURCE);
+        this.jumpHeld = true;
+      } else if (!frame.grounded) {
+        actions.releaseSource(JUMP_SOURCE);
+        this.jumpHeld = false;
+      }
+      return;
+    }
     // 先在最後高台引完兩次落印，再執行原本避開地刺的跳躍。
     if (!this.options.rushGoalStamp && !this.options.allowFirstGoalAmbush &&
       frame.x >= 2_626 && frame.x < 2_646 && frame.timeMs !== undefined) {
@@ -98,7 +119,8 @@ export class ZeroAssistDriver implements PlaytestDriver {
         actions.releaseSource(JUMP_SOURCE);
         this.jumpHeld = false;
       }
-      if (this.slimeBaitAt === null || frame.timeMs - this.slimeBaitAt < 1_100) return;
+      const waitMs = this.options.slimeRevengeFault === 'jumper' ? 1_100 : 2_200;
+      if (this.slimeBaitAt === null || frame.timeMs - this.slimeBaitAt < waitMs) return;
       this.slimeBaitCleared = true;
     }
     if (!this.options.rushFirstPit && this.pitApproach.shouldWait(frame)) {

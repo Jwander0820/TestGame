@@ -5,7 +5,7 @@ import { LEVEL_ONE_EFFECT_IDS as effects } from '../content/levelOne';
 
 const [charger, jumper] = LEVEL_ONE_SLIMES;
 describe('幾何史萊姆', () => {
-  it('靠近才蓄力，衝完攤平，每生命只衝一次', () => {
+  it('靠近才蓄力，衝完攤平假睡，第二次起身前不傷害', () => {
     const state = new SlimeState();
     state.observePlayer({ x: 110, y: 398, velocityY: 0 }, 0);
     expect(state.sample(charger, 100).phase).toBe('idle');
@@ -13,9 +13,9 @@ describe('幾何史萊姆', () => {
     state.observePlayer({ x: 200, y: 398, velocityY: 0 }, 200);
     expect(state.sample(charger, 279)).toMatchObject({ phase: 'tell', x: 300 });
     expect(state.sample(charger, 480)).toMatchObject({ phase: 'attack', x: 240 });
-    expect(state.sample(charger, 680)).toMatchObject({ phase: 'spent', dangerous: false, x: 180 });
+    expect(state.sample(charger, 680)).toMatchObject({ phase: 'fake-rest', dangerous: false, x: 180 });
     state.observePlayer({ x: 200, y: 398, velocityY: 0 }, 800);
-    expect(state.sample(charger, 800).phase).toBe('spent');
+    expect(state.sample(charger, 800).phase).toBe('fake-rest');
   });
 
   it('圓形只模仿範圍內的上升跳躍，不追蹤落地、遠處或高空玩家', () => {
@@ -28,7 +28,7 @@ describe('幾何史萊姆', () => {
     state.observePlayer({ x: 850, y: 390, velocityY: -400 }, 1_000);
     expect(state.sample(jumper, 1_059).phase).toBe('tell');
     expect(state.sample(jumper, 1_460)).toMatchObject({ phase: 'attack', x: 930, y: 294 });
-    expect(state.sample(jumper, 1_860)).toMatchObject({ phase: 'spent', dangerous: false, y: 402 });
+    expect(state.sample(jumper, 1_860)).toMatchObject({ phase: 'fake-rest', dangerous: false, y: 402 });
   });
 
   it('暫停同時間取樣不移動，重生回原位並保留發現線索', () => {
@@ -63,5 +63,30 @@ describe('幾何史萊姆', () => {
     state.applyEffect(effects.moveFirstLanding);
     state.applyEffect(effects.shrinkWarningStrip);
     for (const definition of LEVEL_ONE_SLIMES) expect(state.sample(definition, 0).dangerous).toBe(false);
+  });
+
+  it.each(LEVEL_ONE_SLIMES)('$id 假睡後僅反擊一次，起終點連續且能撤除', definition => {
+    const state = new SlimeState();
+    state.observePlayer({ x: definition.triggerMinX, y: 390, velocityY: -400 }, 0);
+    const rest = definition.tellMs + definition.actionMs;
+    const wake = rest + definition.fakeRestMs;
+    const attack = wake + definition.wakeMs;
+    const end = attack + definition.revengeMs;
+    const startX = definition.x + definition.travelX;
+    expect(state.sample(definition, wake - 1)).toMatchObject({ phase: 'fake-rest', dangerous: false, x: startX });
+    expect(state.sample(definition, wake)).toMatchObject({ phase: 'wake', dangerous: false, x: startX });
+    expect(state.sample(definition, attack)).toMatchObject({ phase: 'revenge', dangerous: true, x: startX });
+    expect(state.sample(definition, attack + definition.revengeMs / 2)).toMatchObject({
+      phase: 'revenge', x: startX + definition.revengeTravelX / 2, y: definition.y - definition.revengeJumpHeight,
+    });
+    expect(state.sample(definition, end)).toMatchObject({ phase: 'spent', dangerous: false,
+      x: startX + definition.revengeTravelX, y: definition.y });
+    state.observePlayer({ x: definition.triggerMinX, y: 390, velocityY: -400 }, end + 1_000);
+    expect(state.sample(definition, end + 10_000).phase).toBe('spent');
+    state.resetAttempt();
+    expect(state.sample(definition, end)).toMatchObject({ phase: 'idle', x: definition.x });
+    state.observePlayer({ x: definition.triggerMinX, y: 390, velocityY: -400 }, 0);
+    state.applyEffect(definition.retireEffects[0]);
+    expect(state.sample(definition, attack + 100)).toMatchObject({ phase: 'retired', dangerous: false });
   });
 });

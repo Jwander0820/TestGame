@@ -14,7 +14,7 @@ export class SlimeEnemies {
   }[] = [];
 
   constructor(scene: Phaser.Scene, private readonly player: Phaser.Physics.Arcade.Sprite,
-    private readonly state: SlimeState, isDying: () => boolean, onDeath: (id: SlimeId) => void) {
+    private readonly state: SlimeState, isDying: () => boolean, onDeath: (id: SlimeId, revenge: boolean) => void) {
     for (const definition of LEVEL_ONE_SLIMES) {
       const zone = scene.add.zone(definition.x, definition.y, definition.width, definition.height);
       scene.physics.add.existing(zone, true);
@@ -25,7 +25,7 @@ export class SlimeEnemies {
         if (isDying() || !body.enable) return;
         state.reveal(definition.id);
         this.render();
-        onDeath(definition.id);
+        onDeath(definition.id, state.sample(definition, this.elapsedMs).phase === 'revenge');
       });
     }
     this.render();

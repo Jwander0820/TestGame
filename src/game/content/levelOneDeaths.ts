@@ -14,6 +14,11 @@ export const SLIME_DEATHS = {
   jumper: { causeId: LEVEL_ONE_SLIMES[1].causeId, blockerId: 'warning-strip', messages: ['你會跳。它也會，而且一直在等這一刻。'] },
 } as const satisfies Record<SlimeId, DeathContext>;
 
+export const SLIME_REVENGE_DEATHS = {
+  charger: { causeId: LEVEL_ONE_SLIMES[0].revengeCauseId, blockerId: 'first-gap', messages: ['它說累了，沒說不會回頭。'] },
+  jumper: { causeId: LEVEL_ONE_SLIMES[1].revengeCauseId, blockerId: 'warning-strip', messages: ['剛才是在休息。現在輪到你休息。'] },
+} as const satisfies Record<SlimeId, DeathContext>;
+
 export const REAR_DEATHS = {
   [REAR_CAUSES.returnSweep]: { causeId: REAR_CAUSES.returnSweep, blockerId: 'intern-bridge', messages: ['剛才那一發附有回程票。'] },
   [REAR_CAUSES.restHammer]: { causeId: REAR_CAUSES.restHammer, blockerId: 'intern-bridge', messages: ['休息處到了。重槌也到了。'] },
