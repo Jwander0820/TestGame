@@ -68,6 +68,10 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 
 ## 美術檢視
 
+[SPEC-0015](docs/specs/SPEC-0015-return-audit-and-red-carpet.md) 新增「回頭查票」：據點後往左跳會招來退件章，位置鎖定、可掉頭躲開，回程區段第 5 次死亡撤除。往左出界或回到據點後方落坑有獨立死因與反應。本關各種死亡合計 21 次後，工務處退休所有陷阱、高台停止碰撞、整關鋪出同高紅毯，只需持續向右走，無需跳躍；保存／重玩保留，重新開始全新旅程才清除。舊三段最高援助存檔直接適用。
+
+`shell-review.html?state=slimes` 可從林間據點往左跳試查票；`shell-review.html?state=max` 可直接體驗紅毯。`final-mercy.html?case=fresh|left|audit|reload` 與 `max-assistance.html` 驗證真實 Phaser 死亡累積、退件章、重載及只向右通關，皆使用獨立測試保存。
+
 後半段五種連環機關見 [SPEC-0010](docs/specs/SPEC-0010-rear-gauntlet.md)；`/tests/browser/rear-gauntlet.html` 可重現各死因、援助解除、暫停與重載。`art-review.html` 的「後半段零援助」可直接試玩新增區段。
 
 [SPEC-0011](docs/specs/SPEC-0011-second-wave-malice.md) 增加飛行物回頭追擊與最後高台的延遲重槌；橋上需補跳，重槌落點需及時離開。後段第 3 次援助揭露線索，第 5 次撤除兩招。`rear-gauntlet.html?case=returnSweep`／`?case=restHammer` 驗證各自死因；`?case=returnPause`／`?case=hammerReload` 驗證暫停與保存。加上 `&review=1` 可暫停在新機關畫面，再按「繼續驗證」。`/tests/browser/mobile-review.html` 提供真正 375×667 的 iframe 試玩與回歸入口，使用獨立測試進度。

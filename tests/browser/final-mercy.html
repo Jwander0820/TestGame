@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>回頭查票與全程紅毯驗證</title><style>
+body { margin:0; background:#fff3d6; color:#14232b; font:14px system-ui; }
+main { max-width:960px; margin:auto; } #game-root { width:100%; aspect-ratio:16/9; }
+nav { display:flex; flex-wrap:wrap; gap:12px; padding:12px; } output,pre { display:block; margin:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
+button { min-height:48px; margin:12px; } canvas { image-rendering:pixelated; }
+</style></head><body><main>
+<nav aria-label="新玩法驗證"><a href="?case=fresh">新局只往右</a><a href="?case=left">反覆往左跳</a><a href="?case=audit">回頭查票</a><a href="?case=reload">第21死重載</a><a href="?case=audit&review=1">退件章截圖</a></nav>
+<div id="game-root" aria-label="回頭查票與紅毯遊戲舞台"></div>
+<output id="playtest-result" data-status="running">執行中，獨立測試進度。</output>
+<button id="resume-review" hidden>繼續驗證</button><pre id="evidence"></pre>
+</main><script type="module" src="./final-mercy.ts"></script></body></html>

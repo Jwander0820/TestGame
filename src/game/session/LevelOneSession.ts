@@ -3,6 +3,7 @@ import { LEVEL_ONE_SPAWNS } from '../content/levelOneLayout';
 import type { ProgressState, ProgressStore } from '../state/progress';
 import { advanceProgress, completeLevel, discoverEasterEgg, recordDeath } from '../sympathy/director';
 import type { DirectorResult } from '../sympathy/types';
+import { hasFinalMercy } from '../state/FinalMercy';
 
 export interface LevelOneSpawn {
   readonly x: number;
@@ -28,6 +29,8 @@ export class LevelOneSession {
   get totalDeaths(): number {
     return this.progressStore.snapshot.totalDeaths;
   }
+
+  get finalMercy(): boolean { return hasFinalMercy(this.progressStore.snapshot); }
 
   get progressOrder(): number {
     return this.progressStore.snapshot.levels[LEVEL_ONE_ID]?.progressOrder ?? 0;

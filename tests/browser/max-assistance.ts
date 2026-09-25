@@ -3,7 +3,7 @@ import { LEVEL_ONE_ID } from '../../src/game/content/levelOne';
 import { subscribeToGameStatus } from '../../src/game/events';
 import { InputController } from '../../src/game/input/InputController';
 import { ProgressStore } from '../../src/game/state/progress';
-import { MaxAssistanceDriver } from './MaxAssistanceDriver';
+import { RightOnlyDriver } from './RightOnlyDriver';
 import { createMaxAssistanceProgress } from './maxAssistanceState';
 
 const EXPECTED_DEATHS = 21;
@@ -22,7 +22,7 @@ const progressStore = new ProgressStore({
 progressStore.replace(createMaxAssistanceProgress());
 
 const inputController = new InputController();
-const playtestDriver = new MaxAssistanceDriver();
+const playtestDriver = new RightOnlyDriver();
 let lastSeenDeaths = EXPECTED_DEATHS;
 const unsubscribe = subscribeToGameStatus((detail) => {
   result.textContent = detail.message;

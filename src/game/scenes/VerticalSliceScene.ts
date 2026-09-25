@@ -5,6 +5,9 @@ import { FIRST_PIT_CAUSES } from '../content/firstPitAmbush';
 import { LEVEL_ONE_SLIMES } from '../content/levelOneSlimes';
 import { SLIME_DEATHS, SLIME_REVENGE_DEATHS } from '../content/levelOneDeaths';
 import { LEVEL_ONE_TRAP_CAUSES } from '../content/levelOneTraps';
+import { RETURN_AUDIT, RETURN_DEATHS, isBacktrackFall } from '../content/returnAudit';
+import { FINAL_MERCY_EFFECTS, FINAL_MERCY_MESSAGE } from '../state/FinalMercy';
+import { ReturnAudit } from './levelOne/ReturnAudit';
 import { LEVEL_ONE_COPY as copy } from '../content/levelOneCopy';
 import {
   LEVEL_ONE_ID,
@@ -55,6 +58,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private world!: LevelOneWorld;
   private playTimeMs = 0;
+  private returnAudit: ReturnAudit | null = null;
   private reverseCoinLabel: Phaser.GameObjects.Text | null = null;
   private inspectionDossier: Phaser.GameObjects.Container | null = null;
   private inspectionDossierRevealed = false;
@@ -88,11 +92,14 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.drawWorld();
     this.world.createPlatforms();
     this.createPlayer();
+    this.returnAudit = new ReturnAudit(this, this.player, this.session.blockerDeaths('backtrack') >= RETURN_AUDIT.retireDeaths,
+      () => this.beginDeath(RETURN_DEATHS.audit));
     this.createReverseEasterEgg();
     this.world.createWarningHazard();
     this.createGoal();
     this.createInspectionDossier();
     this.restorePersistedAssists();
+    this.syncFinalMercy();
 
     this.cameras.main.setBounds(0, 0, LEVEL_ONE_WORLD.width, LEVEL_ONE_WORLD.height);
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09, -130, 30);
@@ -110,7 +117,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     const deaths = this.session.totalDeaths;
     publishGameStatus({
       deaths,
-      message: deaths === 0 ? copy.controls : copy.resume,
+      message: this.world.finalMercyActive ? FINAL_MERCY_MESSAGE : deaths === 0 ? copy.controls : copy.resume,
     });
   }
 
@@ -149,6 +156,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       goalAmbushSpent: this.session.causeDeaths('goal-approval-stamp') > 0,
     });
     this.playTimeMs = 0;
+    this.returnAudit = null;
     this.reverseCoinLabel = null;
     this.inspectionDossier = null;
     this.inspectionDossierRevealed = false;
@@ -173,6 +181,8 @@ export class VerticalSliceScene extends Phaser.Scene {
 
     this.playTimeMs += delta;
     this.world.update(delta);
+    if (!this.lifecycle.isPlaying) return;
+    this.returnAudit?.update(delta);
     if (!this.lifecycle.isPlaying) return;
 
     const actions = this.dependencies.inputController.actions;
@@ -212,6 +222,10 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
 
     if (this.player.y > LEVEL_ONE_WORLD.height + 30) {
+      if (this.world.finalMercyActive) {
+        this.player.setPosition(this.spawn.x, this.spawn.y).setVelocity(0, 0);
+        return;
+      }
       this.beginDeath(this.resolveFallDeathContext());
       return;
     }
@@ -459,6 +473,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private updateRouteBanter(): void {
+    if (this.world.finalMercyActive) return;
     const banter = LEVEL_ONE_ROUTE_BANTER.find(
       (entry) => this.player.x >= entry.triggerX && !this.seenRouteBanterIds.has(entry.id),
     );
@@ -490,10 +505,11 @@ export class VerticalSliceScene extends Phaser.Scene {
       return;
     }
     this.spawn = spawn;
-    publishGameStatus({ deaths: next.totalDeaths, message });
+    publishGameStatus({ deaths: next.totalDeaths, message: this.world.finalMercyActive ? FINAL_MERCY_MESSAGE : message });
   }
 
   private beginDeath(context: DeathContext): void {
+    if (this.world.finalMercyActive) return;
     if (!this.lifecycle.beginDeath()) {
       return;
     }
@@ -515,10 +531,14 @@ export class VerticalSliceScene extends Phaser.Scene {
       (effectId) => this.applyEffectSafely(effectId),
     );
     this.refreshInspectionDossier();
+    const redCarpetDeployed = this.syncFinalMercy();
+    if (this.session.blockerDeaths('backtrack') >= RETURN_AUDIT.retireDeaths) this.returnAudit?.retire();
 
     const causeDeaths = result.state.levels[LEVEL_ONE_ID]?.deathsByCause[context.causeId] ?? 1;
     const fallbackMessage = context.messages[(causeDeaths - 1) % context.messages.length] ?? context.messages[0];
-    const message = result.reaction?.message ?? fallbackMessage ?? copy.fallbackDeath;
+    const message = redCarpetDeployed ? FINAL_MERCY_MESSAGE :
+      this.session.blockerDeaths('backtrack') === RETURN_AUDIT.retireDeaths && context.blockerId === 'backtrack' ?
+        '退件章被投訴到下班。工務處仍在累積鋪路預算。' : result.reaction?.message ?? fallbackMessage ?? copy.fallbackDeath;
     publishGameStatus({ deaths: result.state.totalDeaths, message, phase: 'dying' });
     const annotation = this.createMercyAnnotation(message, result.reaction);
 
@@ -554,6 +574,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
     this.player.clearTint();
     this.world.resetTransientHazards();
+    this.returnAudit?.resetAttempt();
     this.player.setPosition(this.spawn.x, this.spawn.y);
     this.player.setVelocity(0, 0);
     if (this.player.body !== null) {
@@ -565,7 +586,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.goalRelocationPending = false;
     publishGameStatus({
       deaths: this.session.totalDeaths,
-      message: goalRelocated
+      message: this.world.finalMercyActive ? FINAL_MERCY_MESSAGE : goalRelocated
         ? copy.goalMoved
         : copy.respawn,
     });
@@ -646,6 +667,16 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
   }
 
+  private syncFinalMercy(): boolean {
+    if (!this.session.finalMercy || this.world.finalMercyActive) return false;
+    for (const effect of FINAL_MERCY_EFFECTS) {
+      if (!this.applyEffectSafely(effect)) return false;
+    }
+    this.returnAudit?.retire();
+    this.world.deployRedCarpet();
+    return true;
+  }
+
   private applyEffectSafely(effectId: string): boolean {
     if (this.appliedEffectIds.has(effectId)) {
       return true;
@@ -680,7 +711,7 @@ export class VerticalSliceScene extends Phaser.Scene {
     if (next === null) {
       return;
     }
-    const message = copy.idle;
+    const message = this.world.finalMercyActive ? '工務處已經把整關改成走廊了。只要向右走。' : copy.idle;
     publishGameStatus({ deaths: next.totalDeaths, message });
     const annotation = addGameText(
       this,
@@ -710,6 +741,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       next.totalDeaths,
       this.session.activeAssistCount,
       this.session.causeDeaths('goal-approval-stamp') > 0,
+      this.world.finalMercyActive,
     );
     publishGameStatus({
       deaths: next.totalDeaths,
@@ -788,6 +820,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   }
 
   private resolveFallDeathContext(): DeathContext {
+    if (isBacktrackFall(this.player.x, this.spawn.x, this.session.progressOrder)) return RETURN_DEATHS.exit;
     if (this.world.raisedStepCollapsed && this.player.x >= REAR_STEP.minFallX && this.player.x <= REAR_STEP.maxFallX) {
       return REAR_DEATHS[REAR_CAUSES.step];
     }

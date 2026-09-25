@@ -19,6 +19,10 @@ const routes = {
   revengeReload: 'slime-malice.html?case=revengeReload',
   revengeView: 'slime-malice.html?case=revengeJumper&review=1',
   sleepView: 'slime-malice.html?case=revengeCharger&review=1&view=sleep',
+  finalMercy: 'final-mercy.html?case=fresh',
+  backtrack: 'final-mercy.html?case=left',
+  auditView: 'final-mercy.html?case=audit&review=1',
+  finalReload: 'final-mercy.html?case=reload',
 } as const;
 const selected = new URLSearchParams(location.search).get('case') ?? 'play';
 if (!Object.hasOwn(routes, selected)) throw new Error('未知的手機驗證路線');

@@ -170,7 +170,10 @@ export function getLevelOneCompletionCopy(
   totalDeaths: number,
   activeAssistCount: number,
   goalMercyUsed = false,
+  redCarpetUsed = false,
 ): LevelOneCompletionCopy {
+  if (redCarpetUsed) return { status: '全程紅毯通關。工務處：恭喜，你成功迫使世界改變了自己。',
+    banner: '勇者認證通過\n（全關已改成走廊）' };
   if (totalDeaths === 0) {
     return {
       status: '零次死亡。工務處準備的援助演出全部報廢。',

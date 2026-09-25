@@ -25,6 +25,7 @@ import { GoalStamp } from './GoalStamp';
 import { SlimeEnemies } from './SlimeEnemies';
 import { SlimeState } from '../../state/SlimeState';
 import type { SlimeId } from '../../content/levelOneSlimes';
+import { drawRedCarpet } from '../../visuals/redCarpet';
 
 interface LevelOneWorldCallbacks {
   readonly onWarningHazard: () => void;
@@ -51,6 +52,7 @@ export interface LevelOneWorldInitialState {
 }
 
 export class LevelOneWorld {
+  finalMercyActive = false;
   private readonly slimeState: SlimeState;
   private slimes: SlimeEnemies | null = null;
   private readonly rearState: RearGauntletState;
@@ -144,6 +146,7 @@ export class LevelOneWorld {
   }
 
   update(deltaMs: number): void {
+    if (this.finalMercyActive) return;
     this.goalStamp?.update(deltaMs);
     if (this.callbacks.isPlayerDying()) return;
     this.slimes?.update(deltaMs);
@@ -308,6 +311,7 @@ export class LevelOneWorld {
   }
 
   resetTransientHazards(): void {
+    if (this.finalMercyActive) return;
     this.goalStamp?.resetAttempt();
     this.slimes?.resetAttempt();
     this.rear?.resetAttempt();
@@ -348,6 +352,27 @@ export class LevelOneWorld {
       this.platformVisuals.set(platform, visual);
     }
     return platform;
+  }
+
+  deployRedCarpet(): void {
+    if (this.finalMercyActive) return;
+    this.bridgeCollapseTimer?.remove(false);
+    this.bridgeCollapseTimer = null;
+    this.retireGapSpring();
+    for (const child of this.platforms.getChildren()) {
+      const platform = child as Phaser.Physics.Arcade.Sprite;
+      if (platform.body) platform.body.enable = false;
+      platform.setAlpha(0.15);
+      this.platformVisuals.get(platform)?.setAlpha(0.15);
+    }
+    if (this.collapsingBridge?.body) this.collapsingBridge.body.enable = false;
+    this.collapsingBridge?.setAlpha(0.15);
+    const road = this.scene.add.zone(1_500, 430, 3_000, 24);
+    this.scene.physics.add.existing(road, true);
+    this.scene.physics.add.collider(this.requirePlayer(), road);
+    this.requirePlayer().setCollideWorldBounds(true);
+    drawRedCarpet(this.scene);
+    this.finalMercyActive = true;
   }
 
   private drawWarningMarks(width: number): void {

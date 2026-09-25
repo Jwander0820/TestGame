@@ -1,7 +1,7 @@
 # 當前狀態
 
 - 最後更新：2026-09-24
-- 目前工作：[SPEC-0014：史萊姆假睡與背後追擊](specs/SPEC-0014-slime-fake-rest.md)
+- 目前工作：[SPEC-0015：回頭查票與全程紅毯](specs/SPEC-0015-return-audit-and-red-carpet.md)
 - 階段：新增玩法已實作，技術回歸通過。美術與台詞維持暫用，真人初見與觸控手感待試玩。
 
 ## 已確認
@@ -18,6 +18,10 @@
 
 ## 最近證據
 
+2026-09-24：最新要求增加意外玩法、設計往回跳自殺，並在死亡累積後只向右走即可過關。已加入鎖定落點的「回頭查票」、左側出界專屬死因與反應；反向區段累積 5 死撤除退件章。本關不限死因累積 21 死，或舊三段最高援助齊備，工務處鋪設全程同高實體紅毯、停用舊高台並撤除陷阱，不需要跳躍。
+
+本輪 25 檔 111 項測試、型別與 build 通過。實際 Phaser 新局只向右、反覆左側出界皆精確 21 死後完成；退件章精確 5 死後完成，攻擊暫停／恢復通過；古橋據點第 21 死保存重載及桌面／375×667 最高援助均不跳通關。原已知路線與左側彩蛋重載維持 0 死。桌面、375×667、667×375 已抽樣目視，詳見 [回頭查票與紅毯紀錄](logs/2026-09-24-return-audit-and-red-carpet.md)。
+
 2026-09-24：103 項測試、型別與 build 通過。兩個新死因各精確 5 次死亡後通關，追撞暫停、補跳援助重載通過；桌面／375×667 已知路線及反向探索重載均 0 死，最高援助保留 21 死、終點補蓋精確 1 死。桌面、375×667、667×375 已抽樣檢視，詳見 [假睡後手紀錄](logs/2026-09-24-slime-fake-rest.md)。
 
 2026-09-23：重現舊終點印章 17 幀重疊卻零死，修正下落與邊緣碰撞，新增右側補蓋。98 項測試、型別與 build 通過；印章死因、補蓋、暫停、重載、零死及最高援助通關通過。新增據點進度、固定回饋、手機暫停選單及原生按鈕鍵盤操作；四種尺寸已抽樣目視，正式建置啟動／暫停無 console 警告或錯誤。詳見 [本輪紀錄](logs/2026-09-23-goal-collision-and-ux.md)。以下為 2026-09-20 的前輪證據。
@@ -26,6 +30,9 @@
 
 ## 現在可用
 
+- /tests/browser/shell-review.html?state=slimes：據點後向左跳試「回頭查票」；?state=max 直接試只向右走的全程紅毯，均為獨立記憶體進度。
+- /tests/browser/final-mercy.html?case=fresh|left|audit|reload：只往右、反向出界、退件章死因與最終援助重載驗證；audit&review=1 可暫停檢視退件章。
+- /tests/browser/mobile-review.html?case=shellMax：手機框紅毯手動試玩，可加 &size=landscape 檢視橫向。
 - /tests/browser/shell-review.html：正式介面從入口試玩假睡追撞；?state=slimes 直接試圓形補跳，皆使用獨立記憶體進度。
 - /tests/browser/slime-malice.html?case=revengeCharger|revengeJumper|revengePause|revengeReload：新後手死因、暫停與保存重載；手機框有裝睡／補跳截圖入口。
 - /tests/browser/shell-review.html?state=goal：新版正式介面，從城門據點試玩二連落印，獨立記憶體保存。
