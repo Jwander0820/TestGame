@@ -24,12 +24,13 @@ export function paintSky(p: PixelPainter): void {
   }
 }
 
-export function paintMountains(p: PixelPainter): void {
+export function paintMountains(p: PixelPainter, includeCitadel = true): void {
   for (let x = -220; x < 1900; x += 4) {
     const height = Math.round((90 + Math.sin(x * 0.007) * 44 + Math.sin(x * 0.019) * 17) / 4) * 4;
     p.rect(x, 350 - height, 4, height + 100, C.mist300);
   }
-  // Citadel set into the ridge: quiet, legible, not a foreground obstacle.
+  if (!includeCitadel) return;
+  // Citadel set into the ridge for the title's distant destination.
   const x = 666;
   p.rect(x - 34, 230, 234, 102, C.mist500);
   for (const [offset, top, width] of [[0, 170, 34], [48, 130, 46], [118, 158, 34]] as const) {

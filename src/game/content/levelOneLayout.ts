@@ -54,10 +54,13 @@ export const LEVEL_ONE_WARNING_HAZARD = {
 
 export const LEVEL_ONE_GOAL = {
   x: 2_920,
-  poleY: 322,
+  poleY: 335,
   flagX: 2_965,
   flagY: 255,
   triggerY: 360,
+  gateOffsetX: -40,
+  gateCenterY: 378,
+  platformTopY: 430,
   mercyShiftX: -120,
 } as const;
 

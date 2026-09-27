@@ -26,6 +26,7 @@ import {
   LEVEL_ONE_COLORS,
   LEVEL_ONE_INSPECTION_ROWS,
   LEVEL_ONE_TEXT_COLORS,
+  PIXEL_PALETTE,
 } from '../content/levelOneVisuals';
 import { publishGameStatus } from '../events';
 import type { InputController } from '../input/InputController';
@@ -40,6 +41,7 @@ import { addGameText } from '../visuals/addGameText';
 import { createGameTextures } from '../visuals/createTextures';
 import { drawLevelOneScenery } from '../visuals/LevelOneScenery';
 import {
+  loadLevelOneArt,
   prepareLevelOneArt,
 } from '../visuals/levelOneArt';
 
@@ -66,6 +68,8 @@ export class VerticalSliceScene extends Phaser.Scene {
   private inspectionStamp: Phaser.GameObjects.Text | null = null;
   private goalPole: Phaser.GameObjects.Rectangle | null = null;
   private goalFlag: Phaser.GameObjects.Triangle | null = null;
+  private goalArt: Phaser.GameObjects.Image | null = null;
+  private goalThreshold: Phaser.GameObjects.Graphics | null = null;
   private goalZone: Phaser.GameObjects.Zone | null = null;
   private goalMercyLabel: Phaser.GameObjects.Text | null = null;
   private goalShifted = false;
@@ -82,6 +86,10 @@ export class VerticalSliceScene extends Phaser.Scene {
   constructor(private readonly dependencies: VerticalSliceSceneDependencies) {
     super('VerticalSliceScene');
     this.session = new LevelOneSession(dependencies.progressStore);
+  }
+
+  preload(): void {
+    loadLevelOneArt(this);
   }
 
   create(): void {
@@ -164,6 +172,8 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.inspectionStamp = null;
     this.goalPole = null;
     this.goalFlag = null;
+    this.goalArt = null;
+    this.goalThreshold = null;
     this.goalZone = null;
     this.goalMercyLabel = null;
     this.goalShifted = false;
@@ -301,6 +311,12 @@ export class VerticalSliceScene extends Phaser.Scene {
   private createGoal(): void {
     this.goalShifted = this.session.causeDeaths('goal-approval-stamp') > 0;
     const shiftX = this.goalShifted ? LEVEL_ONE_GOAL.mercyShiftX : 0;
+    const gateX = LEVEL_ONE_GOAL.x + LEVEL_ONE_GOAL.gateOffsetX + shiftX;
+    this.goalThreshold = this.add.graphics({ x: gateX, y: 0 }).setDepth(-1);
+    this.goalThreshold.fillStyle(PIXEL_PALETTE.stone800, 1);
+    this.goalThreshold.fillRect(-60, LEVEL_ONE_GOAL.platformTopY - 6, 120, 6);
+    this.goalThreshold.fillStyle(PIXEL_PALETTE.stone400, 1);
+    for (let x = -54; x <= 42; x += 24) this.goalThreshold.fillRect(x, LEVEL_ONE_GOAL.platformTopY - 6, 19, 2);
     this.goalPole = this.add.rectangle(
       LEVEL_ONE_GOAL.x + shiftX,
       LEVEL_ONE_GOAL.poleY,
@@ -322,6 +338,12 @@ export class VerticalSliceScene extends Phaser.Scene {
       1,
     );
     this.goalFlag.setStrokeStyle(4, LEVEL_ONE_COLORS.ink, 1);
+    if (this.textures.exists('goal-gate-source')) {
+      this.goalArt = this.add.image(gateX, LEVEL_ONE_GOAL.gateCenterY, 'goal-gate-source')
+        .setDisplaySize(230, 160).setDepth(-2);
+      this.goalPole.setVisible(false);
+      this.goalFlag.setVisible(false);
+    }
     this.goalZone = this.add.zone(LEVEL_ONE_GOAL.x - 10 + shiftX, LEVEL_ONE_GOAL.triggerY, 100, 150);
     this.physics.add.existing(this.goalZone, true);
     this.physics.add.overlap(this.player, this.goalZone, () => this.finishLevel());
@@ -617,6 +639,12 @@ export class VerticalSliceScene extends Phaser.Scene {
       duration: 620,
       ease: 'Back.Out',
     });
+    if (this.goalArt !== null) {
+      this.tweens.add({ targets: this.goalArt, x: this.goalArt.x + shiftX, duration: 620, ease: 'Back.Out' });
+    }
+    if (this.goalThreshold !== null) {
+      this.tweens.add({ targets: this.goalThreshold, x: this.goalThreshold.x + shiftX, duration: 620, ease: 'Back.Out' });
+    }
     this.goalMercyLabel = addGameText(
       this,
       poleTargetX - 8,
@@ -733,6 +761,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       return;
     }
     this.player.setVelocity(0, 0);
+    this.player.anims.stop();
     if (this.player.body !== null) {
       this.player.body.enable = false;
     }
@@ -748,21 +777,77 @@ export class VerticalSliceScene extends Phaser.Scene {
       message: copy.status,
       phase: 'completed',
     });
-    this.playCompletionSetpiece();
-    addGameText(
-      this,
-      this.cameras.main.scrollX + 360,
-      150,
-      copy.banner,
-      28,
-      LEVEL_ONE_TEXT_COLORS.danger,
-    )
-      .setAlign('center')
-      .setOrigin(0.5)
-      .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.parchment)
-      .setPadding(14, 9)
-      .setStroke(LEVEL_ONE_TEXT_COLORS.parchment, 8)
-      .setDepth(20);
+    this.playGoalEntrance(() => {
+      this.playCompletionSetpiece();
+      addGameText(
+        this,
+        this.cameras.main.scrollX + 360,
+        150,
+        copy.banner,
+        28,
+        LEVEL_ONE_TEXT_COLORS.danger,
+      )
+        .setAlign('center')
+        .setOrigin(0.5)
+        .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.parchment)
+        .setPadding(14, 9)
+        .setStroke(LEVEL_ONE_TEXT_COLORS.parchment, 8)
+        .setDepth(20);
+    });
+  }
+
+  private playGoalEntrance(onEntered: () => void): void {
+    const doorX = this.goalArt?.x ?? this.goalPole?.x ?? LEVEL_ONE_GOAL.x;
+    const groundY = LEVEL_ONE_GOAL.platformTopY - LEVEL_ONE_PLAYER_PHYSICS.bodyHeight / 2;
+    const openAndEnter = (): void => {
+      this.openGoalDoor(doorX);
+      this.player.setFlipX(false);
+      this.player.play('hero-run', true);
+      this.tweens.add({
+        targets: this.player,
+        x: doorX,
+        alpha: 0,
+        duration: 280,
+        ease: 'Quad.InOut',
+        onComplete: () => {
+          this.player.anims.stop();
+          onEntered();
+        },
+      });
+    };
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.player.setPosition(doorX, groundY).setAlpha(0);
+      this.openGoalDoor(doorX);
+      onEntered();
+      return;
+    }
+    if (Math.abs(this.player.y - groundY) <= 2) {
+      openAndEnter();
+      return;
+    }
+    this.tweens.add({
+      targets: this.player,
+      y: groundY,
+      duration: 220,
+      ease: 'Quad.In',
+      onComplete: openAndEnter,
+    });
+  }
+
+  private openGoalDoor(doorX: number): void {
+    if (this.goalArt === null) return;
+    const floorY = LEVEL_ONE_GOAL.platformTopY;
+    const door = this.add.graphics().setDepth(-1);
+    door.fillStyle(PIXEL_PALETTE.stone800, 1);
+    door.fillRect(doorX - 20, floorY - 63, 40, 62);
+    door.fillRect(doorX - 16, floorY - 69, 32, 8);
+    door.fillStyle(PIXEL_PALETTE.ink950, 1);
+    door.fillRect(doorX - 17, floorY - 61, 34, 60);
+    door.fillRect(doorX - 13, floorY - 66, 26, 8);
+    door.fillStyle(PIXEL_PALETTE.wood800, 1);
+    door.fillRect(doorX - 21, floorY - 55, 5, 52);
+    door.fillRect(doorX + 16, floorY - 55, 5, 52);
   }
 
   private playCompletionSetpiece(): void {

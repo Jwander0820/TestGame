@@ -4,6 +4,7 @@ import { LEVEL_ONE_COLORS as C, LEVEL_ONE_TEXT_COLORS as T } from '../../content
 import { GOAL_STRIKES } from '../../content/goalStamp';
 import { GoalStampState, type CollisionRect } from '../../state/GoalStampState';
 import { addGameText } from '../../visuals/addGameText';
+import { paintRoyalSeal } from '../../visuals/trapPixelArt';
 
 export class GoalStamp {
   private readonly state: GoalStampState;
@@ -15,14 +16,16 @@ export class GoalStamp {
     this.state = new GoalStampState(retired);
     const d = LEVEL_ONE_AMBUSH_LAYOUT.goalStamp;
     this.visuals = GOAL_STRIKES.map((strike, index) => ({
-      seal: scene.add.rectangle(strike.x, d.hiddenY, d.width, d.height, C.royalGold)
-        .setStrokeStyle(2, C.hazardDark).setDepth(3),
-      label: addGameText(scene, strike.x, d.hiddenY, index === 0 ? '王\n令' : '補\n蓋', 19, T.danger)
+      // Keep a transparent geometry marker for the collision review route.
+      seal: scene.add.rectangle(strike.x, d.hiddenY, d.width, d.height, C.royalGold, 0).setDepth(3),
+      art: scene.add.graphics().setDepth(3),
+      label: addGameText(scene, strike.x, d.hiddenY, index === 0 ? '王\n令' : '補\n蓋', 19, T.parchment)
         .setOrigin(0.5).setDepth(4),
       warning: addGameText(scene, strike.x, 435, index === 0 ? '▼ 落印' : '▼ 再一次', 14, T.danger)
         .setOrigin(0.5).setBackgroundColor(T.parchment).setPadding(3, 2).setDepth(4),
       shadow: scene.add.rectangle(strike.x, 416, d.width, 4, C.hazardDark).setDepth(3),
     }));
+    this.visuals.forEach((visual) => paintRoyalSeal(visual.art, d.width, d.height));
     this.render();
   }
 
@@ -50,6 +53,7 @@ export class GoalStamp {
       const sample = this.state.sample(index);
       const visible = sample.phase === 'tell' || sample.active;
       visual.seal.setPosition(sample.x, sample.y).setVisible(visible).setAlpha(sample.active ? 1 : 0.4);
+      visual.art.setPosition(sample.x, sample.y).setVisible(visible).setAlpha(sample.active ? 1 : 0.4);
       visual.label.setPosition(sample.x, sample.y).setVisible(visible);
       visual.warning.setVisible(visible);
       visual.shadow.setVisible(visible);

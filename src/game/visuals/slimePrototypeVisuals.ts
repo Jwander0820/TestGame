@@ -4,10 +4,12 @@ import { LEVEL_ONE_COLORS as C, LEVEL_ONE_TEXT_COLORS as T } from '../content/le
 import type { SlimeSample } from '../state/SlimeState';
 import { addGameText } from './addGameText';
 
-// 本輪經使用者指定的幾何佔位物，正式圖像可獨立替換。
+// The zone and state stay independent from the optional third-batch sprite.
 export function createSlimePrototypeVisual(scene: Phaser.Scene, definition: SlimeDefinition) {
   const shape = scene.add.graphics().setDepth(4);
-  const label = addGameText(scene, definition.x, definition.y - 38, definition.label, 12, T.ink)
+  const textureKey = definition.id === 'charger' ? 'slime-charger' : 'slime-jumper';
+  const art = scene.textures.exists(textureKey) ? scene.add.image(definition.x, definition.y, textureKey).setDepth(4) : null;
+  const label = addGameText(scene, definition.x, definition.y - 68, definition.label, 12, T.ink)
     .setOrigin(0.5).setBackgroundColor(T.parchment).setPadding(3, 2).setDepth(4);
   let lastStyle = '';
   return {
@@ -19,21 +21,28 @@ export function createSlimePrototypeVisual(scene: Phaser.Scene, definition: Slim
       const style = `${sample.phase}:${sample.revealed}`;
       if (style !== lastStyle) {
         lastStyle = style;
-        shape.clear().fillStyle(sleeping ? C.nearHill : warning ? C.royalGold : harmless ? C.assist : C.hazard)
-          .lineStyle(2, C.outline);
+        label.setVisible(sample.revealed || sample.phase !== 'idle');
         const w = definition.width, h = definition.height;
-        if (flat) {
-          shape.fillRect(-w / 2, h / 2 - 8, w, 8).strokeRect(-w / 2, h / 2 - 8, w, 8);
-        } else if (definition.id === 'jumper') {
-          shape.fillCircle(0, 0, w / 2).strokeCircle(0, 0, w / 2);
+        if (art !== null) {
+          art.setDisplaySize(w, flat ? 8 : h)
+            .setTint(warning ? C.royalGold : sleeping ? C.nearHill : sample.revealed ? C.hazard : 0xffffff)
+            .setAlpha(harmless ? 0.86 : 1);
         } else {
-          shape.fillRect(-w / 2, -h / 2, w, h).strokeRect(-w / 2, -h / 2, w, h);
-        }
-        shape.fillStyle(C.outline);
-        const eyeY = flat ? h / 2 - 5 : -4;
-        shape.fillRect(-9, eyeY, 4, flat ? 2 : 5).fillRect(5, sleeping ? eyeY - 3 : eyeY, 4, sleeping ? 5 : flat ? 2 : 5);
-        if (sample.phase === 'revenge') {
-          shape.fillTriangle(12, -h / 2 - 7, 20, -h / 2 - 3, 12, -h / 2 + 1);
+          shape.clear().fillStyle(sleeping ? C.nearHill : warning ? C.royalGold : harmless ? C.assist : C.hazard)
+            .lineStyle(2, C.outline);
+          if (flat) {
+            shape.fillRect(-w / 2, h / 2 - 8, w, 8).strokeRect(-w / 2, h / 2 - 8, w, 8);
+          } else if (definition.id === 'jumper') {
+            shape.fillCircle(0, 0, w / 2).strokeCircle(0, 0, w / 2);
+          } else {
+            shape.fillRect(-w / 2, -h / 2, w, h).strokeRect(-w / 2, -h / 2, w, h);
+          }
+          shape.fillStyle(C.outline);
+          const eyeY = flat ? h / 2 - 5 : -4;
+          shape.fillRect(-9, eyeY, 4, flat ? 2 : 5).fillRect(5, sleeping ? eyeY - 3 : eyeY, 4, sleeping ? 5 : flat ? 2 : 5);
+          if (sample.phase === 'revenge') {
+            shape.fillTriangle(12, -h / 2 - 7, 20, -h / 2 - 3, 12, -h / 2 + 1);
+          }
         }
         label.setText(sample.phase === 'retired' ? '奉命休息' : sample.phase === 'spent' ? '這次真的累了' :
           sleeping ? '睡著了？' : sample.phase === 'wake' ? '！還沒完' : sample.phase === 'revenge' ?
@@ -41,7 +50,8 @@ export function createSlimePrototypeVisual(scene: Phaser.Scene, definition: Slim
             sample.phase === 'tell' ? '！' : sample.revealed ? definition.hint : definition.label);
       }
       shape.setPosition(sample.x, sample.y);
-      label.setPosition(sample.x, sample.y - 38);
+      art?.setPosition(sample.x, sample.y + (flat ? definition.height / 2 - 4 : 0));
+      label.setPosition(sample.x, sample.y - 68);
     },
   };
 }

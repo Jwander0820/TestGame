@@ -80,4 +80,6 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 
 開發伺服器啟動後開啟 `/tests/browser/art-review.html`，可切換零死亡、首次死亡與最高援助。它使用記憶體進度，可用方向鍵試玩，不讀寫正式存檔。美術來源與狀態見 [原創美術紀錄](docs/art-outsourcing/07-original-pixel-refresh.md)。
 
+第三批素材已進入標題與可玩首關：森林、騎士、草土地表、史萊姆、王冠金幣及王城入口；陷阱、援助與 UI 仍用可替換程式圖。來源與待清稿處見[第三批素材盤點](docs/art-outsourcing/08-third-batch-review.md)及[可玩素材紀錄](docs/art-outsourcing/09-third-batch-gameplay.md)。
+
 [SPEC-0013](docs/specs/SPEC-0013-goal-collision-and-ux.md) 修正終點印章下落與邊緣碰撞，加入右側補蓋。最後高台先引完兩招再跳；首次中印章後仍撤除並移近終點。`/tests/browser/shell-review.html?state=goal` 使用正式介面從城門據點試玩，但不動正式存檔。省略參數從入口開始，`?state=max` 試最高援助。手機框 `mobile-review.html?case=shell` 支援 `size=landscape|wide|desktop`；`goal-collision.html?case=rush|second|pause|reload` 驗證精確死因、暫停與保存重載。

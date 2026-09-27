@@ -10,11 +10,37 @@ import {
 
 export const PLATFORM_TEXTURE_WIDTH = 96;
 
+function createSourceTexture(
+  scene: Phaser.Scene,
+  sourceKey: string,
+  textureKey: string,
+  crop: readonly [number, number, number, number],
+  width: number,
+  height: number,
+): boolean {
+  if (!scene.textures.exists(sourceKey)) return false;
+  const texture = scene.textures.createCanvas(textureKey, width, height);
+  if (texture === null) return false;
+  const source = scene.textures.get(sourceKey).getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+  texture.context.imageSmoothingEnabled = false;
+  texture.context.drawImage(source, ...crop, 0, 0, width, height);
+  texture.refresh();
+  return true;
+}
+
 function createPlayerTexture(scene: Phaser.Scene): void {
-  for (const pose of ['idle', 'stride', 'pass', 'jump'] as const) {
+  const poses = [
+    { pose: 'idle', crop: [0, 15, 543, 640] },
+    { pose: 'stride', crop: [543, 30, 543, 660] },
+    { pose: 'pass', crop: [1086, 30, 543, 640] },
+    { pose: 'jump', crop: [1629, 50, 543, 674] },
+  ] as const;
+  for (const { pose, crop } of poses) {
+    const key = pose === 'idle' ? 'player' : `player-${pose}`;
+    if (createSourceTexture(scene, 'hero-source', key, crop, 40, 48)) continue;
     const graphic = scene.make.graphics({ x: 0, y: 0 });
     drawHero(graphicsPainter(graphic), 0, 0, 2, pose);
-    graphic.generateTexture(pose === 'idle' ? 'player' : `player-${pose}`, 32, 48);
+    graphic.generateTexture(key, 32, 48);
     graphic.destroy();
   }
   if (!scene.anims.exists('hero-run')) {
@@ -44,9 +70,37 @@ function createPlatformTexture(scene: Phaser.Scene): void {
   }
   platform.generateTexture('platform', PLATFORM_TEXTURE_WIDTH, 24);
   platform.clear();
-  paintGroundTile(graphicsPainter(platform));
-  platform.generateTexture('forest-ground', PLATFORM_TEXTURE_WIDTH, 54);
+  if (scene.textures.exists('ground-source')) {
+    const ground = scene.textures.createCanvas('forest-ground', 480, 54);
+    if (ground !== null) {
+      const source = scene.textures.get('ground-source').getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      ground.context.fillStyle = `#${PIXEL_PALETTE.stone800.toString(16).padStart(6, '0')}`;
+      ground.context.fillRect(0, 0, 480, 54);
+      ground.context.imageSmoothingEnabled = false;
+      ground.context.drawImage(source, 80, 295, 1614, 370, 0, 0, 240, 54);
+      // Mirror the second half so both the internal join and repeated outer edge match.
+      ground.context.save();
+      ground.context.translate(480, 0);
+      ground.context.scale(-1, 1);
+      ground.context.drawImage(source, 80, 295, 1614, 370, 0, 0, 240, 54);
+      ground.context.restore();
+      ground.refresh();
+    }
+  }
+  if (!scene.textures.exists('forest-ground')) {
+    paintGroundTile(graphicsPainter(platform));
+    platform.generateTexture('forest-ground', PLATFORM_TEXTURE_WIDTH, 54);
+  }
   platform.destroy();
+}
+
+function createSlimeTextures(scene: Phaser.Scene): void {
+  createSourceTexture(scene, 'slime-square-source', 'slime-charger', [380, 385, 660, 430], 36, 28);
+  createSourceTexture(scene, 'slime-round-source', 'slime-jumper', [1020, 230, 620, 530], 32, 32);
+}
+
+function createCoinTexture(scene: Phaser.Scene): void {
+  createSourceTexture(scene, 'coin-source', 'crown-coin', [300, 300, 660, 640], 20, 20);
 }
 
 function createSlimeSpringTexture(scene: Phaser.Scene): void {
@@ -101,4 +155,8 @@ export function createGameTextures(scene: Phaser.Scene): void {
   if (!scene.textures.exists('mercy-platform')) {
     createMercyPlatformTexture(scene);
   }
+  if (!scene.textures.exists('slime-charger') || !scene.textures.exists('slime-jumper')) {
+    createSlimeTextures(scene);
+  }
+  if (!scene.textures.exists('crown-coin')) createCoinTexture(scene);
 }

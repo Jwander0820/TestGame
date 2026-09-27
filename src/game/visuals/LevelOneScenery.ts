@@ -8,9 +8,14 @@ export function drawLevelOneScenery(scene: Phaser.Scene): void {
   scene.cameras.main.setBackgroundColor(C.sky300);
   const layer = (depth: number, scroll: number): PixelPainter =>
     graphicsPainter(scene.add.graphics().setDepth(depth).setScrollFactor(scroll, 1));
-  const sky = graphicsPainter(scene.add.graphics().setDepth(-30).setScrollFactor(0));
-  paintSky(sky);
-  paintMountains(layer(-24, 0.12));
+  if (scene.textures.exists('forest-backdrop')) {
+    // Keep the edited source's 3:2 aspect ratio; the distant woods cover its lower grass and white footer.
+    scene.add.image(480, 320, 'forest-backdrop').setDisplaySize(960, 640).setDepth(-30).setScrollFactor(0);
+  } else {
+    const sky = graphicsPainter(scene.add.graphics().setDepth(-30).setScrollFactor(0));
+    paintSky(sky);
+    paintMountains(layer(-24, 0.12), false);
+  }
   paintDistantWoods(layer(-18, 0.34));
   const forest = layer(-10, 0.62);
   for (let x = -70, n = 0; x < 3900; x += 286, n++) paintTree(forest, x, 454, n);

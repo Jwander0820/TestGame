@@ -1,9 +1,10 @@
 import type Phaser from 'phaser';
 import { RETURN_AUDIT as d } from '../../content/returnAudit';
-import { LEVEL_ONE_COLORS as C, LEVEL_ONE_TEXT_COLORS as T } from '../../content/levelOneVisuals';
+import { LEVEL_ONE_TEXT_COLORS as T } from '../../content/levelOneVisuals';
 import { ReturnAuditState } from '../../state/ReturnAuditState';
 import type { CollisionRect } from '../../state/GoalStampState';
 import { addGameText } from '../../visuals/addGameText';
+import { paintRoyalSeal } from '../../visuals/trapPixelArt';
 
 export class ReturnAudit {
   private readonly state: ReturnAuditState;
@@ -14,8 +15,8 @@ export class ReturnAudit {
   constructor(scene: Phaser.Scene, private readonly player: Phaser.Physics.Arcade.Sprite,
     retired: boolean, private readonly onDeath: () => void) {
     this.state = new ReturnAuditState(retired);
-    this.seal = scene.add.rectangle(0, d.startY, d.width, d.height, C.hazard)
-      .setStrokeStyle(3, C.outline).setDepth(5);
+    this.seal = scene.add.graphics().setDepth(5);
+    paintRoyalSeal(this.seal, d.width, d.height);
     this.label = addGameText(scene, 0, d.startY, '退\n件', 18, T.parchment).setOrigin(0.5).setDepth(6);
     this.warning = addGameText(scene, 0, 440, '▼ 回頭查票', 14, T.danger)
       .setOrigin(0.5).setBackgroundColor(T.parchment).setPadding(4, 2).setDepth(6);

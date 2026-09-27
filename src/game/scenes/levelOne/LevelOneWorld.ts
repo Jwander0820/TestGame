@@ -9,7 +9,7 @@ import {
   LEVEL_ONE_WARNING_HAZARD,
   type PlatformDefinition,
 } from '../../content/levelOneLayout';
-import { LEVEL_ONE_COLORS, LEVEL_ONE_TEXT_COLORS } from '../../content/levelOneVisuals';
+import { LEVEL_ONE_COLORS, LEVEL_ONE_TEXT_COLORS, PIXEL_PALETTE } from '../../content/levelOneVisuals';
 import { addGameText } from '../../visuals/addGameText';
 import { PLATFORM_TEXTURE_WIDTH } from '../../visuals/createTextures';
 import { LearnedTrapState } from '../../state/LearnedTrapState';
@@ -26,6 +26,7 @@ import { SlimeEnemies } from './SlimeEnemies';
 import { SlimeState } from '../../state/SlimeState';
 import type { SlimeId } from '../../content/levelOneSlimes';
 import { drawRedCarpet } from '../../visuals/redCarpet';
+import { paintSpikeRack, paintTrapPlate } from '../../visuals/trapPixelArt';
 
 interface LevelOneWorldCallbacks {
   readonly onWarningHazard: () => void;
@@ -63,6 +64,7 @@ export class LevelOneWorld {
   private readonly trapState: LearnedTrapState;
   private learnedTraps: LearnedTraps | null = null;
   private landingStamp: Phaser.GameObjects.Rectangle | null = null;
+  private landingStampArt: Phaser.GameObjects.Graphics | null = null;
   private landingStampLabel: Phaser.GameObjects.Text | null = null;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
   private readonly platformVisuals = new Map<Phaser.Physics.Arcade.Sprite, Phaser.GameObjects.TileSprite>();
@@ -177,14 +179,15 @@ export class LevelOneWorld {
       LEVEL_ONE_WARNING_HAZARD.y,
       width,
       LEVEL_ONE_WARNING_HAZARD.height,
-      this.warningHazardRevealed ? LEVEL_ONE_COLORS.hazard : LEVEL_ONE_COLORS.safeBody,
-      1,
+      LEVEL_ONE_COLORS.safeBody,
+      0,
     );
-    danger.setStrokeStyle(4, LEVEL_ONE_COLORS.outline, 1);
     this.scene.physics.add.existing(danger, true);
     this.warningHazard = danger;
     if (this.warningHazardRevealed) {
       this.drawWarningMarks(width);
+    } else {
+      this.drawWarningCover(width);
     }
     this.warningOverlap = this.scene.physics.add.overlap(this.requirePlayer(), danger, this.callbacks.onWarningHazard);
   }
@@ -194,7 +197,6 @@ export class LevelOneWorld {
       return;
     }
     this.warningHazardRevealed = true;
-    this.warningHazard?.setFillStyle(LEVEL_ONE_COLORS.hazard, 1);
     this.drawWarningMarks(this.warningHazard?.displayWidth ?? LEVEL_ONE_WARNING_HAZARD.width);
     addGameText(
       this.scene,
@@ -220,6 +222,7 @@ export class LevelOneWorld {
       const stampBody = this.landingStamp?.body as Phaser.Physics.Arcade.StaticBody | null;
       if (stampBody) stampBody.enable = false;
       this.landingStamp?.setAlpha(0.18);
+      this.landingStampArt?.setAlpha(0.18);
       this.landingStampLabel?.setAlpha(0.18);
     }
     switch (effectId) {
@@ -251,11 +254,11 @@ export class LevelOneWorld {
       case LEVEL_ONE_EFFECT_IDS.retireWarningStrip: {
         this.warningOverlap?.destroy();
         this.warningOverlap = null;
-        this.warningMarks?.destroy();
-        this.warningMarks = null;
-        this.warningHazard
-          ?.setFillStyle(LEVEL_ONE_COLORS.midSilhouette, 0.58)
-          .setStrokeStyle(3, LEVEL_ONE_COLORS.assist, 1);
+        const width = this.warningHazard?.displayWidth ?? LEVEL_ONE_WARNING_HAZARD.width;
+        this.drawWarningCover(width);
+        this.warningMarks?.fillStyle(LEVEL_ONE_COLORS.assist).fillRect(-12, -3, 24, 5);
+        this.warningMarks?.setAlpha(0.48);
+        this.warningHazard?.setAlpha(0);
         const label = LEVEL_ONE_ASSISTANCE_LAYOUT.retiredLabel;
         addGameText(this.scene, label.x, label.y, copy.warningRetired, 17, LEVEL_ONE_TEXT_COLORS.ink)
           .setOrigin(0.5)
@@ -377,17 +380,18 @@ export class LevelOneWorld {
 
   private drawWarningMarks(width: number): void {
     this.warningMarks?.destroy();
-    const marks = this.scene.add.graphics().setDepth(2);
-    const left = LEVEL_ONE_WARNING_HAZARD.x - width / 2;
-    const top = LEVEL_ONE_WARNING_HAZARD.y - LEVEL_ONE_WARNING_HAZARD.height / 2;
-    marks.fillStyle(LEVEL_ONE_COLORS.hazardDark, 1);
-    for (let x = left + 12; x < left + width - 8; x += 26) {
-      marks.fillTriangle(x, top + 3, x + 8, top + 15, x + 16, top + 3);
-    }
-    marks.lineStyle(3, LEVEL_ONE_COLORS.outline, 1);
-    marks.lineBetween(left + 8, top + 2, left + 20, top + 14);
-    marks.lineBetween(left + width - 20, top + 2, left + width - 8, top + 14);
+    const marks = this.scene.add.graphics().setPosition(LEVEL_ONE_WARNING_HAZARD.x, LEVEL_ONE_WARNING_HAZARD.y).setDepth(2);
+    paintSpikeRack(marks, width, LEVEL_ONE_WARNING_HAZARD.height, 'up');
     this.warningMarks = marks;
+  }
+
+  private drawWarningCover(width: number): void {
+    this.warningMarks?.destroy();
+    const cover = this.scene.add.graphics().setPosition(LEVEL_ONE_WARNING_HAZARD.x, LEVEL_ONE_WARNING_HAZARD.y).setDepth(2);
+    paintTrapPlate(cover, width, LEVEL_ONE_WARNING_HAZARD.height);
+    cover.fillStyle(PIXEL_PALETTE.grass600).fillRect(-width / 2 + 3, -LEVEL_ONE_WARNING_HAZARD.height / 2 + 3, width - 6, 7);
+    cover.fillStyle(PIXEL_PALETTE.grass200).fillRect(-width / 2 + 12, -LEVEL_ONE_WARNING_HAZARD.height / 2 + 3, 14, 2);
+    this.warningMarks = cover;
   }
 
   private movePlatform(platform: Phaser.Physics.Arcade.Sprite, x: number, y: number): void {
@@ -452,10 +456,15 @@ export class LevelOneWorld {
       definition.width,
       definition.height,
       LEVEL_ONE_COLORS.hazard,
-      revealed ? 1 : 0,
+      0,
     );
-    stamp.setStrokeStyle(4, LEVEL_ONE_COLORS.outline, revealed ? 1 : 0);
     this.landingStamp = stamp;
+    const stampArt = this.scene.add.graphics().setPosition(definition.x, definition.revealedY).setDepth(2);
+    paintTrapPlate(stampArt, definition.width, definition.height);
+    stampArt.fillStyle(PIXEL_PALETTE.danger700).fillRect(-17, -5, 34, 10);
+    stampArt.fillStyle(PIXEL_PALETTE.gold500).fillRect(-4, -3, 8, 6);
+    stampArt.setAlpha(revealed ? 1 : 0);
+    this.landingStampArt = stampArt;
     this.scene.physics.add.existing(stamp, true);
     const stampBody = stamp.body as Phaser.Physics.Arcade.StaticBody | null;
     if (stampBody !== null) {
@@ -486,7 +495,7 @@ export class LevelOneWorld {
       this.landingAmbushArmed = true;
       this.scene.time.delayedCall(definition.revealDelayMs, () => {
         if (!this.trapState.landingStampEnabled) return;
-        stamp.setAlpha(1).setStrokeStyle(4, LEVEL_ONE_COLORS.outline, 1);
+        stampArt.setAlpha(1);
         label.setAlpha(1);
         if (stampBody !== null) {
           stampBody.enable = true;
