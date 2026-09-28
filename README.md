@@ -42,7 +42,7 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 
 ## 玩法與素材替換
 
-目前持續增加玩法與對話，美術仍待驗收。最新的重槌補點名、關卡／工務處／勇者接話見 [SPEC-0020](docs/specs/SPEC-0020-encore-and-dialogue.md)。首關的隱藏頂板與假斷路見 [SPEC-0008](docs/specs/SPEC-0008-learned-traps.md)；金幣誘餌、第一坑空氣磚與向上攻擊見 [SPEC-0009](docs/specs/SPEC-0009-coin-and-pit-ambush.md)。
+目前持續增加玩法與對話，美術仍待驗收。左上方可探索不影響結局的[工務處施工後台](docs/specs/SPEC-0021-backstage-maintenance-room.md)，試玩與驗證入口見[後台驗證](docs/testing/automated-backstage.md)。最新的重槌補點名、關卡／工務處／勇者接話見 [SPEC-0020](docs/specs/SPEC-0020-encore-and-dialogue.md)。首關的隱藏頂板與假斷路見 [SPEC-0008](docs/specs/SPEC-0008-learned-traps.md)；金幣誘餌、第一坑空氣磚與向上攻擊見 [SPEC-0009](docs/specs/SPEC-0009-coin-and-pit-ambush.md)。
 
 | 要修改 | 入口 |
 | --- | --- |

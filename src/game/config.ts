@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { LEVEL_ONE_PLAYER_PHYSICS } from './content/levelOneLayout';
 import type { InputController } from './input/InputController';
 import { VerticalSliceScene } from './scenes/VerticalSliceScene';
+import { BackstageScene } from './scenes/BackstageScene';
 import type { ProgressStore } from './state/progress';
 import type { PlaytestDriver } from './testing/PlaytestDriver';
 import { GAME_RENDERING } from './rendering';
@@ -35,6 +36,6 @@ export function createGame(dependencies: GameDependencies): Phaser.Game {
       width: 960,
       height: 540,
     },
-    scene: [new VerticalSliceScene(dependencies)],
+    scene: [new VerticalSliceScene(dependencies), new BackstageScene(dependencies)],
   });
 }

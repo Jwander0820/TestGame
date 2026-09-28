@@ -368,6 +368,11 @@ export class LevelOneWorld {
       platform.setAlpha(0.15);
       this.platformVisuals.get(platform)?.setAlpha(0.15);
     }
+    // Optional one-way stairs stay above the road and never block right-only travel.
+    for (const platform of LEVEL_ONE_SECRET_PLATFORM_LAYOUT) {
+      this.addOneWayPlatform(platform.x, platform.y, platform.width);
+    }
+    this.scene.physics.world.setBounds(-110, 0, 3_110, 720);
     if (this.collapsingBridge?.body) this.collapsingBridge.body.enable = false;
     this.collapsingBridge?.setAlpha(0.15);
     const road = this.scene.add.zone(1_500, 430, 3_000, 24);

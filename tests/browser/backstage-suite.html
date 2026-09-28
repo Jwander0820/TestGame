@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>後台驗收矩陣</title>
+<style>body{margin:8px;background:#14232b;color:#fff3d6;font:16px system-ui}main{display:grid;grid-template-columns:1fr 1fr;gap:8px}iframe{width:100%;height:350px;border:1px solid #c99459}h1{font-size:18px;margin:4px}a{color:#62d4d6}</style></head>
+<body><h1>後台驗收矩陣</h1><main id="cases"></main><script>
+const groups = {
+  room: ['backstage.html?case=hit', 'backstage.html?case=repeat', 'backstage.html?case=max', 'backstage.html?case=reload'],
+  boundary: ['backstage.html?case=pause', 'backstage.html?case=immediate', 'backstage.html?case=five', 'backstage.html?case=checkpoint'],
+  regression: ['final-mercy.html?case=fresh', 'final-mercy.html?case=left', 'pit-malice.html?case=coin', 'zero-assist.html'],
+};
+const group = new URLSearchParams(location.search).get('group') || 'room';
+if (!Object.hasOwn(groups, group)) throw Error('未知驗證組別');
+for (const [index, route] of groups[group].entries()) {
+  const frame = document.createElement('iframe'); frame.id = `case-${index}`; frame.title = route; frame.src = route;
+  document.querySelector('#cases').append(frame);
+}
+</script></body></html>

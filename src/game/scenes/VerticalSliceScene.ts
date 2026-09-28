@@ -1,4 +1,7 @@
 import Phaser from 'phaser';
+import { BACKSTAGE, BACKSTAGE_COPY } from '../content/backstage';
+import { BackstageEntry } from '../state/BackstageState';
+import { drawBackstageEntrance } from '../visuals/backstageVisuals';
 import { FIRST_PIT_DEATHS, LEVEL_ONE_DEATHS, LEVEL_ONE_TRAP_DEATHS, REAR_DEATHS, type DeathContext } from '../content/levelOneDeaths';
 import { REAR_CAUSES, REAR_HAZARDS, REAR_STEP } from '../content/rearGauntlet';
 import { FIRST_PIT_CAUSES } from '../content/firstPitAmbush';
@@ -80,6 +83,16 @@ export class VerticalSliceScene extends Phaser.Scene {
   private readonly lifecycle = new SceneLifecycle();
   private readonly idleTrigger = new IdleTrigger(8_000);
   private readonly dialogue = new DialogueQueue();
+  private readonly backstageEntry = new BackstageEntry();
+  private readonly discoverBackstage = (): void => { this.session.discoverEasterEgg(BACKSTAGE.egg); };
+  private readonly returnFromBackstage = (): void => {
+    this.dependencies.inputController.clear();
+    this.player.setPosition(BACKSTAGE.returnPoint.x, BACKSTAGE.returnPoint.y).setVelocity(0, 0);
+    this.player.body?.reset(BACKSTAGE.returnPoint.x, BACKSTAGE.returnPoint.y);
+    this.backstageEntry.reset(); this.resetIdleClock();
+    this.speak(BACKSTAGE_COPY.exit, priority.ambient);
+    publishGameStatus({ deaths: this.session.totalDeaths, message: this.dialogue.current });
+  };
 
   private readonly resetIdleClock = (): void => {
     this.idleTrigger.reset();
@@ -105,6 +118,9 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.returnAudit = new ReturnAudit(this, this.player, this.session.blockerDeaths('backtrack') >= RETURN_AUDIT.retireDeaths,
       () => this.beginDeath(RETURN_DEATHS.audit));
     this.createReverseEasterEgg();
+    drawBackstageEntrance(this);
+    this.game.events.on('backstage-discovered', this.discoverBackstage);
+    this.game.events.on('backstage-return', this.returnFromBackstage);
     this.world.createWarningHazard();
     this.createGoal();
     this.createInspectionDossier();
@@ -119,6 +135,8 @@ export class VerticalSliceScene extends Phaser.Scene {
     window.addEventListener('focus', this.resetIdleClock);
     window.addEventListener('blur', this.resetIdleClock);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('backstage-discovered', this.discoverBackstage);
+      this.game.events.off('backstage-return', this.returnFromBackstage);
       document.removeEventListener('visibilitychange', this.resetIdleClock);
       window.removeEventListener('focus', this.resetIdleClock);
       window.removeEventListener('blur', this.resetIdleClock);
@@ -185,6 +203,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       if (entry.triggerX < this.session.initialSpawn.x) this.seenRouteBanterIds.add(entry.id);
     }
     this.dialogue.reset();
+    this.backstageEntry.reset();
     this.lifecycle.reset();
     this.idleTrigger.resetAll();
   }
@@ -209,6 +228,7 @@ export class VerticalSliceScene extends Phaser.Scene {
         y: this.player.y,
         grounded: this.player.body?.blocked.down === true,
         timeMs: this.playTimeMs,
+        area: 'main',
       },
       actions,
     );
@@ -223,8 +243,16 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
 
     const body = this.player.body;
-    if (actions.consumeJumpPressed() && body?.blocked.down === true) {
+    const jumpPressed = actions.consumeJumpPressed();
+    const enterBackstage = this.backstageEntry.update({ x: this.player.x, y: this.player.y,
+      feet: body?.bottom ?? 0, grounded: body?.blocked.down === true,
+      leftJump: jumpPressed && horizontal < 0, alive: this.lifecycle.isPlaying });
+    if (jumpPressed && body?.blocked.down === true) {
       this.player.setVelocityY(-this.jumpSpeed);
+    }
+    if (enterBackstage) {
+      this.dependencies.inputController.clear(); this.player.setVelocity(0, 0);
+      this.scene.launch(BACKSTAGE.scene); this.scene.sleep(); return;
     }
 
     // Texture-only animation: body dimensions and movement remain unchanged.
@@ -538,6 +566,7 @@ export class VerticalSliceScene extends Phaser.Scene {
 
     this.resetIdleClock();
     this.player.setTint(LEVEL_ONE_COLORS.hazardDark);
+    this.backstageEntry.reset();
     this.player.setVelocity(0, -180);
     if (this.player.body !== null) {
       this.player.body.enable = false;

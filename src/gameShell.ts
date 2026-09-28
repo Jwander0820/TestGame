@@ -1,3 +1,4 @@
+import type { PlaytestDriver } from './game/testing/PlaytestDriver';
 import { paintTitle } from './game/visuals/titlePainting';
 import { createGame } from './game/config';
 import { LEVEL_ONE_ID } from './game/content/levelOne';
@@ -7,7 +8,7 @@ import type { GameAction } from './game/input/ActionState';
 import { ProgressStore, createDefaultProgress } from './game/state/progress';
 import { restartLevel } from './game/sympathy/director';
 
-export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): void {
+export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>, playtestDriver?: PlaytestDriver): void {
   type MenuName = 'title' | 'pause' | 'complete';
 
   const AUDIO_MUTED_STORAGE_KEY = 'pity-platformer:audio-muted';
@@ -59,6 +60,8 @@ export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): v
   let clearArmed = false;
   let clearArmTimer: number | null = null;
   let muted = loadMutedPreference();
+  const playableScene = (): string => game?.scene.isActive('BackstageScene') || game?.scene.isPaused('BackstageScene')
+    ? 'BackstageScene' : 'VerticalSliceScene';
 
   function updateDeathBadge(deaths: number): void {
     deathCount.textContent = String(deaths);
@@ -153,11 +156,11 @@ export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): v
     }
 
     if (game === null) {
-      game = createGame({ inputController, progressStore });
+      game = createGame({ inputController, progressStore, ...(playtestDriver === undefined ? {} : { playtestDriver }) });
       game.sound.mute = muted;
       gameShell.dataset.gameStarted = 'true';
     } else {
-      game.scene.resume('VerticalSliceScene');
+      game.scene.resume(playableScene());
       if (completed) {
         game.scene.getScene('VerticalSliceScene').scene.restart();
       }
@@ -170,7 +173,7 @@ export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): v
       return;
     }
     inputController.actions.releaseAll();
-    game.scene.pause('VerticalSliceScene');
+    game.scene.pause(playableScene());
     showMenu('pause');
   }
 
@@ -179,7 +182,7 @@ export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): v
       return;
     }
     inputController.actions.releaseAll();
-    game.scene.resume('VerticalSliceScene');
+    game.scene.resume(playableScene());
     showMenu(null);
   }
 
@@ -190,7 +193,9 @@ export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): v
     }
     inputController.actions.releaseAll();
     progressStore.replace(restartLevel(progressStore.snapshot, LEVEL_ONE_ID));
-    game.scene.resume('VerticalSliceScene');
+    game.scene.resume(playableScene());
+    game.scene.stop('BackstageScene');
+    game.scene.wake('VerticalSliceScene');
     game.scene.getScene('VerticalSliceScene').scene.restart();
     showMenu(null);
   }
@@ -198,7 +203,7 @@ export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): v
   function returnToTitle(): void {
     if (game !== null) {
       inputController.actions.releaseAll();
-      game.scene.pause('VerticalSliceScene');
+      game.scene.pause(playableScene());
     }
     updateProgressSummary();
     showMenu('title');
@@ -230,7 +235,7 @@ export function mountGameShell(storage: Pick<Storage, 'getItem' | 'setItem'>): v
     gameStatus.textContent = detail.message;
     gameShell.dataset.phase = detail.phase ?? 'playing';
     const order = Math.min(3, progressStore.snapshot.levels[LEVEL_ONE_ID]?.progressOrder ?? 0);
-    checkpointLabel.textContent = ['森林入口', '據點已保存 · 林間', '據點已保存 · 古橋', '據點已保存 · 城門'][order] ?? '森林入口';
+    checkpointLabel.textContent = detail.area === 'backstage' ? '工務處後台 · 右側返回' : ['森林入口', '據點已保存 · 林間', '據點已保存 · 古橋', '據點已保存 · 城門'][order] ?? '森林入口';
     checkpoints.forEach((checkpoint, index) => {
       checkpoint.dataset.reached = String(index <= order);
       if (index === order) checkpoint.setAttribute('aria-current', 'step');

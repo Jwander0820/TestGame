@@ -1,4 +1,5 @@
 import '../../src/styles.css';
+import { BackstageDriver } from './BackstageDriver';
 import markup from '../../index.html?raw';
 import { mountGameShell } from '../../src/gameShell';
 import { PROGRESS_STORAGE_KEY, createDefaultProgress } from '../../src/game/state/progress';
@@ -14,4 +15,16 @@ const initial = selected === 'max' ? createMaxAssistanceProgress() : selected ==
   advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-intern-bridge', 3) : selected === 'slimes' ?
     advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-first-gap', 1) : createDefaultProgress();
 const memory = new Map<string, string>([[PROGRESS_STORAGE_KEY, JSON.stringify(initial)]]);
-mountGameShell({ getItem: key => memory.get(key) ?? null, setItem: (key, value) => { memory.set(key, value); } });
+const backstage = selected === 'backstage' ? new BackstageDriver() : null;
+let handedOver = false;
+mountGameShell({ getItem: key => memory.get(key) ?? null, setItem: (key, value) => { memory.set(key, value); } }, backstage === null ? undefined : {
+  reset: actions => { backstage.reset(actions); handedOver = false; },
+  update: (frame, actions) => {
+    document.querySelector('.game-shell')?.setAttribute('data-playtest-frame', JSON.stringify(frame));
+    if (frame.area === 'backstage') {
+      if (!handedOver) { actions.releaseAll(); handedOver = true; document.querySelector('.game-shell')?.setAttribute('data-backstage-ready', 'true'); }
+      return;
+    }
+    if (!handedOver) backstage.update(frame, actions);
+  },
+});

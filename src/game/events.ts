@@ -1,4 +1,5 @@
 export interface GameStatusDetail {
+  readonly area?: 'main' | 'backstage';
   readonly deaths: number;
   readonly message: string;
   readonly phase?: 'playing' | 'dying' | 'completed';
