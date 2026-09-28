@@ -9,6 +9,8 @@ const routes = {
   zero: 'zero-assist.html',
   return: 'rear-gauntlet.html?case=returnPause',
   hammer: 'rear-gauntlet.html?case=hammerReload',
+  encore: 'rear-gauntlet.html?case=encoreReload',
+  encoreView: 'rear-gauntlet.html?case=restEcho&review=1',
   max: 'max-assistance.html',
   hammerView: 'rear-gauntlet.html?case=restHammer&review=1',
   returnView: 'rear-gauntlet.html?case=returnSweep&review=1',

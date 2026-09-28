@@ -30,7 +30,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 2,
     tier: 1,
     priority: 100,
-    message: '這個坑今天有點積極。',
+    message: '關卡｜坑沒有問題。\n工務處｜它今天已經吃兩個人了。',
   },
   {
     id: 'first-gap-move-landing',
@@ -39,7 +39,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 3,
     tier: 2,
     priority: 100,
-    message: '風太大了，平台只是自己滑過來。',
+    message: '工務處｜落點搬近，頭頂磚拆掉。\n關卡｜風大，吹的。',
     effectId: LEVEL_ONE_EFFECT_IDS.moveFirstLanding,
   },
   {
@@ -49,7 +49,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 5,
     tier: 3,
     priority: 100,
-    message: '工安臨檢：臨時加裝彈簧。',
+    message: '工務處｜彈簧裝好了，金幣和伏擊停工。方塊也去睡。',
     effectId: LEVEL_ONE_EFFECT_IDS.deployGapSpring,
   },
   {
@@ -59,7 +59,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 7,
     tier: 4,
     priority: 100,
-    message: '算了。這裡現在是一座橋。',
+    message: '工務處｜坑填成橋了，走過去。\n關卡｜我的坑！',
     effectId: LEVEL_ONE_EFFECT_IDS.deployGapBridge,
   },
   {
@@ -69,7 +69,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 2,
     tier: 1,
     priority: 100,
-    message: '「王城認證」這四個字開始彼此切割了。',
+    message: '關卡｜安全認證還有效。\n工務處｜認證員已經辭職了。',
   },
   {
     id: 'warning-strip-shrink',
@@ -78,7 +78,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 3,
     tier: 2,
     priority: 100,
-    message: '正常耗損而已，危險區本來就這麼短。',
+    message: '工務處｜危險帶縮短，假斷路標出來了。那段直接走。',
     effectId: LEVEL_ONE_EFFECT_IDS.shrinkWarningStrip,
   },
   {
@@ -88,7 +88,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 5,
     tier: 3,
     priority: 100,
-    message: '臨時繞道已核准，請假裝沒看到施工。',
+    message: '工務處｜繞道蓋好，空中埋伏和圓形停工。別跟考官說。',
     effectId: LEVEL_ONE_EFFECT_IDS.deployStripBypass,
   },
   {
@@ -98,7 +98,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 7,
     tier: 4,
     priority: 100,
-    message: '危險帶今日提早下班。',
+    message: '工務處｜危險帶整段停用。\n關卡｜至少把牌子留給我。',
     effectId: LEVEL_ONE_EFFECT_IDS.retireWarningStrip,
   },
   {
@@ -108,7 +108,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 2,
     tier: 1,
     priority: 100,
-    message: '承辦人強調：橋塌掉不代表驗收沒有通過。',
+    message: '關卡｜橋的安全證明有三張。\n工務處｜木板只有兩片。',
   },
   {
     id: 'intern-bridge-reinforced',
@@ -117,7 +117,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 3,
     tier: 2,
     priority: 100,
-    message: '補發三張安全證明。木板現在比較不敢塌。',
+    message: '工務處｜高台補牢、橋已加固；陷阱位置也幫你標了。',
     effectId: LEVEL_ONE_EFFECT_IDS.reinforceInternBridge,
   },
   {
@@ -127,7 +127,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 5,
     tier: 3,
     priority: 100,
-    message: '守衛：我沒有修橋，我只是在下面接你。',
+    message: '工務處｜安全網就位，飛行物、頂刺和兩把重槌全下班。',
     effectId: LEVEL_ONE_EFFECT_IDS.deployBridgeSafetyNet,
   },
   {
@@ -137,29 +137,10 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 7,
     tier: 4,
     priority: 100,
-    message: '王城公告：即日起，這座橋依法不得倒塌。',
+    message: '工務處｜橋不准再塌，橋尾和終點地刺撤掉。這次真的。',
     effectId: LEVEL_ONE_EFFECT_IDS.certifyBridgePermanent,
   },
 ] as const satisfies readonly ReactionDefinition<LevelOneEffectId>[];
-
-export interface LevelOneRouteBanter {
-  readonly id: string;
-  readonly triggerX: number;
-  readonly message: string;
-}
-
-export const LEVEL_ONE_ROUTE_BANTER = [
-  {
-    id: 'bridge-briefing',
-    triggerX: 1_500,
-    message: '前方是王國模範橋。牌子比橋新很多。',
-  },
-  {
-    id: 'goal-pressure',
-    triggerX: 2_500,
-    message: '王城就在前面。客服已經把手放在跳關按鈕上。',
-  },
-] as const satisfies readonly LevelOneRouteBanter[];
 
 export interface LevelOneCompletionCopy {
   readonly status: string;

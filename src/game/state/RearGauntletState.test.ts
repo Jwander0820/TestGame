@@ -2,8 +2,31 @@ import { describe, expect, it } from 'vitest';
 import { RearGauntletState } from './RearGauntletState';
 import { REAR_HAZARDS, REAR_STEP } from '../content/rearGauntlet';
 import { LEVEL_ONE_EFFECT_IDS as effects } from '../content/levelOne';
+import { LEVEL_ONE_PLAYER_PHYSICS } from '../content/levelOneLayout';
 
 describe('rear gauntlet', () => {
+  it('兩把重槌之間保留至少一個角色寬度的站位容錯', () => {
+    const first = REAR_HAZARDS[5];
+    const second = REAR_HAZARDS[6];
+    const safeCenterWidth = second.x - second.width / 2 - first.x - first.width / 2 - LEVEL_ONE_PLAYER_PHYSICS.bodyWidth;
+    expect(safeCenterWidth).toBeGreaterThanOrEqual(LEVEL_ONE_PLAYER_PHYSICS.bodyWidth);
+  });
+  it('補槌與第一槌錯開，固定第二落點，重生前不能重複武裝', () => {
+    const state = new RearGauntletState();
+    const echo = REAR_HAZARDS[6];
+    state.arm('restEcho', 100);
+    state.arm('restHammer', 100);
+    state.arm('restEcho', 500);
+    expect(state.sample(echo, 1_199)).toMatchObject({ active: false, pending: true, visible: true, x: 2_660 });
+    expect(state.sample(REAR_HAZARDS[5], 1_199).active).toBe(false);
+    expect(state.sample(echo, 1_200)).toMatchObject({ active: true, y: 160 });
+    expect(state.sample(echo, 1_500)).toMatchObject({ active: true, y: 340 });
+    expect(state.sample(echo, 1_800).active).toBe(false);
+    state.arm('restEcho', 1_800);
+    expect(state.sample(echo, 2_900).active).toBe(false);
+    state.resetAttempt(); state.arm('restEcho', 3_000);
+    expect(state.sample(echo, 4_100).active).toBe(true);
+  });
   it('delays the return shot, then pursues from behind only once until respawn', () => {
     const returning = REAR_HAZARDS[4];
     const state = new RearGauntletState();

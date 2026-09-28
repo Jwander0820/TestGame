@@ -46,10 +46,12 @@ export class RearGauntletState {
       this.stepRetired = true;
       this.revealed.add('exit'); this.revealed.add('ceiling'); this.revealed.add('finish');
       this.revealed.add('returnSweep'); this.revealed.add('restHammer');
+      this.revealed.add('restEcho');
     }
     if (effect === effects.deployBridgeSafetyNet || effect === effects.certifyBridgePermanent) {
       this.retired.add('sweep'); this.retired.add('ceiling');
       this.retired.add('returnSweep'); this.retired.add('restHammer');
+      this.retired.add('restEcho');
     }
     if (effect === effects.certifyBridgePermanent) {
       this.retired.add('exit'); this.retired.add('finish');

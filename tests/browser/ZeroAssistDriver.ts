@@ -21,7 +21,7 @@ interface ZeroAssistDriverOptions {
   readonly jumpAtFalseGap?: boolean;
   readonly rushFirstPit?: boolean;
   readonly lateFirstPitJump?: boolean;
-  readonly rearFault?: 'step' | 'sweep' | 'exit' | 'ceiling' | 'returnSweep';
+  readonly rearFault?: 'step' | 'sweep' | 'exit' | 'ceiling' | 'returnSweep' | 'restEcho';
   readonly slimeFault?: 'charger' | 'jumper';
   readonly slimeRevengeFault?: 'charger' | 'jumper';
   readonly rushGoalStamp?: boolean;
@@ -38,6 +38,7 @@ export class ZeroAssistDriver implements PlaytestDriver {
   private landingBeforeCharger = false;
   private goalBaitAt: number | null = null;
   private chargerBaitAt: number | null = null;
+  private encoreWaitAt: number | null = null;
 
   constructor(private readonly options: ZeroAssistDriverOptions = {}) {}
 
@@ -53,6 +54,7 @@ export class ZeroAssistDriver implements PlaytestDriver {
     this.landingBeforeCharger = false;
     this.goalBaitAt = null;
     this.chargerBaitAt = null;
+    this.encoreWaitAt = null;
   }
 
   update(frame: PlaytestFrame, actions: ActionState): void {
@@ -62,6 +64,7 @@ export class ZeroAssistDriver implements PlaytestDriver {
       this.slimeBaitCleared = false;
       this.landingBeforeCharger = false;
       this.chargerBaitAt = null;
+      this.encoreWaitAt = null;
     }
     this.lastX = frame.x;
     // 高台返回時下落至觸發高度就已引怪，不能等落地才計時。
@@ -77,6 +80,16 @@ export class ZeroAssistDriver implements PlaytestDriver {
       return;
     }
     this.landingBeforeCharger = false;
+    // 兩把重槌之間只有這段安全落點；等第二槌結束才進入門口等待區。
+    if (this.options.rearFault !== 'restEcho' && frame.x >= 2_582 && frame.x < 2_600 && frame.timeMs !== undefined) {
+      this.encoreWaitAt ??= frame.timeMs;
+      if (frame.timeMs - this.encoreWaitAt < 1_350) {
+        actions.releaseSource(RIGHT_SOURCE);
+        actions.releaseSource(JUMP_SOURCE);
+        this.jumpHeld = false;
+        return;
+      }
+    }
     // 方塊假睡後會折返；先留在岸內，第二次原地跳過追撞才進坑。
     if (this.options.slimeRevengeFault !== 'charger' && frame.x >= 340 && frame.x < 372 &&
       frame.timeMs !== undefined && this.chargerBaitAt !== null && frame.timeMs - this.chargerBaitAt < 1_800) {

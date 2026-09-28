@@ -3,6 +3,17 @@ import { ActionState } from '../../src/game/input/ActionState';
 import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 describe('ZeroAssistDriver', () => {
+  it('停在兩槌之間等補點名落完，故意犯錯路線才直接前進', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 2_585, y: 350, grounded: true, timeMs: 0 }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    driver.update({ x: 2_585, y: 350, grounded: true, timeMs: 1_350 }, actions);
+    expect(actions.isDown('right')).toBe(true);
+    const fault = new ZeroAssistDriver({ rearFault: 'restEcho' });
+    fault.update({ x: 2_585, y: 350, grounded: true, timeMs: 0 }, actions);
+    expect(actions.isDown('right')).toBe(true);
+  });
   it('從高台下落進觸發高度時就開始計時，不延到落地才計時', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver();

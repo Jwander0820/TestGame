@@ -9,9 +9,10 @@ import { RETURN_AUDIT, RETURN_DEATHS, isBacktrackFall } from '../content/returnA
 import { FINAL_MERCY_EFFECTS, FINAL_MERCY_MESSAGE } from '../state/FinalMercy';
 import { ReturnAudit } from './levelOne/ReturnAudit';
 import { LEVEL_ONE_COPY as copy } from '../content/levelOneCopy';
+import { checkpointDialogue, deathDialogue, DIALOGUE_PRIORITY as priority, INTRO_DIALOGUE, ROUTE_DIALOGUE } from '../content/levelOneDialogue';
+import { DialogueQueue } from '../state/DialogueQueue';
 import {
   LEVEL_ONE_ID,
-  LEVEL_ONE_ROUTE_BANTER,
   getLevelOneCompletionCopy,
   isLevelOneEffectId,
 } from '../content/levelOne';
@@ -78,6 +79,7 @@ export class VerticalSliceScene extends Phaser.Scene {
   private seenRouteBanterIds = new Set<string>();
   private readonly lifecycle = new SceneLifecycle();
   private readonly idleTrigger = new IdleTrigger(8_000);
+  private readonly dialogue = new DialogueQueue();
 
   private readonly resetIdleClock = (): void => {
     this.idleTrigger.reset();
@@ -123,10 +125,9 @@ export class VerticalSliceScene extends Phaser.Scene {
     });
 
     const deaths = this.session.totalDeaths;
-    publishGameStatus({
-      deaths,
-      message: this.world.finalMercyActive ? FINAL_MERCY_MESSAGE : deaths === 0 ? copy.controls : copy.resume,
-    });
+    this.speak(this.world.finalMercyActive ? [FINAL_MERCY_MESSAGE] : deaths === 0 && this.session.progressOrder === 0 ? INTRO_DIALOGUE :
+      [`工務處｜${copy.resume}`, '關卡｜你竟然回來了。\n工務處｜已經撤掉的陷阱，誰都不准裝回去。'],
+      this.world.finalMercyActive ? priority.mercy : priority.ambient);
   }
 
   private resetRuntimeState(): void {
@@ -180,11 +181,17 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.goalRelocationPending = false;
     this.appliedEffectIds.clear();
     this.seenRouteBanterIds.clear();
+    for (const entry of ROUTE_DIALOGUE) {
+      if (entry.triggerX < this.session.initialSpawn.x) this.seenRouteBanterIds.add(entry.id);
+    }
+    this.dialogue.reset();
     this.lifecycle.reset();
     this.idleTrigger.resetAll();
   }
 
   override update(_time: number, delta: number): void {
+    const line = this.dialogue.advance(delta);
+    if (line !== null) publishGameStatus({ deaths: this.session.totalDeaths, message: line });
     if (!this.lifecycle.isPlaying) {
       return;
     }
@@ -290,7 +297,7 @@ export class VerticalSliceScene extends Phaser.Scene {
 
     this.reverseCoinLabel?.setText(copy.reverseCollected);
     const message = copy.reverseDiscovery;
-    publishGameStatus({ deaths: next.totalDeaths, message });
+    this.speak([`工務處｜${message}`, '勇者｜那為什麼還會咬人？\n關卡｜沒有面值，不代表沒有脾氣。'], priority.checkpoint);
 
     const annotation = addGameText(
       this,
@@ -496,29 +503,21 @@ export class VerticalSliceScene extends Phaser.Scene {
 
   private updateRouteBanter(): void {
     if (this.world.finalMercyActive) return;
-    const banter = LEVEL_ONE_ROUTE_BANTER.find(
+    const banter = ROUTE_DIALOGUE.find(
       (entry) => this.player.x >= entry.triggerX && !this.seenRouteBanterIds.has(entry.id),
     );
     if (banter === undefined) {
       return;
     }
     this.seenRouteBanterIds.add(banter.id);
-    publishGameStatus({ deaths: this.session.totalDeaths, message: banter.message });
-    const annotation = addGameText(
-      this,
-      this.player.x + 90,
-      130,
-      banter.message,
-      18,
-      LEVEL_ONE_TEXT_COLORS.ink,
-    )
-      .setOrigin(0.5)
-      .setAlign('center')
-      .setWordWrapWidth(430)
-      .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.parchment)
-      .setPadding(8, 5)
-      .setDepth(10);
-    this.time.delayedCall(2_300, () => annotation.destroy());
+    this.speak(banter.lines, priority.ambient);
+  }
+
+  private speak(lines: readonly string[], importance: number, phase?: 'playing' | 'dying' | 'completed'): void {
+    const accepted = this.dialogue.offer(lines, importance, phase === 'dying' || phase === 'completed');
+    if (accepted || phase !== undefined) {
+      publishGameStatus({ deaths: this.session.totalDeaths, message: this.dialogue.current, ...(phase === undefined ? {} : { phase }) });
+    }
   }
 
   private advanceMarker(markerId: string, order: number, spawn: Phaser.Math.Vector2, message: string): void {
@@ -527,7 +526,8 @@ export class VerticalSliceScene extends Phaser.Scene {
       return;
     }
     this.spawn = spawn;
-    publishGameStatus({ deaths: next.totalDeaths, message: this.world.finalMercyActive ? FINAL_MERCY_MESSAGE : message });
+    this.speak(this.world.finalMercyActive ? [FINAL_MERCY_MESSAGE] : checkpointDialogue(message, this.session.activeAssistCount > 0),
+      this.world.finalMercyActive ? priority.mercy : priority.checkpoint, 'playing');
   }
 
   private beginDeath(context: DeathContext): void {
@@ -557,12 +557,11 @@ export class VerticalSliceScene extends Phaser.Scene {
     if (this.session.blockerDeaths('backtrack') >= RETURN_AUDIT.retireDeaths) this.returnAudit?.retire();
 
     const causeDeaths = result.state.levels[LEVEL_ONE_ID]?.deathsByCause[context.causeId] ?? 1;
-    const fallbackMessage = context.messages[(causeDeaths - 1) % context.messages.length] ?? context.messages[0];
-    const message = redCarpetDeployed ? FINAL_MERCY_MESSAGE :
+    const lines = redCarpetDeployed ? [FINAL_MERCY_MESSAGE, '關卡｜這不就是一條走廊？\n工務處｜對。現在請你也靠邊站。'] :
       this.session.blockerDeaths('backtrack') === RETURN_AUDIT.retireDeaths && context.blockerId === 'backtrack' ?
-        '退件章被投訴到下班。工務處仍在累積鋪路預算。' : result.reaction?.message ?? fallbackMessage ?? copy.fallbackDeath;
-    publishGameStatus({ deaths: result.state.totalDeaths, message, phase: 'dying' });
-    const annotation = this.createMercyAnnotation(message, result.reaction);
+        ['工務處｜退件章被投訴到下班。鋪路預算還在累積。'] : deathDialogue(context, causeDeaths, result.reaction);
+    this.speak(lines, redCarpetDeployed || result.reaction?.effectId !== undefined ? priority.mercy : priority.death, 'dying');
+    const annotation = this.createMercyAnnotation(lines[0] ?? copy.fallbackDeath, result.reaction);
 
     this.time.delayedCall(900, () => {
       annotation.destroy();
@@ -574,20 +573,21 @@ export class VerticalSliceScene extends Phaser.Scene {
     const prefix = copy.accidentPrefix(reaction?.tier ?? null);
     return addGameText(
       this,
-      this.player.x,
-      Math.max(80, this.player.y - 72),
+      400,
+      160,
       `${prefix}　${message}`,
       20,
       LEVEL_ONE_TEXT_COLORS.ink,
     )
       .setOrigin(0.5)
+      .setWordWrapWidth(380)
       .setBackgroundColor(
         reaction === null ? LEVEL_ONE_TEXT_COLORS.parchment : LEVEL_ONE_TEXT_COLORS.assist,
       )
       .setPadding(8, 5)
       .setStroke(LEVEL_ONE_TEXT_COLORS.parchment, 3)
       .setDepth(10)
-      .setScrollFactor(1);
+      .setScrollFactor(0);
   }
 
   private respawn(): void {
@@ -604,14 +604,9 @@ export class VerticalSliceScene extends Phaser.Scene {
     }
     this.lifecycle.respawn();
     this.resetIdleClock();
-    const goalRelocated = this.goalRelocationPending && this.relocateGoalAfterAudit();
+    if (this.goalRelocationPending) this.relocateGoalAfterAudit();
     this.goalRelocationPending = false;
-    publishGameStatus({
-      deaths: this.session.totalDeaths,
-      message: this.world.finalMercyActive ? FINAL_MERCY_MESSAGE : goalRelocated
-        ? copy.goalMoved
-        : copy.respawn,
-    });
+    publishGameStatus({ deaths: this.session.totalDeaths, message: this.dialogue.current, phase: 'playing' });
   }
 
   private relocateGoalAfterAudit(): boolean {
@@ -740,20 +735,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       return;
     }
     const message = this.world.finalMercyActive ? '工務處已經把整關改成走廊了。只要向右走。' : copy.idle;
-    publishGameStatus({ deaths: next.totalDeaths, message });
-    const annotation = addGameText(
-      this,
-      this.player.x + 20,
-      this.player.y - 76,
-      message,
-      20,
-      LEVEL_ONE_TEXT_COLORS.ink,
-    )
-      .setOrigin(0.5)
-      .setBackgroundColor(LEVEL_ONE_TEXT_COLORS.parchment)
-      .setPadding(8, 5)
-      .setDepth(10);
-    this.time.delayedCall(2_400, () => annotation.destroy());
+    this.speak([`關卡｜${message}`, '勇者｜我在等道歉。\n工務處｜他不會。我先幫你把表格填了。'], priority.ambient);
   }
 
   private finishLevel(): void {
@@ -772,11 +754,7 @@ export class VerticalSliceScene extends Phaser.Scene {
       this.session.causeDeaths('goal-approval-stamp') > 0,
       this.world.finalMercyActive,
     );
-    publishGameStatus({
-      deaths: next.totalDeaths,
-      message: copy.status,
-      phase: 'completed',
-    });
+    this.speak([copy.status], priority.complete, 'completed');
     this.playGoalEntrance(() => {
       this.playCompletionSetpiece();
       addGameText(

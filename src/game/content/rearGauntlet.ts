@@ -6,6 +6,7 @@ export const REAR_CAUSES = {
   finish: 'finish-landing-spikes',
   returnSweep: 'bridge-return-shot',
   restHammer: 'rest-platform-hammer',
+  restEcho: 'rest-platform-encore',
 } as const;
 export type RearCause = (typeof REAR_CAUSES)[keyof typeof REAR_CAUSES];
 export type RearHazardId = Exclude<keyof typeof REAR_CAUSES, 'step'>;
@@ -39,4 +40,6 @@ export const REAR_HAZARDS = [
     triggerX: 1_810, delayMs: 900, durationMs: 850, velocityX: 800 },
   { id: 'restHammer', x: 2_540, y: 160, width: 56, height: 40,
     triggerX: 2_490, delayMs: 400, durationMs: 600, velocityX: 0, velocityY: 600, warnDuringDelay: true },
+  { id: 'restEcho', x: 2_660, y: 160, width: 56, height: 40,
+    triggerX: 2_490, delayMs: 1_100, durationMs: 600, velocityX: 0, velocityY: 600, warnDuringDelay: true },
 ] as const satisfies readonly RearHazardDefinition[];

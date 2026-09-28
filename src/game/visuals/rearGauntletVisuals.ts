@@ -9,14 +9,14 @@ export function createRearHazardVisual(scene: Phaser.Scene, definition: RearHaza
   const spikes = definition.id === 'exit' || definition.id === 'finish' || definition.id === 'ceiling';
   if (spikes) {
     paintSpikeRack(drawing, definition.width, definition.height, definition.id === 'ceiling' ? 'down' : 'up');
-  } else if (definition.id === 'restHammer') {
+  } else if (definition.id === 'restHammer' || definition.id === 'restEcho') {
     paintHammer(drawing, definition.width, definition.height);
   } else {
     paintFlyingDart(drawing, definition.width, definition.height, definition.velocityX > 0 ? 1 : -1);
   }
   const socket = spikes ? scene.add.graphics().setDepth(3) : null;
   if (socket !== null) paintTrapPlate(socket, definition.width, Math.min(definition.height, 12));
-  const impact = definition.id === 'restHammer' ? scene.add.graphics().setDepth(3) : null;
+  const impact = definition.id === 'restHammer' || definition.id === 'restEcho' ? scene.add.graphics().setDepth(3) : null;
   if (impact !== null) {
     impact.fillStyle(P.danger700).fillRect(definition.x - 20, 366, 40, 3);
     impact.fillStyle(P.stone400).fillRect(definition.x - 12, 369, 6, 2).fillRect(definition.x + 6, 369, 6, 2);

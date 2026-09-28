@@ -42,7 +42,7 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 
 ## 玩法與素材替換
 
-目前優先玩法，美術與台詞暫留，不表示已核准成品。首關的隱藏頂板與假斷路見 [SPEC-0008](docs/specs/SPEC-0008-learned-traps.md)；金幣誘餌、第一坑空氣磚與向上攻擊見 [SPEC-0009](docs/specs/SPEC-0009-coin-and-pit-ambush.md)。
+目前持續增加玩法與對話，美術仍待驗收。最新的重槌補點名、關卡／工務處／勇者接話見 [SPEC-0020](docs/specs/SPEC-0020-encore-and-dialogue.md)。首關的隱藏頂板與假斷路見 [SPEC-0008](docs/specs/SPEC-0008-learned-traps.md)；金幣誘餌、第一坑空氣磚與向上攻擊見 [SPEC-0009](docs/specs/SPEC-0009-coin-and-pit-ambush.md)。
 
 | 要修改 | 入口 |
 | --- | --- |
@@ -57,7 +57,8 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 | 遊戲介面 | src/gameShell.ts；src/main.ts 提供正式保存，測試入口提供獨立記憶體保存 |
 | 場景、彩蛋、機關文字 | src/game/content/levelOneCopy.ts |
 | 死亡文字 | src/game/content/levelOneDeaths.ts |
-| 援助、路上對話、結算文字 | src/game/content/levelOne.ts |
+| 援助、結算文字 | src/game/content/levelOne.ts |
+| 說話者、路上接話、死因提示 | src/game/content/levelOneDialogue.ts；閱讀時間與打斷規則在 state/DialogueQueue.ts |
 | 角色／場景／色盤 | src/game/visuals/heroPixels.ts、forestPainting.ts、content/levelOneVisuals.ts |
 
 換文案只修改文字，不更動 causeId／blockerId／effectId；換陷阱圖片沿用獨立 Zone 的幾何，不從圖片大小推導碰撞。角色圖以現行 32×48 畫布為接入契約，碰撞另由 levelOneLayout 設定。

@@ -20,6 +20,7 @@ export const SLIME_REVENGE_DEATHS = {
 } as const satisfies Record<SlimeId, DeathContext>;
 
 export const REAR_DEATHS = {
+  [REAR_CAUSES.restEcho]: { causeId: REAR_CAUSES.restEcho, blockerId: 'intern-bridge', messages: ['休息處有兩位承辦。你只等第一位下班。', '補點名不接受「我剛剛躲過了」作為請假理由。', '第二把槌堅稱自己只是來補簽到。'] },
   [REAR_CAUSES.returnSweep]: { causeId: REAR_CAUSES.returnSweep, blockerId: 'intern-bridge', messages: ['剛才那一發附有回程票。'] },
   [REAR_CAUSES.restHammer]: { causeId: REAR_CAUSES.restHammer, blockerId: 'intern-bridge', messages: ['休息處到了。重槌也到了。'] },
   [REAR_CAUSES.step]: { causeId: REAR_CAUSES.step, blockerId: 'intern-bridge', messages: ['落點已簽收。地板已下班。'] },

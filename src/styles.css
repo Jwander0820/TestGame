@@ -435,6 +435,7 @@ h1 {
 }
 
 .game-status {
+  white-space: pre-line;
   height: 3em;
   overflow: auto;
   margin: 0;
