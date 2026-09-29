@@ -73,7 +73,9 @@ export class BackstageScene extends Phaser.Scene {
       this.sign.phase = 'spent'; this.art.warning.setVisible(false); this.say(BACKSTAGE_COPY.sign); this.recover(); return;
     }
     if (this.sign.phase === 'spent' && !this.seen.has('sign')) { this.seen.add('sign'); this.say(BACKSTAGE_COPY.sign); }
-    if (this.player.x > 420 && this.player.x < 605) this.visit('desk', BACKSTAGE_COPY.desk);
+    if (this.player.x > 420 && this.player.x < 605 && this.visit('desk', BACKSTAGE_COPY.desk) && !reduced) {
+      this.tweens.add({ targets: this.art.workerHand, angle: 55, duration: 220, yoyo: true, repeat: 2 });
+    }
     if (this.player.x > 250 && this.player.x < 335 && this.visit('spikes', BACKSTAGE_COPY.spikes)) {
       this.tweens.add({ targets: this.art.spikes, y: 365, duration: 180, yoyo: true,
         onComplete: () => this.art.testLabel.setText('測試通過') });

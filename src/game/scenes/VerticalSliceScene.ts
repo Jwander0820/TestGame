@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { BACKSTAGE, BACKSTAGE_COPY } from '../content/backstage';
 import { BackstageEntry } from '../state/BackstageState';
-import { drawBackstageEntrance } from '../visuals/backstageVisuals';
 import { FIRST_PIT_DEATHS, LEVEL_ONE_DEATHS, LEVEL_ONE_TRAP_DEATHS, REAR_DEATHS, type DeathContext } from '../content/levelOneDeaths';
 import { REAR_CAUSES, REAR_HAZARDS, REAR_STEP } from '../content/rearGauntlet';
 import { FIRST_PIT_CAUSES } from '../content/firstPitAmbush';
@@ -118,7 +117,6 @@ export class VerticalSliceScene extends Phaser.Scene {
     this.returnAudit = new ReturnAudit(this, this.player, this.session.blockerDeaths('backtrack') >= RETURN_AUDIT.retireDeaths,
       () => this.beginDeath(RETURN_DEATHS.audit));
     this.createReverseEasterEgg();
-    drawBackstageEntrance(this);
     this.game.events.on('backstage-discovered', this.discoverBackstage);
     this.game.events.on('backstage-return', this.returnFromBackstage);
     this.world.createWarningHazard();
