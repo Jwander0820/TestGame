@@ -52,6 +52,7 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 | 陷阱外觀 | src/game/visuals/learnedTrapVisuals.ts，外觀沒有碰撞體 |
 | 第一坑與金幣機關 | content/firstPitAmbush.ts、state/FirstPitState.ts、scenes/levelOne/FirstPitAmbush.ts、visuals/firstPitVisuals.ts（皆位於 src/game） |
 | 後半段連環陷阱 | content/rearGauntlet.ts、state/RearGauntletState.ts、scenes/levelOne/RearGauntlet.ts、visuals/rearGauntletVisuals.ts（皆位於 src/game） |
+| 虛晃落腳地板 | content/feintPlatform.ts、state/FeintPlatformState.ts、scenes/levelOne/FeintPlatform.ts、visuals/feintPlatformVisuals.ts（皆位於 src/game）；[規格與試玩](docs/specs/SPEC-0023-feint-platform.md) |
 | 幾何史萊姆原型 | content/levelOneSlimes.ts、state/SlimeState.ts、scenes/levelOne/SlimeEnemies.ts、visuals/slimePrototypeVisuals.ts（皆位於 src/game） |
 | 終點二連落印 | content/goalStamp.ts、state/GoalStampState.ts、scenes/levelOne/GoalStamp.ts（皆位於 src/game）；矩形圖形與傷害共用位置尺寸 |
 | 遊戲介面 | src/gameShell.ts；src/main.ts 提供正式保存，測試入口提供獨立記憶體保存 |

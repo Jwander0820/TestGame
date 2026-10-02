@@ -26,6 +26,7 @@ interface ZeroAssistDriverOptions {
   readonly slimeRevengeFault?: 'charger' | 'jumper';
   readonly rushGoalStamp?: boolean;
   readonly goalWaitMs?: number;
+  readonly rushFeint?: boolean;
 }
 
 export class ZeroAssistDriver implements PlaytestDriver {
@@ -67,6 +68,22 @@ export class ZeroAssistDriver implements PlaytestDriver {
       this.encoreWaitAt = null;
     }
     this.lastX = frame.x;
+    // 在岸邊引出移動，再收腳等它回位；保持向右朝向，不觸發回頭查票。
+    if (!this.options.rushFeint && frame.feint !== undefined && frame.x >= 1_456 && frame.x < 1_490 &&
+      frame.feint.phase !== 'retired') {
+      if (frame.feint.phase !== 'spent') {
+        actions.releaseSource(RIGHT_SOURCE);
+        actions.releaseSource(JUMP_SOURCE);
+        this.jumpHeld = false;
+        return;
+      }
+      if (frame.grounded) {
+        actions.press('right', RIGHT_SOURCE);
+        actions.press('jump', JUMP_SOURCE);
+        this.jumpHeld = true;
+        return;
+      }
+    }
     // 高台返回時下落至觸發高度就已引怪，不能等落地才計時。
     if (frame.x >= 180 && frame.x < 340 && frame.y >= 270 && frame.timeMs !== undefined) {
       this.chargerBaitAt ??= frame.timeMs;
@@ -146,6 +163,7 @@ export class ZeroAssistDriver implements PlaytestDriver {
     const shouldSkipGoalJump =
       this.options.allowFirstGoalAmbush === true && !this.goalAmbushAttempted;
     const zones = JUMP_ZONES.map((zone, index) => {
+      if (index === 3 && frame.feint?.phase === 'spent' && this.options.rearFault !== 'step') return { minX: 1_585, maxX: 1_660 };
       if (index === 0 && this.options.lateFirstPitJump) return { minX: 410, maxX: 421 };
       if (index === 1 && this.options.earlyLandingJump) return { minX: 580, maxX: 610 };
       if ((index === 3 && this.options.rearFault === 'step') || (index === 4 && this.options.rearFault === 'sweep')) return { minX: -1, maxX: -1 };

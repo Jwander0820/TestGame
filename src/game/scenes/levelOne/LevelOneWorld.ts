@@ -19,6 +19,7 @@ import { FirstPitAmbush } from './FirstPitAmbush';
 import { FirstPitState } from '../../state/FirstPitState';
 import type { FirstPitCause } from '../../content/firstPitAmbush';
 import { RearGauntlet } from './RearGauntlet';
+import { FeintPlatform } from './FeintPlatform';
 import { RearGauntletState } from '../../state/RearGauntletState';
 import type { RearCause, RearHazardId } from '../../content/rearGauntlet';
 import { GoalStamp } from './GoalStamp';
@@ -59,6 +60,7 @@ export class LevelOneWorld {
   private readonly rearState: RearGauntletState;
   private rear: RearGauntlet | null = null;
   private raisedStep: Phaser.Physics.Arcade.Sprite | null = null;
+  private feint: FeintPlatform | null = null;
   private readonly firstPitState: FirstPitState;
   private firstPit: FirstPitAmbush | null = null;
   private readonly trapState: LearnedTrapState;
@@ -145,6 +147,12 @@ export class LevelOneWorld {
         if (step) this.platformVisuals.get(step)?.setAlpha(collapsed ? 0.2 : 1)
           .setY(step.y + 15 + (collapsed ? 90 : 0));
       });
+    this.feint = new FeintPlatform(this.scene, player, x => {
+      const step = this.raisedStep;
+      if (step === null) return;
+      step.setX(x).refreshBody();
+      this.platformVisuals.get(step)?.setX(x);
+    });
   }
 
   update(deltaMs: number): void {
@@ -154,8 +162,11 @@ export class LevelOneWorld {
     this.slimes?.update(deltaMs);
     this.firstPit?.update(deltaMs);
     this.rear?.update(deltaMs);
+    this.feint?.update(deltaMs, this.raisedStepCollapsed);
   }
 
+  get feintSample() { return this.feint?.sample; }
+  get feintTriggeredThisAttempt(): boolean { return this.feint?.triggeredThisAttempt ?? false; }
   get raisedStepCollapsed(): boolean { return this.rear?.stepCollapsed ?? false; }
 
   get hitPitBrickThisAttempt(): boolean {
@@ -216,6 +227,7 @@ export class LevelOneWorld {
     if (effectId === LEVEL_ONE_EFFECT_IDS.certifyBridgePermanent) this.goalStamp?.retire();
     this.slimes?.applyEffect(effectId);
     this.rear?.applyEffect(effectId);
+    this.feint?.applyEffect(effectId);
     this.firstPit?.applyEffect(effectId);
     this.learnedTraps?.applyEffect(effectId);
     if (!this.trapState.landingStampEnabled) {
@@ -318,6 +330,7 @@ export class LevelOneWorld {
     this.goalStamp?.resetAttempt();
     this.slimes?.resetAttempt();
     this.rear?.resetAttempt();
+    this.feint?.resetAttempt();
     this.firstPit?.resetAttempt();
     this.trapState.resetAttempt();
     this.bridgeCollapseTimer?.remove(false);
@@ -359,6 +372,7 @@ export class LevelOneWorld {
 
   deployRedCarpet(): void {
     if (this.finalMercyActive) return;
+    this.feint?.retire();
     this.bridgeCollapseTimer?.remove(false);
     this.bridgeCollapseTimer = null;
     this.retireGapSpring();

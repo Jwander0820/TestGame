@@ -12,7 +12,8 @@ template.querySelectorAll('script').forEach(script => script.remove());
 document.body.replaceChildren(...Array.from(template.body.childNodes));
 const selected = new URLSearchParams(location.search).get('state');
 const initial = selected === 'max' ? createMaxAssistanceProgress() : selected === 'goal' ?
-  advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-intern-bridge', 3) : selected === 'slimes' ?
+  advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-intern-bridge', 3) : selected === 'feint' ?
+    advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-warning-strip', 2) : selected === 'slimes' ?
     advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-first-gap', 1) : createDefaultProgress();
 const memory = new Map<string, string>([[PROGRESS_STORAGE_KEY, JSON.stringify(initial)]]);
 const backstage = selected === 'backstage' || selected === 'workshop' ? new BackstageDriver(selected === 'workshop' ? 'preview' : 'dodge') : null;

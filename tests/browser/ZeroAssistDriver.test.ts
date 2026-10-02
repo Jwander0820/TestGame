@@ -3,6 +3,27 @@ import { ActionState } from '../../src/game/input/ActionState';
 import { ZeroAssistDriver } from './ZeroAssistDriver';
 
 describe('ZeroAssistDriver', () => {
+  it('在岸上引地板閃躲，等回位再起跳；故意直衝案例維持前進', () => {
+    const actions = new ActionState();
+    const driver = new ZeroAssistDriver();
+    driver.update({ x: 1_460, y: 300, grounded: false, feint: { phase: 'dodging', x: 1_700 } }, actions);
+    expect(actions.isDown('right')).toBe(false);
+    expect(actions.isDown('left')).toBe(false);
+    driver.update({ x: 1_460, y: 395, grounded: true, feint: { phase: 'returning', x: 1_650 } }, actions);
+    expect(actions.consumeJumpPressed()).toBe(false);
+    driver.update({ x: 1_460, y: 395, grounded: true, feint: { phase: 'spent', x: 1_625 } }, actions);
+    expect(actions.consumeJumpPressed()).toBe(true);
+    expect(actions.isDown('right')).toBe(true);
+    driver.update({ x: 1_464, y: 370, grounded: false, feint: { phase: 'spent', x: 1_625 } }, actions);
+    expect(actions.isDown('right')).toBe(true);
+    expect(actions.isDown('jump')).toBe(false);
+    driver.update({ x: 1_464, y: 370, grounded: false, feint: { phase: 'spent', x: 1_625 } }, actions);
+    expect(actions.isDown('right')).toBe(true);
+    expect(actions.isDown('jump')).toBe(false);
+    const fault = new ZeroAssistDriver({ rushFeint: true });
+    fault.update({ x: 1_460, y: 300, grounded: false, feint: { phase: 'holding', x: 1_721 } }, actions);
+    expect(actions.isDown('right')).toBe(true);
+  });
   it('停在兩槌之間等補點名落完，故意犯錯路線才直接前進', () => {
     const actions = new ActionState();
     const driver = new ZeroAssistDriver();

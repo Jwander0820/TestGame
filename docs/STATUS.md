@@ -1,8 +1,8 @@
 # 當前狀態
 
 - 最後更新：2026-10-02
-- 目前工作：[SPEC-0022：後台彈簧驗收與監工史萊姆](specs/SPEC-0022-backstage-workshop-toys.md)
-- 階段：新增可取消／重玩的試彈碰鈴、三段驗收吐槽與依朝向裝忙的史萊姆，細化落牌預告。33 檔 138 項測試、型別與建置通過；主線進度隔離與原路線回歸通過。美術、趣味與實體觸控待真人驗收。
+- 目前工作：[SPEC-0023：虛晃落腳地板](specs/SPEC-0023-feint-platform.md)
+- 階段：古橋前高台在玩家向前跳近時快退、停留、慢回，每命一次；後段第 3 次援助固定。34 檔 152 項測試、型別與建置通過；落空、零死、暫停、重載與 21 死紅毯回歸通過。真人節奏、趣味、美術與實體觸控待驗收。前輪後台彈簧／監工維持，見 [SPEC-0022](specs/SPEC-0022-backstage-workshop-toys.md)。
 
 ## 已確認
 
@@ -19,6 +19,8 @@
 已加入靠近突進的方塊史萊姆、玩家跳起時攔截的圓形史萊姆，依使用者要求先用幾何佔位、不過度設計。最新接續要求休息的怪物突然動起來：第一招後先假睡，再由方塊回頭追撞、圓形向前補跳，兩招結束才真正休息。對應區段第 5 次援助讓牠永久奉命休息。沒有血量、戰鬥或新輸入。
 
 ## 最近證據
+
+2026-10-02：虛晃高台的直衝路線精確 3 死後固定、援助保存重載、岸邊引招零死、空中暫停與實體碰撞同步通過；新局整關 0 死、只往右精確 21 死紅毯完成。桌面與手機尺寸已檢視，詳見[虛晃地板紀錄](logs/2026-10-02-feint-platform.md)。
 
 2026-10-02：三次試彈與碰鈴、三次監工抓包、空中暫停、落牌命中、重訪、重載、最高援助與原零死／21 死紅毯回歸通過；正式外框桌面、375×667、667×375 已目視。見[試彈與監工紀錄](logs/2026-10-02-backstage-workshop.md)。
 
@@ -49,6 +51,9 @@
 本輪通過 20 檔 91 項測試、型別與 build。桌面及固定 375×667 框內的已知路線 0 死；方塊與圓形小怪各精確 5 次死亡後援助完成，突進暫停及圓形援助重載通過。最高援助維持 21 死、原 checkpoint 14 死，前段頂板／假斷路、撞磚及後段追擊回歸通過。反向金幣探索、重載與整關亦 0 死。正式 dist 盲跳本輪 17 死完成，重玩／保存／重載正常，console 0 警告／錯誤，原保存還原。詳見 [SPEC-0012 紀錄](logs/2026-09-20-slime-prototypes.md)。前輪證據：[SPEC-0011](logs/2026-09-20-second-wave-malice.md)、[SPEC-0010](logs/2026-09-20-rear-gauntlet.md)、[SPEC-0009](logs/2026-09-20-coin-and-pit-ambush.md)。Phaser 主 bundle 大於 500 kB 為既有警告。
 
 ## 現在可用
+
+- `/tests/browser/shell-review.html?state=feint`：正式外框從高台前據點手動試玩虛晃，獨立進度；手機框 `mobile-review.html?case=feintPlay`，可加 `&size=landscape`。
+- `/tests/browser/feint-platform.html?case=learned|rush|pause|reload`：零死、直衝落空、暫停與援助重載；`?case=pause&review=1` 停在閃開畫面。
 
 - `/tests/browser/shell-review.html?state=workshop`：按開始後沿正常路線走到後台彈簧台再交還操作；使用獨立記憶體進度。
 - `/tests/browser/backstage-suite.html?group=workshop`：三次試彈、空中暫停、落牌命中與重訪；手機框 `mobile-review.html?case=workshopPlay` 可接手試玩。

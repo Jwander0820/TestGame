@@ -18,6 +18,7 @@ const DEATH_HINTS: Readonly<Record<string, string>> = {
   'trusted-warning-strip': '牌子負責認證，腳負責離開。跨過變色的地面。',
   'intern-bridge-collapse': '橋上別停留；迎面和回頭的飛行物要分兩次躲。',
   'crumbled-high-step': '落上高台就接著跳。這塊地板按次計薪。',
+  'feint-platform-miss': '在岸邊跳一下引它閃開，收腳等它回來，再跳過去。',
   'bridge-countershot': '橋前等迎面那發靠近再跳，後面還有一發。',
   'bridge-return-shot': '它會折返。第一跳落地後，在橋尾再跳一次。',
   'bridge-exit-spikes': '還沒走到橋尾地刺就要起跳。別等它簽收你的腳。',

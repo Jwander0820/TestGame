@@ -3,6 +3,7 @@ import { BACKSTAGE, BACKSTAGE_COPY } from '../content/backstage';
 import { BackstageEntry } from '../state/BackstageState';
 import { FIRST_PIT_DEATHS, LEVEL_ONE_DEATHS, LEVEL_ONE_TRAP_DEATHS, REAR_DEATHS, type DeathContext } from '../content/levelOneDeaths';
 import { REAR_CAUSES, REAR_HAZARDS, REAR_STEP } from '../content/rearGauntlet';
+import { FEINT_DEATH, FEINT_PLATFORM } from '../content/feintPlatform';
 import { FIRST_PIT_CAUSES } from '../content/firstPitAmbush';
 import { LEVEL_ONE_SLIMES } from '../content/levelOneSlimes';
 import { SLIME_DEATHS, SLIME_REVENGE_DEATHS } from '../content/levelOneDeaths';
@@ -227,6 +228,7 @@ export class VerticalSliceScene extends Phaser.Scene {
         grounded: this.player.body?.blocked.down === true,
         timeMs: this.playTimeMs,
         area: 'main',
+        feint: this.world.feintSample,
       },
       actions,
     );
@@ -913,6 +915,9 @@ export class VerticalSliceScene extends Phaser.Scene {
     if (isBacktrackFall(this.player.x, this.spawn.x, this.session.progressOrder)) return RETURN_DEATHS.exit;
     if (this.world.raisedStepCollapsed && this.player.x >= REAR_STEP.minFallX && this.player.x <= REAR_STEP.maxFallX) {
       return REAR_DEATHS[REAR_CAUSES.step];
+    }
+    if (this.world.feintTriggeredThisAttempt && this.player.x >= FEINT_PLATFORM.fallMinX && this.player.x <= FEINT_PLATFORM.fallMaxX) {
+      return FEINT_DEATH;
     }
     const { firstGap, internBridge } = LEVEL_ONE_BLOCKER_ZONES;
     if (this.player.x >= firstGap.minX && this.player.x < firstGap.maxX) {

@@ -2,6 +2,9 @@ import { requireTestElement } from './dom';
 
 // 固定 iframe 的內部 viewport；不依賴桌面面板是否採用裝置尺寸設定。
 const routes = {
+  feint: 'feint-platform.html?case=learned',
+  feintView: 'feint-platform.html?case=pause&review=1',
+  feintPlay: 'shell-review.html?state=feint',
   backstage: 'shell-review.html?state=backstage',
   workshopPlay: 'shell-review.html?state=workshop',
   workshop: 'backstage.html?case=workshop',

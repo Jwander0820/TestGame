@@ -117,7 +117,7 @@ export const LEVEL_ONE_REACTIONS = [
     threshold: 3,
     tier: 2,
     priority: 100,
-    message: '工務處｜高台補牢、橋已加固；陷阱位置也幫你標了。',
+    message: '工務處｜高台釘住，不准再閃也不准塌。橋已加固，陷阱標好了。',
     effectId: LEVEL_ONE_EFFECT_IDS.reinforceInternBridge,
   },
   {
