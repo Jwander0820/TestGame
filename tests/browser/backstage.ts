@@ -40,6 +40,11 @@ let pauseVerified = false;
 let mainTimeAtEntry = 0;
 let recovered = false;
 let previousRoomX = 790;
+let springs = 0;
+let bells = 0;
+let catches = 0;
+let workerChanges = 0;
+const workshopMode = mode === 'workshop' || mode === 'springPause';
 const observed = new Set<string>();
 let firstMessages = 0;
 let repeatMessages = 0;
@@ -58,11 +63,14 @@ const unsubscribe = subscribeToGameStatus(detail => {
     output.dataset.observed = [...observed].join(',');
     output.dataset.recovered = String(recovered);
     output.dataset.firstMessages = String(firstMessages); output.dataset.repeatMessages = String(repeatMessages);
+    output.dataset.springs = String(springs); output.dataset.bells = String(bells);
+    output.dataset.catches = String(catches); output.dataset.workerChanges = String(workerChanges);
     const roomExpected = mode === 'immediate' ? route.visits === 1 : mode === 'repeat' ? route.visits === 2 : route.visits === 1;
     const contentExpected = mode === 'immediate' || ['desk', 'spikes', 'slime'].every(key => observed.has(key));
     output.dataset.status = detail.deaths === before.totalDeaths && roomExpected && contentExpected &&
       output.dataset.isolated === 'true' && output.dataset.mainFrozen === 'true' && output.dataset.eggCount === '1' &&
-      (mode !== 'hit' || recovered) && (mode !== 'pause' || pauseVerified) &&
+      (mode !== 'hit' || recovered) && (mode !== 'pause' && mode !== 'springPause' || pauseVerified) &&
+      (!workshopMode || (springs === 3 && bells === 3 && catches >= 3 && workerChanges >= 4)) &&
       (mode !== 'reload' || (firstMessages === 0 && repeatMessages === 1 && sessionStorage.getItem(prefix + 'reloaded') === 'true')) ? 'completed' : 'failed';
   }
 });
@@ -78,12 +86,14 @@ const game = createGame({ inputController: input, progressStore: store, playtest
       }
       if (frame.x - previousRoomX > 60 && mode === 'hit') recovered = true;
       previousRoomX = frame.x;
-      if ((params.has('review') || mode === 'pause') && !reviewPaused && frame.x < 754) {
+      if ((params.has('review') || mode === 'pause' || mode === 'springPause') && !reviewPaused &&
+        (mode === 'springPause' ? frame.x < 400 && frame.y < 280 : frame.x < 754)) {
         reviewPaused = true; game.scene.pause(BACKSTAGE.scene); output.dataset.status = 'review-paused';
-        if (mode === 'pause') {
+        if (mode === 'pause' || mode === 'springPause') {
           const frozen = output.dataset.frame;
+          const frozenCounts = `${springs}:${bells}:${catches}`;
           window.setTimeout(() => {
-            pauseVerified = frozen === output.dataset.frame && game.scene.isSleeping('VerticalSliceScene');
+            pauseVerified = frozen === output.dataset.frame && game.scene.isSleeping('VerticalSliceScene') && frozenCounts === `${springs}:${bells}:${catches}`;
             output.dataset.pauseHeld = String(pauseVerified); game.scene.resume(BACKSTAGE.scene); output.dataset.status = 'running';
           }, 750);
         }
@@ -91,6 +101,11 @@ const game = createGame({ inputController: input, progressStore: store, playtest
     }
   },
 } });
+game.events.on('backstage-spring', () => { springs++; output.dataset.springs = String(springs); });
+game.events.on('backstage-bell', (count: number) => { bells = count; output.dataset.bells = String(bells); });
+game.events.on('backstage-worker', (_working: boolean, count: number) => {
+  catches = count; workerChanges++; output.dataset.catches = String(catches); output.dataset.workerChanges = String(workerChanges);
+});
 game.events.on('backstage-discovered', () => {
   roomSnapshot = JSON.stringify(store.snapshot.levels);
   output.dataset.mainTimeAtEntry = String(mainTimeAtEntry);

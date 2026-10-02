@@ -2,6 +2,9 @@ import { requireTestElement } from './dom';
 
 // 固定 iframe 的內部 viewport；不依賴桌面面板是否採用裝置尺寸設定。
 const routes = {
+  backstage: 'shell-review.html?state=backstage',
+  workshopPlay: 'shell-review.html?state=workshop',
+  workshop: 'backstage.html?case=workshop',
   play: 'art-review.html',
   shell: 'shell-review.html?state=goal',
   shellZero: 'shell-review.html',

@@ -15,13 +15,13 @@ const initial = selected === 'max' ? createMaxAssistanceProgress() : selected ==
   advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-intern-bridge', 3) : selected === 'slimes' ?
     advanceProgress(createDefaultProgress(), LEVEL_ONE_ID, 'after-first-gap', 1) : createDefaultProgress();
 const memory = new Map<string, string>([[PROGRESS_STORAGE_KEY, JSON.stringify(initial)]]);
-const backstage = selected === 'backstage' ? new BackstageDriver() : null;
+const backstage = selected === 'backstage' || selected === 'workshop' ? new BackstageDriver(selected === 'workshop' ? 'preview' : 'dodge') : null;
 let handedOver = false;
 mountGameShell({ getItem: key => memory.get(key) ?? null, setItem: (key, value) => { memory.set(key, value); } }, backstage === null ? undefined : {
   reset: actions => { backstage.reset(actions); handedOver = false; },
   update: (frame, actions) => {
     document.querySelector('.game-shell')?.setAttribute('data-playtest-frame', JSON.stringify(frame));
-    if (frame.area === 'backstage') {
+    if (frame.area === 'backstage' && (selected !== 'workshop' || frame.x <= 392)) {
       if (!handedOver) { actions.releaseAll(); handedOver = true; document.querySelector('.game-shell')?.setAttribute('data-backstage-ready', 'true'); }
       return;
     }

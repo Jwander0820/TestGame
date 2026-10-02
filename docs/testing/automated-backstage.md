@@ -8,6 +8,8 @@
 
 | case | 驗證內容 |
 | --- | --- |
+| workshop | 三次站定試彈、三次碰鈴、三次回頭抓包、移開重裝，零死返回並完成主線 |
+| springPause | 同上，另在第一次空中暫停 750ms，比對有效時間與互動計數凍結 |
 | dodge（預設） | 躲過施工牌、工作台及兩個可選互動、返回主線零死完成 |
 | hit | 故意站在落牌下，被局部復位後完成探索與主線；應維持 0 死 |
 | repeat | 同局拜訪兩次、第二次立即退出、發現紀錄只有一筆 |
@@ -25,9 +27,14 @@
 ## 矩陣與正式介面
 
 - `/tests/browser/backstage-suite.html?group=room`：hit、repeat、max、reload。
+- `?group=workshop`：三次試彈、空中暫停、原落牌命中與重訪。
 - `?group=boundary`：pause、immediate、five、checkpoint。
 - `?group=regression`：原本只向右與左出界精確 21 死、停留金幣精確 1 死、主線零死。
 - `/tests/browser/shell-review.html?state=backstage`：正式外框與選單；按開始後自動走到後台，再交還鍵盤／觸控。使用記憶體進度。
+- `?state=workshop`：自動沿正常路線躲過落牌，走到彈簧台後交還操作；站定試彈，落地後走開再回台可重玩。
+- `/tests/browser/mobile-review.html?case=workshopPlay`：固定 375×667 正式外框；加 `&size=landscape` 為 667×375。`?case=workshop` 在手機框跑三次試彈整關驗證。
+
+新機制通過另需 `data-springs=3`、`data-bells=3`、`data-catches>=3` 與 `data-worker-changes>=4`。狀態測試涵蓋取消、離台重裝、單次碰鈴、掃掠、漏鈴、發射後地面訊號殘留及兩側朝向／抓包冷卻。
 
 矩陣 iframe 的測試寬度不是手機驗收尺寸。視覺驗收另外以正式外框 1280×800、375×667、667×375 截圖，並檢查暫停、返回標示、觸控目標及文字遮擋。真實手機觸控仍需真人驗收。
 

@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import { BACKSTAGE } from '../content/backstage';
 import { PIXEL_PALETTE as p, LEVEL_ONE_TEXT_COLORS as text } from '../content/levelOneVisuals';
 import { addGameText } from './addGameText';
+import { drawBackstageWorkshop } from './backstageWorkshopVisuals';
 
 export function drawBackstage(scene: Phaser.Scene) {
   const art = scene.add.graphics();
@@ -149,10 +150,12 @@ export function drawBackstage(scene: Phaser.Scene) {
   slimeArt.fillStyle(p.gold500).fillRect(-20, -15, 38, 3).fillRect(-12, -23, 24, 9);
   slimeArt.fillStyle(p.gold300).fillRect(-8, -22, 6, 5);
   slime.add(slimeArt);
-  rect(173, 383, 34, 35, p.wood800); rect(176, 386, 28, 28, p.wood400);
-  rect(186, 386, 5, 28, p.wood600); rect(176, 397, 28, 5, p.wood600);
+  const slimeCrate = scene.add.graphics().setPosition(190, 418);
+  slimeCrate.fillStyle(p.wood800).fillRect(-17, -35, 34, 35);
+  slimeCrate.fillStyle(p.wood400).fillRect(-14, -32, 28, 28);
+  slimeCrate.fillStyle(p.wood600).fillRect(-4, -32, 5, 28).fillRect(-14, -21, 28, 5);
   rect(69, 329, 132, 24, p.wood800);
-  addGameText(scene, 135, 340, '搬運中（休息）', 16, text.parchment).setOrigin(0.5);
+  const slimeLabel = addGameText(scene, 135, 340, '搬運中（休息）', 16, text.parchment).setOrigin(0.5);
   // Sign and net remain separate so their animation cannot alter floor geometry.
   rect(671, 141, 68, 6, p.wood400);
   rect(679, 147, 3, 51, p.gold700); rect(728, 147, 3, 51, p.gold700);
@@ -167,6 +170,8 @@ export function drawBackstage(scene: Phaser.Scene) {
   const warning = scene.add.graphics().setVisible(false);
   warning.lineStyle(3, p.gold500).strokeRect(665, 413, 80, 5);
   for (let x = 670; x < 745; x += 15) warning.lineBetween(x, 435, x + 7, 422);
+  warning.lineBetween(696, 372, 705, 383).lineBetween(705, 383, 714, 372);
+  const signCountdown = addGameText(scene, 705, 350, '', 17, text.parchment).setOrigin(0.5).setVisible(false);
   const net = scene.add.graphics().setVisible(false);
   net.lineStyle(2, p.assist500);
   for (let x = 656; x <= 756; x += 10) net.lineBetween(x, 438, x + 8, 458);
@@ -188,7 +193,8 @@ export function drawBackstage(scene: Phaser.Scene) {
   addGameText(scene, 48, 24, '工務處後台', 27, text.parchment);
   addGameText(scene, 48, 53, '尚未開放・右側隨時可返回 →', 16, text.assist);
   addGameText(scene, 480, 511, '施工進度：差一點就好了。（昨日亦同）', 17, text.parchment).setOrigin(0.5);
-  return { sign, warning, net, worker, workerHand, slime, spikes, testLabel };
+  const workshop = drawBackstageWorkshop(scene);
+  return { sign, warning, signCountdown, net, worker, workerHand, slime, slimeCrate, slimeLabel, spikes, testLabel, workshop };
 }
 
 /** Static scenic props; none of these surfaces create collision or hide the walking lane. */
@@ -240,14 +246,14 @@ function drawWorkshopDetails(scene: Phaser.Scene): void {
   for (const x of [442, 574]) r(x + 2, 400, 2, 15, p.wood400);
   r(468, 402, 72, 7, p.wood800); r(468, 402, 72, 2, p.wood400);
   // Paint tins beside the unfinished canvas, plus a brush leaning against its frame.
-  for (const [x, y, color] of [[349, 384, p.grass600], [374, 392, p.mist500]] as const) {
+  for (const [x, y, color] of [[768, 384, p.grass600], [793, 392, p.mist500]] as const) {
     r(x, y, 19, 24, p.ink950); r(x + 2, y + 3, 15, 18, p.stone600);
     r(x + 3, y + 4, 6, 15, p.stone400); r(x + 2, y + 2, 15, 3, color);
     r(x + 10, y + 4, 3, 7, color); r(x + 6, y + 13, 7, 6, p.parchment100);
   }
-  for (let i = 0; i < 8; i++) r(389 + i, 349 + i * 6, 3, 7, p.wood400);
-  r(386, 345, 9, 13, p.grass600); r(386, 345, 9, 4, p.mist500);
-  r(365, 410, 15, 2, p.grass600); r(381, 413, 8, 2, p.mist500);
+  for (let i = 0; i < 8; i++) r(817 + i, 349 + i * 6, 3, 7, p.wood400);
+  r(814, 345, 9, 13, p.grass600); r(814, 345, 9, 4, p.mist500);
+  r(783, 410, 15, 2, p.grass600); r(803, 413, 8, 2, p.mist500);
   // Spare materials never cross the entrance hazard's 667..743 landing span.
   crate(60, 373, 34, 43); crate(63, 352, 28, 21);
   r(181, 369, 22, 12, p.parchment100); r(185, 372, 13, 2, p.wood600);

@@ -19,6 +19,7 @@
 | SPEC-0015 | 回頭查票與全程紅毯 | 已實作、技術通過，待真人試玩 | SPEC-0014 |
 | [SPEC-0020](SPEC-0020-encore-and-dialogue.md) | 重槌補點名與關卡鬥嘴 | 已實作、技術通過，待真人試玩 | SPEC-0011、SPEC-0015 |
 | [SPEC-0021](SPEC-0021-backstage-maintenance-room.md) | 回頭探索與工務處施工後台 | 實作與技術驗證完成，真人驗收待辦 | SPEC-0001、SPEC-0009、SPEC-0015、SPEC-0020 |
+| [SPEC-0022](SPEC-0022-backstage-workshop-toys.md) | 後台彈簧驗收與監工史萊姆 | 已實作、技術通過，待真人試玩 | SPEC-0021、SPEC-0005 |
 
 ## 使用方式
 

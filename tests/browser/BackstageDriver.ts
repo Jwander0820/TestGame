@@ -12,8 +12,12 @@ export class BackstageDriver implements PlaytestDriver {
   private roomPhase = 'sign';
   private stopAt = 0;
   private returnedAt = 0;
+  private springTries = 0;
   constructor(readonly mode = 'dodge') {}
-  reset(actions: ActionState): void { actions.releaseAll(); this.main.reset(actions); this.phase = 'first'; this.jumpStarted = false; }
+  reset(actions: ActionState): void {
+    actions.releaseAll(); this.main.reset(actions); this.phase = 'first'; this.jumpStarted = false;
+    this.springTries = 0; this.visits = 0;
+  }
   update(frame: PlaytestFrame, actions: ActionState): void {
     this.last = frame;
     const move = (direction: 'left' | 'right'): void => { actions.press(direction, 'backstage-route'); };
@@ -32,7 +36,22 @@ export class BackstageDriver implements PlaytestDriver {
         if (frame.x > 520) move('left');
         else { this.roomPhase = 'read'; this.stopAt = time; }
       } else if (this.roomPhase === 'read') {
-        if (time - this.stopAt > 10500) this.roomPhase = 'spikes';
+        if (time - this.stopAt > (this.mode === 'preview' ? 200 : 10500)) {
+          this.roomPhase = ['preview', 'workshop', 'springPause'].includes(this.mode) ? 'spring' : 'spikes';
+        }
+      } else if (this.roomPhase === 'spring') {
+        if (frame.x > 392) move('left');
+        else { this.roomPhase = 'spring-wait'; this.stopAt = time; }
+      } else if (this.roomPhase === 'spring-wait') {
+        if (time - this.stopAt > 4800 && frame.grounded) {
+          this.springTries++;
+          this.roomPhase = this.springTries >= 3 ? 'spikes' : 'spring-rearm';
+        }
+      } else if (this.roomPhase === 'spring-rearm') {
+        if (frame.x < 452) move('right');
+        else { this.roomPhase = 'spring-look-away'; this.stopAt = time; }
+      } else if (this.roomPhase === 'spring-look-away') {
+        if (time - this.stopAt > 750) this.roomPhase = 'spring';
       } else if (this.roomPhase === 'spikes') {
         if (frame.x > 292) move('left');
         else { this.roomPhase = 'read-spikes'; this.stopAt = time; }
