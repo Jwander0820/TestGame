@@ -1,4 +1,5 @@
 export interface GameStatusDetail {
+  readonly levelId?: 'level-one' | 'level-two';
   readonly area?: 'main' | 'backstage';
   readonly deaths: number;
   readonly message: string;

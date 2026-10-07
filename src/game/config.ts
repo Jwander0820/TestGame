@@ -3,11 +3,13 @@ import { LEVEL_ONE_PLAYER_PHYSICS } from './content/levelOneLayout';
 import type { InputController } from './input/InputController';
 import { VerticalSliceScene } from './scenes/VerticalSliceScene';
 import { BackstageScene } from './scenes/BackstageScene';
+import { LevelTwoScene } from './scenes/LevelTwoScene';
 import type { ProgressStore } from './state/progress';
 import type { PlaytestDriver } from './testing/PlaytestDriver';
 import { GAME_RENDERING } from './rendering';
 
 export interface GameDependencies {
+  readonly initialLevelId?: 'level-one' | 'level-two';
   readonly inputController: InputController;
   readonly progressStore: ProgressStore;
   readonly playtestDriver?: PlaytestDriver;
@@ -36,6 +38,8 @@ export function createGame(dependencies: GameDependencies): Phaser.Game {
       width: 960,
       height: 540,
     },
-    scene: [new VerticalSliceScene(dependencies), new BackstageScene(dependencies)],
+    scene: dependencies.initialLevelId === 'level-two'
+      ? [new LevelTwoScene(dependencies), new VerticalSliceScene(dependencies), new BackstageScene(dependencies)]
+      : [new VerticalSliceScene(dependencies), new BackstageScene(dependencies), new LevelTwoScene(dependencies)],
   });
 }

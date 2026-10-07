@@ -6,14 +6,14 @@
     <meta name="theme-color" content="#14232b" />
     <meta name="description" content="一款會因為玩家一直死亡，開始偷偷作弊幫忙的橫向平台遊戲。" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 8h40v19c0 14-9 23-20 29C21 50 12 41 12 27Z' fill='%23f3c743' stroke='%2314232b' stroke-width='5'/%3E%3Cpath d='M20 17h24v8H20z' fill='%23c84c42'/%3E%3Cpath d='M32 14v33' stroke='%232d4650' stroke-width='5'/%3E%3C/svg%3E" />
-    <title>遊戲開始心軟了｜見習勇者的森林試煉</title>
+    <title>遊戲開始心軟了｜森林試煉與王城鐘塔</title>
   </head>
   <body>
     <div id="app">
       <main class="game-shell" data-game-started="false" data-menu-open="true" data-visual-stage="royal-trial" aria-labelledby="game-title">
         <header class="game-header">
           <div>
-            <p class="eyebrow">王城外圍　／　第一章</p>
+            <p id="chapter-label" class="eyebrow">王城外圍　／　第一章</p>
             <h1 id="game-title">遊戲開始心軟了</h1>
           </div>
           <div class="header-actions">
@@ -36,7 +36,7 @@
           <div id="game-root" role="region" tabindex="0" aria-label="2D 橫向平台遊戲；使用左右方向與跳躍操作"></div>
           <div id="game-menu" class="game-menu">
             <section class="menu-panel" data-menu-panel="title" aria-labelledby="title-panel-heading">
-              <p class="menu-kicker">見習勇者的第一場試煉</p>
+              <p id="title-kicker" class="menu-kicker">見習勇者的第一場試煉</p>
               <h2 id="title-panel-heading">往森林深處，<br />再走一步。</h2>
               <p id="continue-summary" class="menu-copy">從王城外圍的新手森林出發。</p>
               <div class="menu-actions">
@@ -58,11 +58,12 @@
             </section>
 
             <section class="menu-panel" data-menu-panel="complete" aria-labelledby="complete-panel-heading" hidden>
-              <p class="menu-kicker">王城試煉完成</p>
+              <p id="complete-kicker" class="menu-kicker">森林試煉完成</p>
               <h2 id="complete-panel-heading">世界先投降了</h2>
               <p id="complete-summary" class="menu-copy"></p>
               <div class="menu-actions">
-                <button id="replay-button" class="menu-button primary-action" type="button">再次啟程</button>
+                <button id="next-level-button" class="menu-button primary-action" type="button" hidden>前往第二關</button>
+                <button id="replay-button" class="menu-button" type="button">重玩本關</button>
                 <button id="title-button" class="menu-button" type="button">回標題</button>
               </div>
             </section>

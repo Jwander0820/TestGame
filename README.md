@@ -42,10 +42,14 @@ check 依序執行單元測試、涵蓋 src 與 tests/browser 的型別檢查、
 
 ## 玩法與素材替換
 
+第二關進入王城鐘塔工坊，以斜向載台、蒸汽閘及貨物分揀提供不同節奏。到站、洩壓、驗收與敲鐘各有固定後手，安全告示未必可信。第一關完成後選「前往第二關」，舊首關完成紀錄也能從標題直接接續。第二關獨立保存死亡、據點與援助；詳見 [SPEC-0024](docs/specs/SPEC-0024-clockwork-level-two.md)、[四次反轉規格](docs/specs/SPEC-0025-clockwork-malice.md) 與[試玩／驗證入口](docs/testing/automated-clockwork.md)。
+
 目前持續增加玩法與對話，美術仍待驗收。左上方可探索不影響結局的[工務處施工後台](docs/specs/SPEC-0021-backstage-maintenance-room.md)，試玩與驗證入口見[後台驗證](docs/testing/automated-backstage.md)。最新的重槌補點名、關卡／工務處／勇者接話見 [SPEC-0020](docs/specs/SPEC-0020-encore-and-dialogue.md)。首關的隱藏頂板與假斷路見 [SPEC-0008](docs/specs/SPEC-0008-learned-traps.md)；金幣誘餌、第一坑空氣磚與向上攻擊見 [SPEC-0009](docs/specs/SPEC-0009-coin-and-pit-ambush.md)。
 
 | 要修改 | 入口 |
 | --- | --- |
+| 第二關關卡與援助 | src/game/content/levelTwo.ts、state/ClockworkState.ts、session/LevelTwoSession.ts、scenes/LevelTwoScene.ts、visuals/clockworkVisuals.ts（皆位於 src/game） |
+| 第二關固定後手 | src/game/content/clockworkMalice.ts、state/ClockworkMaliceState.ts、state/clockworkCollision.ts、visuals/clockworkMaliceVisuals.ts（皆位於 src/game） |
 | 陷阱幾何、援助解除對應 | src/game/content/levelOneTraps.ts |
 | 發現、重生、解除規則 | src/game/state/LearnedTrapState.ts |
 | 陷阱碰撞接線 | src/game/scenes/levelOne/LearnedTraps.ts |

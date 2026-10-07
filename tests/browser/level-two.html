@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="data:,"><title>第二關・鐘塔運送線驗證</title></head>
+  <body style="margin:0;background:#14232b;color:#fff3d6;font-family:system-ui">
+    <main style="max-width:960px;margin:auto">
+      <div id="game-root" style="width:100%;aspect-ratio:16/9" tabindex="0" aria-label="鐘塔運送線遊戲舞台"></div>
+      <output id="playtest-result" data-status="running">第二關安全提示反轉驗證中</output>
+      <button id="resume-review" type="button" hidden>接手試玩</button>
+      <nav id="manual-controls" aria-label="試玩觸控操作" hidden>
+        <button type="button" data-action="left" aria-label="向左移動">←</button>
+        <button type="button" data-action="right" aria-label="向右移動">→</button>
+        <button type="button" data-action="jump">跳躍</button>
+      </nav>
+      <pre id="clockwork-evidence" style="white-space:pre-wrap"></pre>
+    </main>
+    <script type="module" src="./level-two.ts"></script>
+  </body>
+</html>

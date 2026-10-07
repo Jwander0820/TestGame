@@ -1,8 +1,8 @@
 # 當前狀態
 
-- 最後更新：2026-10-02
-- 目前工作：[SPEC-0023：虛晃落腳地板](specs/SPEC-0023-feint-platform.md)
-- 階段：古橋前高台在玩家向前跳近時快退、停留、慢回，每命一次；後段第 3 次援助固定。34 檔 152 項測試、型別與建置通過；落空、零死、暫停、重載與 21 死紅毯回歸通過。真人節奏、趣味、美術與實體觸控待驗收。前輪後台彈簧／監工維持，見 [SPEC-0022](specs/SPEC-0022-backstage-workshop-toys.md)。
+- 最後更新：2026-10-07
+- 目前工作：[SPEC-0025：第二關安全提示的四次反轉](specs/SPEC-0025-clockwork-malice.md)
+- 階段：已加到站閘刀、蒸汽旁管、快速出口及終點配重四個固定後手，安全告示初見會誤導。41 檔 208 項、型別／建置及 22 條第二關 Phaser 案例通過；四條直覺路線各正確中招，已知解法 0 死、援助、八種暫停、兩種真重載、21 死不跳均通過。桌面及手機兩尺寸已目視；真人是否夠惡意、美術與實體觸控待驗收。見[四次反轉紀錄](logs/2026-10-07-clockwork-malice.md)，初版證據保留於[第二關紀錄](logs/2026-10-07-clockwork-level-two.md)。
 
 ## 已確認
 
@@ -19,6 +19,10 @@
 已加入靠近突進的方塊史萊姆、玩家跳起時攔截的圓形史萊姆，依使用者要求先用幾何佔位、不過度設計。最新接續要求休息的怪物突然動起來：第一招後先假睡，再由方塊回頭追撞、圓形向前補跳，兩招結束才真正休息。對應區段第 5 次援助讓牠永久奉命休息。沒有血量、戰鬥或新輸入。
 
 ## 最近證據
+
+2026-10-07：使用者否定初版難度後，第二關四個後手及相對掃碰完成。22 條穩定版案例、桌面／手機畫面、第一關 0 死與精確 21 死回歸通過；詳見[四次反轉紀錄](logs/2026-10-07-clockwork-malice.md)。
+
+2026-10-07：第二關六條 Phaser 路線、載台每幀圖形／碰撞／玩家 offset 同步、暫停凍結、舊首關存檔接續、當前關重玩、雙關清除及手機外框通過；首關零死與精確 21 死紅毯回歸通過。見[第二關紀錄](logs/2026-10-07-clockwork-level-two.md)。
 
 2026-10-02：虛晃高台的直衝路線精確 3 死後固定、援助保存重載、岸邊引招零死、空中暫停與實體碰撞同步通過；新局整關 0 死、只往右精確 21 死紅毯完成。桌面與手機尺寸已檢視，詳見[虛晃地板紀錄](logs/2026-10-02-feint-platform.md)。
 
@@ -51,6 +55,9 @@
 本輪通過 20 檔 91 項測試、型別與 build。桌面及固定 375×667 框內的已知路線 0 死；方塊與圓形小怪各精確 5 次死亡後援助完成，突進暫停及圓形援助重載通過。最高援助維持 21 死、原 checkpoint 14 死，前段頂板／假斷路、撞磚及後段追擊回歸通過。反向金幣探索、重載與整關亦 0 死。正式 dist 盲跳本輪 17 死完成，重玩／保存／重載正常，console 0 警告／錯誤，原保存還原。詳見 [SPEC-0012 紀錄](logs/2026-09-20-slime-prototypes.md)。前輪證據：[SPEC-0011](logs/2026-09-20-second-wave-malice.md)、[SPEC-0010](logs/2026-09-20-rear-gauntlet.md)、[SPEC-0009](logs/2026-09-20-coin-and-pit-ambush.md)。Phaser 主 bundle 大於 500 kB 為既有警告。
 
 ## 現在可用
+
+- `/tests/browser/level-two-shell.html`：直接試玩第二關，獨立記憶體進度；`?station=1|2|3` 試各據點、`?mercy=1` 試全程乘客通道。
+- `/tests/browser/level-two.html?case=learned|right|pause|reload|assistReload|steam|press|dock|backwash|recall|bell|naiveDock|naiveBackwash|naiveRecall|naiveBell`：第二關零死、初見受害、援助、21 死、暫停與真重載；完整說明見[第二關驗證](testing/automated-clockwork.md)。
 
 - `/tests/browser/shell-review.html?state=feint`：正式外框從高台前據點手動試玩虛晃，獨立進度；手機框 `mobile-review.html?case=feintPlay`，可加 `&size=landscape`。
 - `/tests/browser/feint-platform.html?case=learned|rush|pause|reload`：零死、直衝落空、暫停與援助重載；`?case=pause&review=1` 停在閃開畫面。
